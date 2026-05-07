@@ -35,13 +35,28 @@ Microsoft-Defender/
 ├── incidents/                                 ← Phân tích & dữ liệu incidents
 │   ├── analysis_unfamiliar_signin.md          ← Báo cáo phân tích root cause
 │   ├── investigation_chat_log.md              ← Full analysis + KQL + IR playbook
-│   └── data/
-│       ├── risky_users_20260506.csv           ← 55 users At Risk
-│       ├── incidents_queue_20260506.csv       ← 295 incidents queue
-│       └── entra_id_settings.png              ← Screenshot Identity Protection
+│   ├── data/
+│   │   ├── risky_users_20260506.csv           ← 55 users At Risk
+│   │   ├── incidents_queue_20260506.csv       ← 295 incidents queue
+│   │   ├── entra_id_settings.png              ← Screenshot Identity Protection
+│   │   └── exports/                           ← CSV exports từ Advanced Hunting queries
+│   └── analysis/                              ← Output từ Python analysis script
+│       ├── user_investigation_summary.csv     ← Bảng tổng hợp per user (auto-generated)
+│       └── investigation_report.md            ← Báo cáo chi tiết (auto-generated)
 │
-└── queries/                                   ← KQL queries cho investigation
-    └── (sẽ bổ sung)
+├── queries/                                   ← KQL queries cho investigation
+│   ├── README.md                              ← Hướng dẫn sử dụng queries
+│   ├── 01_signin_history_ABL.kql              ← Sign-in 30 ngày — ABL users
+│   ├── 01_signin_history_CMBD.kql             ← Sign-in 30 ngày — CMBD users
+│   ├── 01_signin_history_CETBD.kql            ← Sign-in 30 ngày — CETBD users
+│   ├── 02_isp_data.kql                        ← ISP enrichment (IdentityLogonEvents)
+│   ├── 03_alert_data.kql                      ← Alert correlation
+│   ├── 04_user_profiles.kql                   ← User identity profiles
+│   ├── 05_phishing_check.kql                  ← Phishing email detection
+│   └── 06_cloudapp_isp.kql                    ← Backup ISP data (CloudAppEvents)
+│
+└── scripts/                                   ← Scripts phân tích tự động
+    └── analyze_signins.py                     ← Baseline + Anomaly detection per user
 ```
 
 ---
@@ -208,9 +223,22 @@ EmailEvents
 ## 🛠️ Workflow
 
 ```
-1. Export schema    →  get_all_schemas.kql (chạy từng query trong Advanced Hunting)
-2. Merge schemas    →  All_Schemas_Combined.csv
-3. Reference doc    →  Complete_Schema_Reference.md
-4. Investigation    →  Dùng KQL queries + schema reference
-5. Analysis         →  Ghi nhận findings vào analysis docs
+Phase 0 — Schema (đã hoàn thành)
+  1. Export schema    →  get_all_schemas.kql
+  2. Merge schemas    →  All_Schemas_Combined.csv
+  3. Reference doc    →  Complete_Schema_Reference.md
+
+Phase 1 — Raw Data Export
+  4. Chạy 8 KQL queries trong Advanced Hunting (queries/*.kql)
+  5. Export CSV → Lưu vào incidents/data/exports/
+
+Phase 2 — Automated Analysis
+  6. Chạy: python scripts/analyze_signins.py
+     → Build behavioral baseline per user (trusted IPs/devices/browsers/ISPs)
+     → Detect anomalies (unknown IP, foreign country, suspicious ISP)
+     → Tạo bảng tổng hợp + verdict (Safe/Suspicious/Compromised)
+
+Phase 3 — Investigation
+  7. Review report    →  incidents/analysis/investigation_report.md
+  8. Action plan      →  Dựa trên verdict để xử lý từng user
 ```

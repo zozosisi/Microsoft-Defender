@@ -1,0 +1,39 @@
+// ============================================================
+// QUERY 1B: Sign-in History — CMBD (bd.crystal-martin.com)
+// Export CSV → Save as: signin_cmbd.csv
+// ============================================================
+EntraIdSignInEvents
+| where Timestamp > ago(30d)
+| where AccountUpn endswith "bd.crystal-martin.com"
+| where ErrorCode == 0
+| project
+    Timestamp,
+    AccountUpn,
+    AccountDisplayName,
+    AccountObjectId,
+    LogonType,
+    IPAddress,
+    Country,
+    State,
+    City,
+    Latitude,
+    Longitude,
+    DeviceName,
+    OSPlatform,
+    Browser,
+    ClientAppUsed,
+    UserAgent,
+    IsManaged,
+    IsCompliant,
+    DeviceTrustType,
+    Application,
+    ResourceDisplayName,
+    AuthenticationRequirement,
+    RiskLevelDuringSignIn,
+    RiskLevelAggregated,
+    RiskState,
+    RiskEventTypes,
+    ConditionalAccessStatus,
+    SessionId,
+    LastPasswordChangeTimestamp
+| order by AccountUpn asc, Timestamp asc

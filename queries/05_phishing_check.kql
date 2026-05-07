@@ -1,0 +1,28 @@
+// ============================================================
+// QUERY 5: Phishing Check (EmailEvents)
+// Export CSV → Save as: phishing_emails.csv
+// ============================================================
+// Tìm email có threat gửi đến BD users trong 30 ngày
+// Focus vào Phish/Malware đã delivered
+// ============================================================
+EmailEvents
+| where Timestamp > ago(30d)
+| where RecipientEmailAddress endswith "crystal-abl.com.bd"
+    or RecipientEmailAddress endswith "bd.crystal-martin.com"
+    or RecipientEmailAddress endswith "crystal-cet.com.bd"
+| where EmailDirection == "Inbound"
+| where ThreatTypes != ""
+| project
+    Timestamp,
+    RecipientEmailAddress,
+    SenderFromAddress,
+    SenderFromDomain,
+    Subject,
+    ThreatTypes,
+    ThreatNames,
+    DetectionMethods,
+    DeliveryAction,
+    DeliveryLocation,
+    UrlCount,
+    AttachmentCount
+| order by Timestamp desc

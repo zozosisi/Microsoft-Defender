@@ -1,0 +1,29 @@
+// ============================================================
+// QUERY 4: User Profiles (IdentityInfo)
+// Export CSV → Save as: user_profiles.csv
+// ============================================================
+// Lấy thông tin profile mới nhất của mỗi BD user
+// ============================================================
+IdentityInfo
+| where Timestamp > ago(30d)
+| where AccountUpn endswith "crystal-abl.com.bd"
+    or AccountUpn endswith "bd.crystal-martin.com"
+    or AccountUpn endswith "crystal-cet.com.bd"
+| summarize arg_max(Timestamp, *) by AccountUpn
+| project
+    AccountUpn,
+    AccountDisplayName,
+    AccountObjectId,
+    Department,
+    JobTitle,
+    EmailAddress,
+    City,
+    Country,
+    IsAccountEnabled,
+    Manager,
+    RiskLevel,
+    RiskLevelDetails,
+    CreatedDateTime,
+    IdentityEnvironment,
+    Type
+| order by AccountUpn asc

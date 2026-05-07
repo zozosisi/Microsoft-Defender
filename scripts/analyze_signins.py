@@ -1,0 +1,642 @@
+"""
+Microsoft Defender XDR — Sign-in Investigation Analysis
+========================================================
+Phân tích sign-in history từ CSV exports, build baseline per user,
+detect anomalies, tạo bảng tổng hợp.
+
+Usage:
+    python analyze_signins.py --data-dir ../incidents/data/exports
+"""
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+from datetime import datetime
+import argparse
+import json
+import sys
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+TRUSTED_THRESHOLD = 0.05  # 5% — IP/Device/Browser >= 5% total sign-ins = Trusted
+NORMAL_HOUR_THRESHOLD = 0.03  # 3% — hour with >= 3% sign-ins = Normal hour
+
+# Known BD ISPs (legitimate)
+BD_ISPS_KEYWORDS = [
+    "grameenphone", "robi", "banglalink", "teletalk", "btcl",
+    "bangladesh", "dhaka", "carnation", "link3", "amber it",
+    "aamra", "agni", "bracnet", "dhakacom", "earth telecommunication",
+    "fiber@home", "isp", "maxnet", "ranks itt", "square",
+    "summit communications", "x-press"
+]
+
+# Suspicious ISP keywords (VPN/Hosting/Proxy)
+SUSPICIOUS_ISP_KEYWORDS = [
+    "m247", "datacamp", "digitalocean", "hetzner", "ovh", "linode",
+    "vultr", "amazon", "microsoft azure", "google cloud",
+    "nordvpn", "expressvpn", "mullvad", "surfshark", "cyberghost",
+    "private internet", "protonvpn", "tor", "cloudflare"
+]
+
+BD_DOMAINS = [
+    "crystal-abl.com.bd",
+    "bd.crystal-martin.com",
+    "crystal-cet.com.bd"
+]
+
+
+# ============================================================
+# DATA LOADING
+# ============================================================
+def load_signin_data(data_dir: Path) -> pd.DataFrame:
+    """Load and merge sign-in CSVs from all domains."""
+    files = [
+        "signin_abl.csv",
+        "signin_cmbd.csv",
+        "signin_cetbd.csv"
+    ]
+    dfs = []
+    for f in files:
+        path = data_dir / f
+        if path.exists():
+            df = pd.read_csv(path)
+            print(f"  ✓ Loaded {f}: {len(df)} rows")
+            dfs.append(df)
+        else:
+            print(f"  ⚠ File not found: {f}")
+
+    if not dfs:
+        print("ERROR: No sign-in data files found!")
+        sys.exit(1)
+
+    combined = pd.concat(dfs, ignore_index=True)
+    combined["Timestamp"] = pd.to_datetime(combined["Timestamp"])
+    print(f"  → Total sign-in records: {len(combined)}")
+    print(f"  → Unique users: {combined['AccountUpn'].nunique()}")
+    return combined
+
+
+def load_isp_data(data_dir: Path) -> pd.DataFrame:
+    """Load ISP enrichment data."""
+    path = data_dir / "isp_data.csv"
+    if not path.exists():
+        print("  ⚠ isp_data.csv not found — ISP analysis will be skipped")
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    print(f"  ✓ Loaded isp_data.csv: {len(df)} rows")
+    return df
+
+
+def load_alert_data(data_dir: Path) -> pd.DataFrame:
+    """Load alert correlation data."""
+    path = data_dir / "alert_data.csv"
+    if not path.exists():
+        print("  ⚠ alert_data.csv not found — Alert analysis will be skipped")
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    print(f"  ✓ Loaded alert_data.csv: {len(df)} rows")
+    return df
+
+
+def load_user_profiles(data_dir: Path) -> pd.DataFrame:
+    """Load user profile data."""
+    path = data_dir / "user_profiles.csv"
+    if not path.exists():
+        print("  ⚠ user_profiles.csv not found — Profile enrichment will be skipped")
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    print(f"  ✓ Loaded user_profiles.csv: {len(df)} rows")
+    return df
+
+
+def load_phishing_data(data_dir: Path) -> pd.DataFrame:
+    """Load phishing email data."""
+    path = data_dir / "phishing_emails.csv"
+    if not path.exists():
+        print("  ⚠ phishing_emails.csv not found — Phishing analysis will be skipped")
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    print(f"  ✓ Loaded phishing_emails.csv: {len(df)} rows")
+    return df
+
+
+# ============================================================
+# BASELINE BUILDING
+# ============================================================
+def get_entity(upn: str) -> str:
+    """Extract entity from UPN domain."""
+    if "crystal-abl.com.bd" in upn:
+        return "ABL"
+    elif "bd.crystal-martin.com" in upn:
+        return "CMBD"
+    elif "crystal-cet.com.bd" in upn:
+        return "CETBD"
+    return "OTHER"
+
+
+def build_trusted_set(series: pd.Series, threshold: float) -> list:
+    """
+    From a series of values, find items that appear >= threshold% of total.
+    Returns list of trusted values.
+    """
+    if series.empty:
+        return []
+    counts = series.value_counts()
+    total = len(series)
+    trusted = counts[counts / total >= threshold].index.tolist()
+    return trusted
+
+
+def classify_isp(isp: str) -> str:
+    """Classify ISP as BD/Suspicious/Unknown."""
+    if pd.isna(isp) or isp == "":
+        return "Unknown"
+    isp_lower = isp.lower()
+    for kw in SUSPICIOUS_ISP_KEYWORDS:
+        if kw in isp_lower:
+            return "Suspicious"
+    for kw in BD_ISPS_KEYWORDS:
+        if kw in isp_lower:
+            return "BD-Trusted"
+    return "Unknown"
+
+
+def build_user_baseline(user_df: pd.DataFrame) -> dict:
+    """Build behavioral baseline for a single user from their sign-in history."""
+    baseline = {}
+
+    # Sign-in volume
+    baseline["TotalSignIns"] = len(user_df)
+    baseline["FirstSignIn"] = user_df["Timestamp"].min().strftime("%Y-%m-%d %H:%M")
+    baseline["LastSignIn"] = user_df["Timestamp"].max().strftime("%Y-%m-%d %H:%M")
+    baseline["ActiveDays"] = user_df["Timestamp"].dt.date.nunique()
+
+    # Trusted IPs
+    baseline["TrustedIPs"] = build_trusted_set(
+        user_df["IPAddress"].dropna(), TRUSTED_THRESHOLD
+    )
+    baseline["TotalUniqueIPs"] = user_df["IPAddress"].nunique()
+
+    # Trusted Countries
+    baseline["TrustedCountries"] = build_trusted_set(
+        user_df["Country"].dropna(), TRUSTED_THRESHOLD
+    )
+    baseline["AllCountries"] = sorted(user_df["Country"].dropna().unique().tolist())
+
+    # Trusted Cities
+    baseline["TrustedCities"] = build_trusted_set(
+        user_df["City"].dropna(), TRUSTED_THRESHOLD
+    )
+
+    # Trusted Devices
+    baseline["TrustedDevices"] = build_trusted_set(
+        user_df["DeviceName"].dropna(), TRUSTED_THRESHOLD
+    )
+    baseline["TotalUniqueDevices"] = user_df["DeviceName"].nunique()
+
+    # Trusted Browsers
+    baseline["TrustedBrowsers"] = build_trusted_set(
+        user_df["Browser"].dropna(), TRUSTED_THRESHOLD
+    )
+
+    # Trusted OS
+    baseline["TrustedOS"] = build_trusted_set(
+        user_df["OSPlatform"].dropna(), TRUSTED_THRESHOLD
+    )
+
+    # Normal hours (UTC)
+    hours = user_df["Timestamp"].dt.hour
+    hour_counts = hours.value_counts()
+    total = len(hours)
+    normal_hours = sorted(
+        hour_counts[hour_counts / total >= NORMAL_HOUR_THRESHOLD].index.tolist()
+    )
+    baseline["NormalHours"] = normal_hours
+
+    # Device posture
+    baseline["ManagedSignIns"] = int((user_df["IsManaged"] == 1).sum())
+    baseline["UnmanagedSignIns"] = int((user_df["IsManaged"] != 1).sum())
+    baseline["CompliantSignIns"] = int((user_df["IsCompliant"] == 1).sum())
+
+    return baseline
+
+
+# ============================================================
+# ANOMALY DETECTION
+# ============================================================
+def detect_user_anomalies(user_df: pd.DataFrame, baseline: dict) -> dict:
+    """Compare each sign-in against baseline, compute anomaly metrics."""
+    anomalies = {}
+
+    # Unknown IP sign-ins
+    trusted_ips = set(baseline["TrustedIPs"])
+    unknown_ip_mask = ~user_df["IPAddress"].isin(trusted_ips)
+    anomalies["UnknownIPSignIns"] = int(unknown_ip_mask.sum())
+    anomalies["UnknownIPList"] = sorted(
+        user_df.loc[unknown_ip_mask, "IPAddress"].unique().tolist()
+    )
+
+    # Foreign country sign-ins
+    trusted_countries = set(baseline["TrustedCountries"])
+    foreign_mask = ~user_df["Country"].isin(trusted_countries) & user_df["Country"].notna()
+    anomalies["ForeignCountrySignIns"] = int(foreign_mask.sum())
+    anomalies["ForeignCountryList"] = sorted(
+        user_df.loc[foreign_mask, "Country"].unique().tolist()
+    )
+
+    # Non-BD sign-ins (specific check)
+    non_bd_mask = (user_df["Country"] != "BD") & user_df["Country"].notna()
+    anomalies["NonBDSignIns"] = int(non_bd_mask.sum())
+    anomalies["NonBDCountries"] = sorted(
+        user_df.loc[non_bd_mask, "Country"].unique().tolist()
+    )
+
+    # Unknown device sign-ins
+    trusted_devices = set(baseline["TrustedDevices"])
+    unknown_dev_mask = ~user_df["DeviceName"].isin(trusted_devices) & user_df["DeviceName"].notna()
+    anomalies["UnknownDeviceSignIns"] = int(unknown_dev_mask.sum())
+    anomalies["UnknownDeviceList"] = sorted(
+        user_df.loc[unknown_dev_mask, "DeviceName"].dropna().unique().tolist()
+    )
+
+    # Unknown browser sign-ins
+    trusted_browsers = set(baseline["TrustedBrowsers"])
+    unknown_br_mask = ~user_df["Browser"].isin(trusted_browsers) & user_df["Browser"].notna()
+    anomalies["UnknownBrowserSignIns"] = int(unknown_br_mask.sum())
+
+    # Off-hours sign-ins
+    normal_hours = set(baseline["NormalHours"])
+    hours = user_df["Timestamp"].dt.hour
+    offhours_mask = ~hours.isin(normal_hours)
+    anomalies["OffHoursSignIns"] = int(offhours_mask.sum())
+
+    # High risk sign-ins (RiskLevelDuringSignIn >= 50 = Medium+)
+    risk_col = "RiskLevelDuringSignIn"
+    if risk_col in user_df.columns:
+        anomalies["HighRiskSignIns"] = int(
+            (user_df[risk_col].fillna(0) >= 50).sum()
+        )
+    else:
+        anomalies["HighRiskSignIns"] = 0
+
+    # Unmanaged device percentage
+    total = baseline["TotalSignIns"]
+    anomalies["UnmanagedPct"] = round(
+        baseline["UnmanagedSignIns"] / total * 100, 1
+    ) if total > 0 else 0
+
+    return anomalies
+
+
+def enrich_with_isp(user_upn: str, isp_df: pd.DataFrame) -> dict:
+    """Get ISP info for a user from IdentityLogonEvents data."""
+    if isp_df.empty:
+        return {"ISPList": [], "UniqueISPs": 0, "SuspiciousISPs": []}
+
+    user_isp = isp_df[isp_df["AccountUpn"].str.lower() == user_upn.lower()]
+    if user_isp.empty:
+        return {"ISPList": [], "UniqueISPs": 0, "SuspiciousISPs": []}
+
+    isp_list = user_isp["ISP"].dropna().unique().tolist()
+    suspicious = [i for i in isp_list if classify_isp(i) == "Suspicious"]
+
+    return {
+        "ISPList": sorted(isp_list),
+        "UniqueISPs": len(isp_list),
+        "SuspiciousISPs": suspicious
+    }
+
+
+def enrich_with_alerts(user_upn: str, alert_df: pd.DataFrame) -> dict:
+    """Get alert count and timeline for a user."""
+    if alert_df.empty:
+        return {"AlertCount": 0, "FirstAlert": "", "LastAlert": ""}
+
+    user_alerts = alert_df[alert_df["AccountUpn"].str.lower() == user_upn.lower()]
+    if user_alerts.empty:
+        return {"AlertCount": 0, "FirstAlert": "", "LastAlert": ""}
+
+    return {
+        "AlertCount": user_alerts["AlertId"].nunique(),
+        "FirstAlert": user_alerts["Timestamp"].min().strftime("%Y-%m-%d"),
+        "LastAlert": user_alerts["Timestamp"].max().strftime("%Y-%m-%d")
+    }
+
+
+def enrich_with_profile(user_upn: str, profile_df: pd.DataFrame) -> dict:
+    """Get user profile info."""
+    if profile_df.empty:
+        return {"Department": "", "JobTitle": "", "ProfileRiskLevel": ""}
+
+    user_profile = profile_df[profile_df["AccountUpn"].str.lower() == user_upn.lower()]
+    if user_profile.empty:
+        return {"Department": "", "JobTitle": "", "ProfileRiskLevel": ""}
+
+    row = user_profile.iloc[0]
+    return {
+        "Department": str(row.get("Department", "")),
+        "JobTitle": str(row.get("JobTitle", "")),
+        "ProfileRiskLevel": str(row.get("RiskLevel", ""))
+    }
+
+
+def enrich_with_phishing(user_upn: str, phish_df: pd.DataFrame) -> dict:
+    """Check if user received phishing emails."""
+    if phish_df.empty:
+        return {"PhishingEmailsReceived": 0}
+
+    # Match by email address (UPN is usually the email)
+    user_phish = phish_df[
+        phish_df["RecipientEmailAddress"].str.lower() == user_upn.lower()
+    ]
+    return {"PhishingEmailsReceived": len(user_phish)}
+
+
+# ============================================================
+# VERDICT SCORING
+# ============================================================
+def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
+                    phishing_info: dict) -> tuple:
+    """Compute anomaly score and verdict for a user."""
+    score = 0
+
+    # Foreign country sign-ins (heaviest weight)
+    score += anomalies.get("NonBDSignIns", 0) * 10
+
+    # Suspicious ISPs
+    score += len(isp_info.get("SuspiciousISPs", [])) * 8
+
+    # Unknown IP sign-ins
+    score += min(anomalies.get("UnknownIPSignIns", 0), 20) * 1
+
+    # High risk sign-ins
+    score += anomalies.get("HighRiskSignIns", 0) * 3
+
+    # Phishing emails received
+    score += phishing_info.get("PhishingEmailsReceived", 0) * 5
+
+    # Off-hours sign-ins
+    score += min(anomalies.get("OffHoursSignIns", 0), 10) * 0.5
+
+    # Alert count
+    score += min(alert_info.get("AlertCount", 0), 10) * 2
+
+    # Unmanaged device percentage
+    if anomalies.get("UnmanagedPct", 0) > 80:
+        score += 5
+
+    # Classify
+    if score >= 30:
+        verdict = "🔴 Likely Compromised"
+    elif score >= 10:
+        verdict = "🟠 Suspicious"
+    else:
+        verdict = "🟢 Likely Safe"
+
+    return round(score, 1), verdict
+
+
+# ============================================================
+# MAIN ANALYSIS
+# ============================================================
+def analyze(data_dir: Path, output_dir: Path):
+    """Main analysis pipeline."""
+    print("=" * 60)
+    print("Microsoft Defender XDR — Sign-in Investigation Analysis")
+    print("=" * 60)
+
+    # Load data
+    print("\n📂 Loading data...")
+    signin_df = load_signin_data(data_dir)
+    isp_df = load_isp_data(data_dir)
+    alert_df = load_alert_data(data_dir)
+    profile_df = load_user_profiles(data_dir)
+    phish_df = load_phishing_data(data_dir)
+
+    # Get unique users
+    users = sorted(signin_df["AccountUpn"].unique())
+    print(f"\n🔍 Analyzing {len(users)} users...")
+
+    # Process each user
+    results = []
+    for i, upn in enumerate(users):
+        print(f"  [{i+1}/{len(users)}] {upn}")
+        user_df = signin_df[signin_df["AccountUpn"] == upn].copy()
+
+        # Build baseline
+        baseline = build_user_baseline(user_df)
+
+        # Detect anomalies
+        anomalies = detect_user_anomalies(user_df, baseline)
+
+        # Enrich with ISP, alerts, profile, phishing
+        isp_info = enrich_with_isp(upn, isp_df)
+        alert_info = enrich_with_alerts(upn, alert_df)
+        profile_info = enrich_with_profile(upn, profile_df)
+        phishing_info = enrich_with_phishing(upn, phish_df)
+
+        # Compute verdict
+        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info)
+
+        # Build summary row
+        row = {
+            # Identity
+            "User": upn,
+            "DisplayName": user_df["AccountDisplayName"].iloc[0] if len(user_df) > 0 else "",
+            "Entity": get_entity(upn),
+            "Department": profile_info["Department"],
+            "JobTitle": profile_info["JobTitle"],
+            "CurrentRiskLevel": profile_info["ProfileRiskLevel"],
+            # Sign-in volume
+            "TotalSignIns": baseline["TotalSignIns"],
+            "ActiveDays": baseline["ActiveDays"],
+            "FirstSignIn": baseline["FirstSignIn"],
+            "LastSignIn": baseline["LastSignIn"],
+            # Baseline
+            "TrustedIPs": json.dumps(baseline["TrustedIPs"]),
+            "TrustedIPCount": len(baseline["TrustedIPs"]),
+            "TotalUniqueIPs": baseline["TotalUniqueIPs"],
+            "TrustedCountries": json.dumps(baseline["AllCountries"]),
+            "TrustedCities": json.dumps(baseline["TrustedCities"]),
+            "TrustedDevices": json.dumps(baseline["TrustedDevices"]),
+            "TrustedBrowsers": json.dumps(baseline["TrustedBrowsers"]),
+            "TrustedOS": json.dumps(baseline["TrustedOS"]),
+            "ISPList": json.dumps(isp_info["ISPList"]),
+            "UniqueISPs": isp_info["UniqueISPs"],
+            # Anomalies
+            "UnknownIPSignIns": anomalies["UnknownIPSignIns"],
+            "UnknownIPList": json.dumps(anomalies["UnknownIPList"]),
+            "ForeignCountrySignIns": anomalies["ForeignCountrySignIns"],
+            "ForeignCountryList": json.dumps(anomalies["ForeignCountryList"]),
+            "NonBDSignIns": anomalies["NonBDSignIns"],
+            "NonBDCountries": json.dumps(anomalies["NonBDCountries"]),
+            "UnknownDeviceSignIns": anomalies["UnknownDeviceSignIns"],
+            "UnknownBrowserSignIns": anomalies["UnknownBrowserSignIns"],
+            "OffHoursSignIns": anomalies["OffHoursSignIns"],
+            "HighRiskSignIns": anomalies["HighRiskSignIns"],
+            "ManagedSignIns": baseline["ManagedSignIns"],
+            "UnmanagedSignIns": baseline["UnmanagedSignIns"],
+            "UnmanagedPct": anomalies["UnmanagedPct"],
+            # Alerts
+            "AlertCount": alert_info["AlertCount"],
+            "FirstAlert": alert_info["FirstAlert"],
+            "LastAlert": alert_info["LastAlert"],
+            # Phishing
+            "PhishingEmailsReceived": phishing_info["PhishingEmailsReceived"],
+            "SuspiciousISPs": json.dumps(isp_info["SuspiciousISPs"]),
+            # Verdict
+            "AnomalyScore": score,
+            "Verdict": verdict,
+        }
+        results.append(row)
+
+    # Create output DataFrame
+    summary_df = pd.DataFrame(results)
+    summary_df = summary_df.sort_values("AnomalyScore", ascending=False)
+
+    # Export
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # CSV
+    csv_path = output_dir / "user_investigation_summary.csv"
+    summary_df.to_csv(csv_path, index=False)
+    print(f"\n📊 Summary CSV saved: {csv_path}")
+
+    # Markdown report
+    md_path = output_dir / "investigation_report.md"
+    generate_markdown_report(summary_df, md_path)
+    print(f"📄 Markdown report saved: {md_path}")
+
+    # Print summary stats
+    print("\n" + "=" * 60)
+    print("SUMMARY")
+    print("=" * 60)
+    verdicts = summary_df["Verdict"].value_counts()
+    for v, c in verdicts.items():
+        print(f"  {v}: {c} users")
+
+    compromised = summary_df[summary_df["Verdict"].str.contains("Compromised")]
+    if len(compromised) > 0:
+        print(f"\n🔴 USERS REQUIRING IMMEDIATE ACTION:")
+        for _, row in compromised.iterrows():
+            print(f"  • {row['User']} (Score: {row['AnomalyScore']}, "
+                  f"NonBD: {row['NonBDSignIns']}, "
+                  f"SuspiciousISPs: {row['SuspiciousISPs']})")
+
+    return summary_df
+
+
+# ============================================================
+# REPORT GENERATION
+# ============================================================
+def generate_markdown_report(df: pd.DataFrame, output_path: Path):
+    """Generate a markdown investigation report."""
+    lines = [
+        "# 🔍 Investigation Report: Unfamiliar Sign-in — BD Users",
+        "",
+        f"> **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        f"> **Users analyzed:** {len(df)}",
+        f"> **Trusted threshold:** {TRUSTED_THRESHOLD*100}%",
+        "",
+        "---",
+        "",
+        "## Summary",
+        "",
+    ]
+
+    # Verdict summary
+    for verdict_type in ["🔴 Likely Compromised", "🟠 Suspicious", "🟢 Likely Safe"]:
+        count = len(df[df["Verdict"] == verdict_type])
+        lines.append(f"- **{verdict_type}:** {count} users")
+    lines.append("")
+
+    # Per-user details
+    lines.extend(["---", "", "## User Details", ""])
+
+    for _, row in df.iterrows():
+        lines.extend([
+            f"### {row['Verdict']} — {row['DisplayName']}",
+            "",
+            f"- **Email:** `{row['User']}`",
+            f"- **Entity:** {row['Entity']} | **Dept:** {row['Department']}",
+            f"- **Current Risk:** {row['CurrentRiskLevel']}",
+            f"- **Anomaly Score:** {row['AnomalyScore']}",
+            "",
+            f"| Metric | Value |",
+            f"|--------|-------|",
+            f"| Total Sign-ins | {row['TotalSignIns']} ({row['ActiveDays']} active days) |",
+            f"| Trusted IPs | {row['TrustedIPCount']} / {row['TotalUniqueIPs']} unique |",
+            f"| Countries | {row['TrustedCountries']} |",
+            f"| ISPs | {row['ISPList']} |",
+            f"| Non-BD Sign-ins | **{row['NonBDSignIns']}** → {row['NonBDCountries']} |",
+            f"| Unknown IP Sign-ins | {row['UnknownIPSignIns']} |",
+            f"| Unknown Device Sign-ins | {row['UnknownDeviceSignIns']} |",
+            f"| Off-hours Sign-ins | {row['OffHoursSignIns']} |",
+            f"| High Risk Sign-ins | {row['HighRiskSignIns']} |",
+            f"| Managed / Unmanaged | {row['ManagedSignIns']} / {row['UnmanagedSignIns']} ({row['UnmanagedPct']}%) |",
+            f"| Alerts | {row['AlertCount']} (first: {row['FirstAlert']}, last: {row['LastAlert']}) |",
+            f"| Phishing Emails | {row['PhishingEmailsReceived']} |",
+            f"| Suspicious ISPs | {row['SuspiciousISPs']} |",
+            "",
+            "---",
+            "",
+        ])
+
+    output_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+# ============================================================
+# CLI
+# ============================================================
+def main():
+    parser = argparse.ArgumentParser(
+        description="Analyze Defender XDR sign-in data for BD users"
+    )
+    parser.add_argument(
+        "--data-dir",
+        type=str,
+        default="../incidents/data/exports",
+        help="Directory containing exported CSV files"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="../incidents/analysis",
+        help="Directory for output files"
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.05,
+        help="Trusted threshold (default: 0.05 = 5%%)"
+    )
+    args = parser.parse_args()
+
+    global TRUSTED_THRESHOLD
+    TRUSTED_THRESHOLD = args.threshold
+
+    data_dir = Path(args.data_dir)
+    output_dir = Path(args.output_dir)
+
+    if not data_dir.exists():
+        print(f"ERROR: Data directory not found: {data_dir}")
+        print(f"Create the directory and place exported CSV files there.")
+        print(f"\nExpected files:")
+        print(f"  - signin_abl.csv")
+        print(f"  - signin_cmbd.csv")
+        print(f"  - signin_cetbd.csv")
+        print(f"  - isp_data.csv")
+        print(f"  - alert_data.csv")
+        print(f"  - user_profiles.csv")
+        print(f"  - phishing_emails.csv")
+        sys.exit(1)
+
+    analyze(data_dir, output_dir)
+
+
+if __name__ == "__main__":
+    main()

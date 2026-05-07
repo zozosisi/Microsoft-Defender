@@ -1,0 +1,32 @@
+// ============================================================
+// QUERY 6: CloudApp ISP Backup (CloudAppEvents)
+// Export CSV → Save as: cloudapp_isp.csv
+// ============================================================
+// Backup ISP data từ CloudAppEvents
+// Dùng nếu IdentityLogonEvents thiếu data
+// CloudAppEvents có: ISP, CountryCode, IsAnonymousProxy
+// ============================================================
+CloudAppEvents
+| where Timestamp > ago(30d)
+| where AccountObjectId in (
+    (IdentityInfo
+    | where AccountUpn endswith "crystal-abl.com.bd"
+        or AccountUpn endswith "bd.crystal-martin.com"
+        or AccountUpn endswith "crystal-cet.com.bd"
+    | distinct AccountObjectId)
+)
+| project
+    Timestamp,
+    AccountObjectId,
+    AccountDisplayName,
+    ActionType,
+    Application,
+    IPAddress,
+    CountryCode,
+    City,
+    ISP,
+    IsAnonymousProxy,
+    DeviceType,
+    OSPlatform,
+    UserAgent
+| order by AccountObjectId asc, Timestamp asc
