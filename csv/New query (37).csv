@@ -1,0 +1,7 @@
+﻿TableName,ColumnName,ColumnType,DataType
+ExposureGraphNodes,NodeId,string,System.String
+ExposureGraphNodes,NodeLabel,string,System.String
+ExposureGraphNodes,NodeName,string,System.String
+ExposureGraphNodes,Categories,dynamic,System.Object
+ExposureGraphNodes,NodeProperties,dynamic,System.Object
+ExposureGraphNodes,EntityIds,dynamic,System.Object

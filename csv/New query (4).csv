@@ -1,0 +1,10 @@
+﻿TableName,ColumnName,ColumnType,DataType
+AlertInfo,Timestamp,datetime,System.DateTime
+AlertInfo,AlertId,string,System.String
+AlertInfo,Title,string,System.String
+AlertInfo,Category,string,System.String
+AlertInfo,Severity,string,System.String
+AlertInfo,ServiceSource,string,System.String
+AlertInfo,DetectionSource,string,System.String
+AlertInfo,AttackTechniques,string,System.String
+AlertInfo,SentinelWorkspaceIds,string,System.String

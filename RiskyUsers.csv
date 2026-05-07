@@ -1,0 +1,55 @@
+﻿User ID,User,Username,Risk state,Risk level,Risk detail,Status,Risk processing state,Risk last updated (UTC)
+3a0f4dfe-9476-46db-bb82-809376678ba6,Airin Rahman Rakhi (SUS/CMBD),Airin.Rahman@bd.crystal-martin.com,At risk,High,-,Active,-,2026-05-06T14:38:04.1047652Z
+18d1fdb9-089c-4edf-a2ee-63baca1ad1ee,Mehedi Hasan Khoka (QAD/CMBD),MehediHasan.Khoka@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T14:16:09.1114308Z
+c5ef0527-57ad-4fdd-a392-8a39586098bd,Imran Hossain (PDD/ABL),Imran_Hossain2@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T14:14:55.2557689Z
+9bf0791c-13b1-4f2e-8f76-97436df6988b,Shahadat Hossain Biplob (PPC/HAY),Hossain.Shahadat@crystal-cet.com.bd,At risk,Medium,-,Active,-,2026-05-06T14:14:37.8237856Z
+b116e597-1866-47f8-b9d5-3b5b34ba438d,Islam Nurul (QAD/CMBD),Islam.Nurul@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T14:14:21.2451146Z
+479ffcd0-9399-4daa-9102-17b95971eee2,Nur Hossain (FAB/CMBD),Nur.Hossain@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T14:07:30.9345189Z
+5a54e606-dece-4a63-858e-a851907acc1f,Ezazul Karim (MER/ABL),Ezazul_Karim@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T14:04:03.5885373Z
+c0fe273d-cc2e-4b0f-a481-c1afbdacd8f6,Abdullah Zubair (ASG/ABL),Abdullah_Zubair@crystal-abl.com.bd,At risk,High,-,Active,-,2026-05-06T13:22:07.8129408Z
+d02439bc-a82b-44e6-b791-3e0a72a03020,Nila Hasda (MER/CMBD),Nila.Hasda@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T12:47:28.7585478Z
+c2f508ab-aaeb-4dc7-b4b3-85bea810b16b,Jahidul Islam (MER/ABL),Jahidul_Islam2@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T12:46:28.32501Z
+9f60fae5-5068-4119-a4d1-bf4650e2e048,Zakarul Islam (FIN/BD-SSC),Zakarul_Islam@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T12:38:41.9018941Z
+53316d79-0431-4d02-ad22-842a740dd4ff,Zakir Ahmed (HRD/CMBD),Zakir.Ahmed@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T12:30:22.0358614Z
+e37ceec0-fa85-4fd5-9c45-2448b2b6d86b,Durjoy Areng (ISD/ABL),Durjoy_Areng@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T12:24:33.4952628Z
+0ede9e36-7473-4ee3-bd1a-2e154438909d,Masud RanaWH (FGW/CMBD),Masud.RanaWH@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T11:42:36.2782182Z
+9b2fb4c6-7edd-4391-8a6c-4190e0782aef,Raihan Islam (ADM/ABL),Raihan_Islam@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T11:26:36.3566197Z
+8eacd22b-d5c7-4052-94a9-83c7912641f0,Shuhel Mohammed (PDD/ABL),Shuhel_Mohammed@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T11:14:17.9214439Z
+610740a9-5b79-40f3-bf74-bdd9aea40abd,Nahid Hasan (QAD/CETBD),Nahid.Hasan@crystal-cet.com.bd,At risk,Medium,-,Active,-,2026-05-06T11:11:50.4440416Z
+992d3c16-0200-4788-b526-1340735f419f,Abu Sayed (FIN/BD-SSC),Abu.Sayed@crystal-cet.com.bd,At risk,Medium,-,Active,-,2026-05-06T11:09:45.6327799Z
+67a561b9-8030-46e7-90a2-978873f55010,Ariful Islam (WAS/ABL),Ariful_Islam3@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T10:43:39.638562Z
+67a1c7b4-5fdb-45e8-bdd6-c5c3a7cef27b,Fahimuzzaman Md (QAD/ABL),Fahimuzzaman_Md@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T10:30:31.6582297Z
+fdb5da05-cae7-4eee-8430-c0fb96a5d033,Babu Sarker (SPL/ABL),Babu_Sarker2@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T10:28:03.0886916Z
+2c605111-bfa5-49fa-aaf5-35f69c7e6de0,Mizanur Rahman(MER/CMBD),MizanurRahman.Masum@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T10:26:53.1034264Z
+4797db6f-704d-482a-9790-9ef3d26d7a76,Rahim Uddin (QAD/HAY),Rahim.Uddin@crystal-cet.com.bd,At risk,Medium,-,Active,-,2026-05-06T10:19:52.5714655Z
+e1f92a69-81b5-4ee3-a4c9-11f8fd92dd1c,Tanvir Ahmed (PAK/CMBD),Tanvir.Ahmed@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T09:59:53.7223266Z
+33eb9e32-81a1-41a1-9939-696154230703,Abdul Mannan (DYE/CETBD),Abdul.Mannan@crystal-cet.com.bd,At risk,Medium,-,Active,-,2026-05-06T09:28:05.8661157Z
+c4c79026-43c7-43e9-a3b4-935c37e35fa4,Nannu Mia (DEV/CMBD),Nannu.Mia@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T09:25:21.0454873Z
+acf14d52-af37-47ee-b316-7c89687ed022,Mukul Hossain (DYE/HAY),Mukul.Hossain@crystal-cet.com.bd,At risk,Medium,-,Active,-,2026-05-06T09:20:14.9682982Z
+57ddeabb-d0b0-4326-93bf-90e0428e0f09,Shuvrodev Bepari (ADM/ABL),Shuvrodev_Bepari@crystal-abl.com.bd,At risk,High,-,Active,-,2026-05-06T09:19:45.5630346Z
+b7a90d57-571c-4206-ab2a-e52d9d39682f,Rayhen Ahmed (CTG/ABL),Rayhen_Ahmed@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T08:57:02.5509393Z
+49fce889-0131-464c-b156-bb83e0817c29,Md Aiub Hossain (MTN/CMBD),MdAiub.Hossain@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T08:53:52.8343539Z
+0de792bc-1492-47e0-acae-2ce6dea17bcc,Jumur Akter (DYE/CETBD),Jumur.Akter@crystal-cet.com.bd,At risk,High,-,Active,-,2026-05-06T08:47:35.9484522Z
+f39a0dcc-a3e5-4abf-941f-672b497e3afd,Sultana Akter (HRD/HAY),sultana.akter@crystal-cet.com.bd,At risk,Medium,-,Active,-,2026-05-06T07:52:25.2501669Z
+ee61ae9c-da1f-47e9-b986-251085d15ec1,Atanu Roy (Fin/BD-SSC),Atanu.roy@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T07:47:59.5469235Z
+dbd94746-bcd7-4dd8-8066-5224f031b83c,Mahfuzur Rahman (QAD/CMBD),Mahfuzur.Rahman@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T07:47:07.8899891Z
+8ac44f38-3648-4950-8e87-666dcbcf1d42,Rubel Mia (CTG/ABL),Rubel_Mia@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T07:25:53.9381998Z
+8a797d11-89d1-46ae-8a0d-0991ecaf2d2a,Saiful Islam (PDD/ABL),Saiful_Islam@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T07:18:43.6756709Z
+5c99b3db-4d0f-4e4e-a12a-2491306494f1,Rayhan Ali (QAD/ABL),Rayhan_Ali@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T02:59:14.1601117Z
+f7548e2a-2b3c-47aa-81d2-fca2e415e19a,cmaadmmk,cmaadmmk@bd.crystal-martin.com,At risk,Medium,-,Active,-,2026-05-06T00:40:46.5436773Z
+bf68bbb3-a5d1-429e-8c41-464e87de2162,Asraful Islam (QAD/ABL),Asraful_Islam2@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-05-06T00:19:56.4130742Z
+bfbea342-8a64-4533-a375-e3abf0102512,Junie Dung Hoang Van (0PUR/REG),rghvdungh@crystal-regent.com.vn,At risk,Medium,-,Active,-,2026-04-21T00:59:52.437811Z
+6b9b8143-f320-4b6f-b22a-d4674ad01846,Jeremy Zeng (ISD/CSC),jeremy_zeng@crystal-csc.cn,At risk,Medium,-,Active,-,2026-04-11T17:30:34.655568Z
+8d5b7665-2fbc-47f4-be4f-aafc5d5733a2,Dominic Yu (ISD/CKL),dominic_yu@crystalgroup.com,At risk,Medium,-,Active,-,2026-04-11T06:41:12.6595096Z
+11d44ff4-961d-41ad-a757-f36ea33f513d,Chhum Thida (WMO/YDCL),chhum_thida@crystal-ydcl.com.kh,At risk,Medium,-,Active,-,2026-04-07T07:37:53.3506112Z
+07438c94-463b-4a78-a0fc-a0edc8c1663e,Walter Li (SHP/YIDA),walter_li@crystal-yida.cn,At risk,Medium,-,Active,-,2026-03-22T10:06:58.3863611Z
+7cf5d5e1-2bd5-4e9c-86c9-7f3f76775dc3,Hung Nguyen Tien (0SMT/REG),rgnthungssd@crystal-regent.com.vn,At risk,Medium,-,Active,-,2026-03-16T16:12:27.5876539Z
+3a83a596-953b-4ba3-ba30-83da735abcbd,Anh Phan Thi Lan (1PPC/STF),stfptlanh@crystal-stf.com.vn,At risk,Medium,-,Active,-,2026-03-16T09:47:18.3158745Z
+b347605a-6b97-434b-a29e-b8adf5dc48d2,Katherine Mou (HRD/CKL),Katherine_Mou@crystalgroup.com,At risk,Medium,-,Active,-,2026-02-27T03:10:55.4060732Z
+f5d83609-d1dc-4a6c-ad3f-16714d15591e,Alex Law (SAL/CAL),alex_law@crystalgroup.com,At risk,Medium,-,Active,-,2026-02-18T06:12:23.7894455Z
+32c79867-d99d-4de5-95f5-e3b6f50b89fe,Lam Nguyen Thi (TSS/CMVN),lam.nguyen@vn.crystal-martin.com,At risk,Medium,-,Active,-,2026-02-13T09:02:28.9062785Z
+3f448e26-ec03-4275-83c2-f6d49ab265b0,Em Sothea (PPC/YDCL),em_sothea@crystal-ydcl.com.kh,At risk,Medium,-,Active,-,2026-01-28T13:02:57.8632834Z
+055d207e-f425-4204-a9fd-bf480be578e2,David Dong (ISD/CSC),david_dong@crystal-csc.cn,At risk,Medium,-,Active,-,2026-01-24T18:45:08.0402788Z
+93215434-9243-4f99-9332-52d1acb4e05b,Tushar Ahmed (CTG/ABL),Tushar_Ahmed@crystal-abl.com.bd,At risk,Medium,-,Active,-,2026-01-19T12:57:45.7540775Z
+626cc1c5-339f-4da8-a39f-9e8d80917af6,Xian Hua Jiang (PDC-SPL/CIMA),lxhjiang@crystal-cima.com.cn,At risk,Medium,-,Active,-,2026-01-16T09:09:00.7563184Z
+36d221b4-9453-4dd8-84df-4a16dbe97a76,Ling Wang (AKT-STI/CIMA),llwang2@crystal-cima.com.cn,At risk,Medium,-,Active,-,2026-01-02T06:59:31.1855153Z

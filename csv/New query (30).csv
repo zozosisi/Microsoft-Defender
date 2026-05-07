@@ -1,0 +1,12 @@
+﻿TableName,ColumnName,ColumnType,DataType
+DeviceTvmSoftwareInventory,DeviceId,string,System.String
+DeviceTvmSoftwareInventory,DeviceName,string,System.String
+DeviceTvmSoftwareInventory,OSPlatform,string,System.String
+DeviceTvmSoftwareInventory,OSVersion,string,System.String
+DeviceTvmSoftwareInventory,OSArchitecture,string,System.String
+DeviceTvmSoftwareInventory,SoftwareVendor,string,System.String
+DeviceTvmSoftwareInventory,SoftwareName,string,System.String
+DeviceTvmSoftwareInventory,SoftwareVersion,string,System.String
+DeviceTvmSoftwareInventory,EndOfSupportStatus,string,System.String
+DeviceTvmSoftwareInventory,EndOfSupportDate,datetime,System.DateTime
+DeviceTvmSoftwareInventory,ProductCodeCpe,string,System.String

@@ -1,0 +1,17 @@
+﻿TableName,ColumnName,ColumnType,DataType
+EmailAttachmentInfo,Timestamp,datetime,System.DateTime
+EmailAttachmentInfo,NetworkMessageId,string,System.String
+EmailAttachmentInfo,SenderFromAddress,string,System.String
+EmailAttachmentInfo,SenderDisplayName,string,System.String
+EmailAttachmentInfo,SenderObjectId,string,System.String
+EmailAttachmentInfo,RecipientEmailAddress,string,System.String
+EmailAttachmentInfo,RecipientObjectId,string,System.String
+EmailAttachmentInfo,FileName,string,System.String
+EmailAttachmentInfo,FileType,string,System.String
+EmailAttachmentInfo,SHA256,string,System.String
+EmailAttachmentInfo,FileSize,long,System.Int64
+EmailAttachmentInfo,ThreatTypes,string,System.String
+EmailAttachmentInfo,ThreatNames,string,System.String
+EmailAttachmentInfo,DetectionMethods,string,System.String
+EmailAttachmentInfo,ReportId,string,System.String
+EmailAttachmentInfo,FileExtension,string,System.String

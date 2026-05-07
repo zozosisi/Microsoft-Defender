@@ -1,0 +1,16 @@
+﻿TableName,ColumnName,ColumnType,DataType
+BehaviorInfo,Timestamp,datetime,System.DateTime
+BehaviorInfo,BehaviorId,string,System.String
+BehaviorInfo,ActionType,string,System.String
+BehaviorInfo,Description,string,System.String
+BehaviorInfo,Categories,string,System.String
+BehaviorInfo,AttackTechniques,string,System.String
+BehaviorInfo,ServiceSource,string,System.String
+BehaviorInfo,DetectionSource,string,System.String
+BehaviorInfo,DataSources,string,System.String
+BehaviorInfo,DeviceId,string,System.String
+BehaviorInfo,AccountUpn,string,System.String
+BehaviorInfo,AccountObjectId,string,System.String
+BehaviorInfo,StartTime,datetime,System.DateTime
+BehaviorInfo,EndTime,datetime,System.DateTime
+BehaviorInfo,AdditionalFields,string,System.String

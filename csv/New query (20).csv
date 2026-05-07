@@ -1,0 +1,9 @@
+﻿TableName,ColumnName,ColumnType,DataType
+EmailUrlInfo,Timestamp,datetime,System.DateTime
+EmailUrlInfo,NetworkMessageId,string,System.String
+EmailUrlInfo,Url,string,System.String
+EmailUrlInfo,UrlDomain,string,System.String
+EmailUrlInfo,UrlLocation,string,System.String
+EmailUrlInfo,ReportId,string,System.String
+EmailUrlInfo,UrlChainId,string,System.String
+EmailUrlInfo,UrlChainPosition,int,System.Int32

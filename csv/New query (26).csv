@@ -1,0 +1,6 @@
+﻿TableName,ColumnName,ColumnType,DataType
+DeviceTvmInfoGatheringKB,IgId,string,System.String
+DeviceTvmInfoGatheringKB,FieldName,string,System.String
+DeviceTvmInfoGatheringKB,Description,string,System.String
+DeviceTvmInfoGatheringKB,Categories,dynamic,System.Object
+DeviceTvmInfoGatheringKB,DataStructure,string,System.String

@@ -1,0 +1,125 @@
+// =====================================================
+// QUERY ĐỂ LẤY TOÀN BỘ SCHEMA TỪ TENANT
+// Chạy từng query một trong Advanced Hunting
+// Sau mỗi query: Export → CSV
+// =====================================================
+
+// --- ALERTS & BEHAVIORS ---
+
+// 1. AlertEvidence
+AlertEvidence | getschema | extend TableName = "AlertEvidence" | project TableName, ColumnName, ColumnType, DataType
+
+// 2. AlertInfo
+AlertInfo | getschema | extend TableName = "AlertInfo" | project TableName, ColumnName, ColumnType, DataType
+
+// 3. BehaviorEntities
+BehaviorEntities | getschema | extend TableName = "BehaviorEntities" | project TableName, ColumnName, ColumnType, DataType
+
+// 4. BehaviorInfo
+BehaviorInfo | getschema | extend TableName = "BehaviorInfo" | project TableName, ColumnName, ColumnType, DataType
+
+// --- APPS & IDENTITIES ---
+
+// 5. AADSignInEventsBeta
+AADSignInEventsBeta | getschema | extend TableName = "AADSignInEventsBeta" | project TableName, ColumnName, ColumnType, DataType
+
+// 6. AADSpnSignInEventsBeta
+AADSpnSignInEventsBeta | getschema | extend TableName = "AADSpnSignInEventsBeta" | project TableName, ColumnName, ColumnType, DataType
+
+// 7. CloudAppEvents
+CloudAppEvents | getschema | extend TableName = "CloudAppEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 8. EntraIdSignInEvents
+EntraIdSignInEvents | getschema | extend TableName = "EntraIdSignInEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 9. EntraIdSpnSignInEvents
+EntraIdSpnSignInEvents | getschema | extend TableName = "EntraIdSpnSignInEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 10. GraphAPIAuditEvents
+GraphAPIAuditEvents | getschema | extend TableName = "GraphAPIAuditEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 11. IdentityAccountInfo
+IdentityAccountInfo | getschema | extend TableName = "IdentityAccountInfo" | project TableName, ColumnName, ColumnType, DataType
+
+// 12. IdentityInfo
+IdentityInfo | getschema | extend TableName = "IdentityInfo" | project TableName, ColumnName, ColumnType, DataType
+
+// 13. IdentityLogonEvents
+IdentityLogonEvents | getschema | extend TableName = "IdentityLogonEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 14. OAuthAppInfo
+OAuthAppInfo | getschema | extend TableName = "OAuthAppInfo" | project TableName, ColumnName, ColumnType, DataType
+
+// --- EMAIL & COLLABORATION ---
+
+// 15. EmailAttachmentInfo
+EmailAttachmentInfo | getschema | extend TableName = "EmailAttachmentInfo" | project TableName, ColumnName, ColumnType, DataType
+
+// 16. EmailEvents
+EmailEvents | getschema | extend TableName = "EmailEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 17. EmailPostDeliveryEvents
+EmailPostDeliveryEvents | getschema | extend TableName = "EmailPostDeliveryEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 18. EmailUrlInfo
+EmailUrlInfo | getschema | extend TableName = "EmailUrlInfo" | project TableName, ColumnName, ColumnType, DataType
+
+// 19. MessageEvents
+MessageEvents | getschema | extend TableName = "MessageEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 20. MessagePostDeliveryEvents
+MessagePostDeliveryEvents | getschema | extend TableName = "MessagePostDeliveryEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 21. MessageUrlInfo
+MessageUrlInfo | getschema | extend TableName = "MessageUrlInfo" | project TableName, ColumnName, ColumnType, DataType
+
+// 22. UrlClickEvents
+UrlClickEvents | getschema | extend TableName = "UrlClickEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// --- DEFENDER VULNERABILITY MANAGEMENT ---
+
+// 23. DeviceTvmInfoGathering
+DeviceTvmInfoGathering | getschema | extend TableName = "DeviceTvmInfoGathering" | project TableName, ColumnName, ColumnType, DataType
+
+// 24. DeviceTvmInfoGatheringKB
+DeviceTvmInfoGatheringKB | getschema | extend TableName = "DeviceTvmInfoGatheringKB" | project TableName, ColumnName, ColumnType, DataType
+
+// 25. DeviceTvmSecureConfigurationAssessment
+DeviceTvmSecureConfigurationAssessment | getschema | extend TableName = "DeviceTvmSecureConfigurationAssessment" | project TableName, ColumnName, ColumnType, DataType
+
+// 26. DeviceTvmSecureConfigurationAssessmentKB
+DeviceTvmSecureConfigurationAssessmentKB | getschema | extend TableName = "DeviceTvmSecureConfigurationAssessmentKB" | project TableName, ColumnName, ColumnType, DataType
+
+// 27. DeviceTvmSoftwareEvidenceBeta
+DeviceTvmSoftwareEvidenceBeta | getschema | extend TableName = "DeviceTvmSoftwareEvidenceBeta" | project TableName, ColumnName, ColumnType, DataType
+
+// 28. DeviceTvmSoftwareInventory
+DeviceTvmSoftwareInventory | getschema | extend TableName = "DeviceTvmSoftwareInventory" | project TableName, ColumnName, ColumnType, DataType
+
+// 29. DeviceTvmSoftwareVulnerabilities
+DeviceTvmSoftwareVulnerabilities | getschema | extend TableName = "DeviceTvmSoftwareVulnerabilities" | project TableName, ColumnName, ColumnType, DataType
+
+// 30. DeviceTvmSoftwareVulnerabilitiesKB
+DeviceTvmSoftwareVulnerabilitiesKB | getschema | extend TableName = "DeviceTvmSoftwareVulnerabilitiesKB" | project TableName, ColumnName, ColumnType, DataType
+
+// --- CLOUD INFRASTRUCTURE ---
+
+// 31. CloudAuditEvents
+CloudAuditEvents | getschema | extend TableName = "CloudAuditEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 32. CloudDnsEvents
+CloudDnsEvents | getschema | extend TableName = "CloudDnsEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 33. CloudProcessEvents
+CloudProcessEvents | getschema | extend TableName = "CloudProcessEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// 34. CloudStorageAggregatedEvents
+CloudStorageAggregatedEvents | getschema | extend TableName = "CloudStorageAggregatedEvents" | project TableName, ColumnName, ColumnType, DataType
+
+// --- EXPOSURE MANAGEMENT ---
+
+// 35. ExposureGraphEdges
+ExposureGraphEdges | getschema | extend TableName = "ExposureGraphEdges" | project TableName, ColumnName, ColumnType, DataType
+
+// 36. ExposureGraphNodes
+ExposureGraphNodes | getschema | extend TableName = "ExposureGraphNodes" | project TableName, ColumnName, ColumnType, DataType

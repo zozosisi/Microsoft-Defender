@@ -1,0 +1,17 @@
+﻿TableName,ColumnName,ColumnType,DataType
+OAuthAppInfo,ReportId,string,System.String
+OAuthAppInfo,Timestamp,datetime,System.DateTime
+OAuthAppInfo,OAuthAppId,string,System.String
+OAuthAppInfo,ServicePrincipalId,string,System.String
+OAuthAppInfo,AppName,string,System.String
+OAuthAppInfo,AddedOnTime,datetime,System.DateTime
+OAuthAppInfo,LastModifiedTime,datetime,System.DateTime
+OAuthAppInfo,AppStatus,string,System.String
+OAuthAppInfo,VerifiedPublisher,dynamic,System.Object
+OAuthAppInfo,PrivilegeLevel,string,System.String
+OAuthAppInfo,Permissions,dynamic,System.Object
+OAuthAppInfo,IsAdminConsented,bool,System.SByte
+OAuthAppInfo,ConsentedUsersCount,int,System.Int32
+OAuthAppInfo,AppOrigin,string,System.String
+OAuthAppInfo,AppOwnerTenantId,string,System.String
+OAuthAppInfo,LastUsedTime,datetime,System.DateTime

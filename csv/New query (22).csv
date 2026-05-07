@@ -1,0 +1,16 @@
+﻿TableName,ColumnName,ColumnType,DataType
+MessagePostDeliveryEvents,Timestamp,datetime,System.DateTime
+MessagePostDeliveryEvents,TeamsMessageId,string,System.String
+MessagePostDeliveryEvents,Action,string,System.String
+MessagePostDeliveryEvents,ActionType,string,System.String
+MessagePostDeliveryEvents,ActionTrigger,string,System.String
+MessagePostDeliveryEvents,ActionResult,string,System.String
+MessagePostDeliveryEvents,SenderEmailAddress,string,System.String
+MessagePostDeliveryEvents,RecipientDetails,dynamic,System.Object
+MessagePostDeliveryEvents,IsExternalThread,bool,System.SByte
+MessagePostDeliveryEvents,ThreatTypes,string,System.String
+MessagePostDeliveryEvents,ConfidenceLevel,dynamic,System.Object
+MessagePostDeliveryEvents,DetectionMethods,dynamic,System.Object
+MessagePostDeliveryEvents,LatestDeliveryLocation,string,System.String
+MessagePostDeliveryEvents,ReportId,string,System.String
+MessagePostDeliveryEvents,SafetyTip,string,System.String

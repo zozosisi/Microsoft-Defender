@@ -1,0 +1,7 @@
+﻿TableName,ColumnName,ColumnType,DataType
+DeviceTvmInfoGathering,Timestamp,datetime,System.DateTime
+DeviceTvmInfoGathering,LastSeenTime,datetime,System.DateTime
+DeviceTvmInfoGathering,DeviceId,string,System.String
+DeviceTvmInfoGathering,DeviceName,string,System.String
+DeviceTvmInfoGathering,OSPlatform,string,System.String
+DeviceTvmInfoGathering,AdditionalFields,dynamic,System.Object

@@ -1,0 +1,16 @@
+﻿TableName,ColumnName,ColumnType,DataType
+UrlClickEvents,Timestamp,datetime,System.DateTime
+UrlClickEvents,Url,string,System.String
+UrlClickEvents,ActionType,string,System.String
+UrlClickEvents,AccountUpn,string,System.String
+UrlClickEvents,Workload,string,System.String
+UrlClickEvents,NetworkMessageId,string,System.String
+UrlClickEvents,ThreatTypes,string,System.String
+UrlClickEvents,DetectionMethods,string,System.String
+UrlClickEvents,IPAddress,string,System.String
+UrlClickEvents,IsClickedThrough,bool,System.SByte
+UrlClickEvents,UrlChain,string,System.String
+UrlClickEvents,ReportId,string,System.String
+UrlClickEvents,AppName,string,System.String
+UrlClickEvents,AppVersion,string,System.String
+UrlClickEvents,SourceId,string,System.String

@@ -1,0 +1,8 @@
+﻿TableName,ColumnName,ColumnType,DataType
+DeviceTvmSoftwareEvidenceBeta,DeviceId,string,System.String
+DeviceTvmSoftwareEvidenceBeta,SoftwareVendor,string,System.String
+DeviceTvmSoftwareEvidenceBeta,SoftwareName,string,System.String
+DeviceTvmSoftwareEvidenceBeta,SoftwareVersion,string,System.String
+DeviceTvmSoftwareEvidenceBeta,RegistryPaths,dynamic,System.Object
+DeviceTvmSoftwareEvidenceBeta,DiskPaths,dynamic,System.Object
+DeviceTvmSoftwareEvidenceBeta,LastSeenTime,string,System.String

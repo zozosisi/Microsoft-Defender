@@ -1,0 +1,12 @@
+﻿TableName,ColumnName,ColumnType,DataType
+ExposureGraphEdges,EdgeId,string,System.String
+ExposureGraphEdges,EdgeLabel,string,System.String
+ExposureGraphEdges,SourceNodeId,string,System.String
+ExposureGraphEdges,SourceNodeName,string,System.String
+ExposureGraphEdges,SourceNodeLabel,string,System.String
+ExposureGraphEdges,SourceNodeCategories,dynamic,System.Object
+ExposureGraphEdges,TargetNodeId,string,System.String
+ExposureGraphEdges,TargetNodeName,string,System.String
+ExposureGraphEdges,TargetNodeLabel,string,System.String
+ExposureGraphEdges,TargetNodeCategories,dynamic,System.Object
+ExposureGraphEdges,EdgeProperties,dynamic,System.Object

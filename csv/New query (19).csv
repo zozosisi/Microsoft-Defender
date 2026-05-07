@@ -1,0 +1,15 @@
+﻿TableName,ColumnName,ColumnType,DataType
+EmailPostDeliveryEvents,Timestamp,datetime,System.DateTime
+EmailPostDeliveryEvents,NetworkMessageId,string,System.String
+EmailPostDeliveryEvents,InternetMessageId,string,System.String
+EmailPostDeliveryEvents,Action,string,System.String
+EmailPostDeliveryEvents,ActionType,string,System.String
+EmailPostDeliveryEvents,ActionTrigger,string,System.String
+EmailPostDeliveryEvents,ActionResult,string,System.String
+EmailPostDeliveryEvents,RecipientEmailAddress,string,System.String
+EmailPostDeliveryEvents,DeliveryLocation,string,System.String
+EmailPostDeliveryEvents,ThreatTypes,string,System.String
+EmailPostDeliveryEvents,DetectionMethods,string,System.String
+EmailPostDeliveryEvents,ReportId,string,System.String
+EmailPostDeliveryEvents,SenderFromAddress,string,System.String
+EmailPostDeliveryEvents,EmailDirection,string,System.String

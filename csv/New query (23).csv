@@ -1,0 +1,6 @@
+﻿TableName,ColumnName,ColumnType,DataType
+MessageUrlInfo,Timestamp,datetime,System.DateTime
+MessageUrlInfo,TeamsMessageId,string,System.String
+MessageUrlInfo,Url,string,System.String
+MessageUrlInfo,UrlDomain,string,System.String
+MessageUrlInfo,ReportId,string,System.String
