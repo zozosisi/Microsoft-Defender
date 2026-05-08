@@ -267,9 +267,8 @@ def detect_user_anomalies(user_df: pd.DataFrame, baseline: dict) -> dict:
     # High risk sign-ins (RiskLevelDuringSignIn >= 50 = Medium+)
     risk_col = "RiskLevelDuringSignIn"
     if risk_col in user_df.columns:
-        anomalies["HighRiskSignIns"] = int(
-            (user_df[risk_col].fillna(0) >= 50).sum()
-        )
+        numeric_risk = pd.to_numeric(user_df[risk_col], errors='coerce').fillna(0)
+        anomalies["HighRiskSignIns"] = int((numeric_risk >= 50).sum())
     else:
         anomalies["HighRiskSignIns"] = 0
 
@@ -354,26 +353,27 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     """Compute anomaly score and verdict for a user."""
     score = 0
 
-    # Foreign country sign-ins (heaviest weight)
-    score += anomalies.get("NonBDSignIns", 0) * 10
+    # Foreign country sign-ins: Penalize variety, not raw count
+    # +10 points for each distinct non-BD country
+    score += len(anomalies.get("NonBDCountries", [])) * 10
 
-    # Suspicious ISPs
-    score += len(isp_info.get("SuspiciousISPs", [])) * 8
+    # Suspicious ISPs: High penalty per suspicious ISP
+    score += len(isp_info.get("SuspiciousISPs", [])) * 15
 
-    # Unknown IP sign-ins
-    score += min(anomalies.get("UnknownIPSignIns", 0), 20) * 1
+    # Unknown IPs: Penalize variety of unknown IPs (max 30 pts)
+    score += min(len(anomalies.get("UnknownIPList", [])), 15) * 2
 
-    # High risk sign-ins
-    score += anomalies.get("HighRiskSignIns", 0) * 3
+    # High risk sign-ins (Entra ID Risk Event)
+    score += anomalies.get("HighRiskSignIns", 0) * 5
 
     # Phishing emails received
     score += phishing_info.get("PhishingEmailsReceived", 0) * 5
 
-    # Off-hours sign-ins
-    score += min(anomalies.get("OffHoursSignIns", 0), 10) * 0.5
+    # Off-hours sign-ins (cap at 10 pts)
+    score += min(anomalies.get("OffHoursSignIns", 0), 20) * 0.5
 
-    # Alert count
-    score += min(alert_info.get("AlertCount", 0), 10) * 2
+    # Alert count (Defender Alerts)
+    score += min(alert_info.get("AlertCount", 0), 5) * 5
 
     # Unmanaged device percentage
     if anomalies.get("UnmanagedPct", 0) > 80:
@@ -382,7 +382,7 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     # Classify
     if score >= 30:
         verdict = "🔴 Likely Compromised"
-    elif score >= 10:
+    elif score >= 15:
         verdict = "🟠 Suspicious"
     else:
         verdict = "🟢 Likely Safe"
