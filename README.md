@@ -45,6 +45,9 @@ Microsoft-Defender/
 │       ├── user_investigation_summary.csv     ← Bảng tổng hợp per user (auto-generated)
 │       └── investigation_report.md            ← Báo cáo chi tiết (auto-generated)
 │
+├── docs/                                      ← Tài liệu nghiệp vụ & Hướng dẫn
+│   └── detection_logic_reference.md           ← Giải thích chi tiết logic nhận diện VPN/Hacker
+│
 ├── queries/                                   ← KQL queries cho investigation
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
 │   ├── 00_unfamiliar_signin_incidents.kql     ← ⭐ Master query — all incidents + users + IPs
@@ -58,7 +61,10 @@ Microsoft-Defender/
 │   ├── 03_alert_data.kql                      ← Alert evidence details
 │   ├── 04_user_profiles.kql                   ← User identity profiles
 │   ├── 05_phishing_check.kql                  ← Phishing email detection
-│   └── 06_cloudapp_isp.kql                    ← Backup ISP data (CloudAppEvents)
+│   ├── 06_cloudapp_isp.kql                    ← Backup ISP data (CloudAppEvents)
+│   ├── 07_vpn_vs_hacker_investigation.kql     ← Điều tra thiết bị VPN vs Hacker
+│   ├── 08_post_breach_investigation.kql       ← Truy vết CloudApp (Single User)
+│   └── 09_cloudapp_events_bulk.kql            ← Bulk Data Breach export cho Python
 │
 └── scripts/                                   ← Scripts phân tích tự động
     └── analyze_signins.py                     ← Baseline + Anomaly detection per user
