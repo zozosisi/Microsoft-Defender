@@ -1,6 +1,6 @@
 # 🔍 Investigation Report: Unfamiliar Sign-in — BD Users
 
-> **Generated:** 2026-05-08 09:57
+> **Generated:** 2026-05-08 11:15
 > **Users analyzed:** 54
 > **Trusted threshold:** 5.0%
 
@@ -21,7 +21,7 @@
 - **Email:** `Sumi.Akter@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Fabric
 - **Current Risk:** nan
-- **Anomaly Score:** 465.0
+- **Anomaly Score:** 925.0
 
 | Metric | Value |
 |--------|-------|
@@ -46,7 +46,7 @@
 - **Email:** `Touhith_Hasan@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Facility Maintenance
 - **Current Risk:** nan
-- **Anomaly Score:** 465.0
+- **Anomaly Score:** 925.0
 
 | Metric | Value |
 |--------|-------|
@@ -66,137 +66,12 @@
 
 ---
 
-### 🔴 Likely Compromised — Raihan Islam (ADM/ABL)
-
-- **Email:** `Raihan_Islam@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Administration
-- **Current Risk:** nan
-- **Anomaly Score:** 440.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2704 (30 active days) |
-| Trusted IPs | 1 / 57 unique |
-| Countries | ["AR", "BD", "CH", "DE", "DO", "EC", "ES", "IE", "IQ", "IT", "MX", "PE", "PT", "PY", "RS", "TH", "TW", "UZ", "ZA"] |
-| ISPs | ["a1_serbia public ip addresses", "addresses used to provide broadband access to telkom internet cu", "compa a dominicana de tel fonos s. a.", "desarrollo de infraestructura de telecomunicaciones peru s.a.c.", "dsl-ull", "hayat isp", "kbro co. ltd.", "linkem customers", "lynx inc", "moja supernova doo", "negocios y telefonia nedetel s.a.", "residential dhcp", "tamayo magda judith", "telecel s.a.", "total play telecomunicaciones  s.a.p.i. de c.v.", "triple t broadband public company limited", "uzbektelekom joint stock company", "vodafone espana s.a.u.", "wimax customer allocation for dhaka zone", "wireless connect ltd."] |
-| Non-BD Sign-ins | **84** → ["AR", "CH", "DE", "DO", "EC", "ES", "IE", "IQ", "IT", "MX", "PE", "PT", "PY", "RS", "TH", "TW", "UZ", "ZA"] |
-| Unknown IP Sign-ins | 282 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 680 |
-| High Risk Sign-ins | 38 |
-| Managed / Unmanaged | 0 / 2704 (100.0%) |
-| Alerts | 20 (first: 2026-04-18, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Imran Hossain (PDD/ABL)
-
-- **Email:** `Imran_Hossain2@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Product Development Department
-- **Current Risk:** nan
-- **Anomaly Score:** 430.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 5523 (29 active days) |
-| Trusted IPs | 2 / 28 unique |
-| Countries | ["AR", "AT", "BD", "CA", "CL", "DO", "ES", "GT", "HN", "HR", "IQ", "IT", "MY", "NL", "PT", "SE", "SV", "TH", "TW", "ZA"] |
-| ISPs | ["ais fibre", "allay nawroz telecom company for communication ltd.", "cablevision del caribe  eirl", "cte s.a. de c.v.", "dsl-ull", "hero telecoms (pty) ltd", "iskon internet d.d.", "isp solutions s.a.", "jazztel triple play services", "kbro co. ltd.", "kpn b.v.", "magenta telekom", "metronet", "o3 telecom", "opnet srl", "se al nacional s.a.", "servicios innovadores de comunicaci n y entretenimiento  s.a.", "sympatico hse", "telecom personal bs as", "telefonica del sur s.a.", "telia network services", "tmnst", "wien energie gmbh", "wimax customer allocation for dhaka zone", "wind telecomunicazioni s.p.a"] |
-| Non-BD Sign-ins | **102** → ["AR", "AT", "CA", "CL", "DO", "ES", "GT", "HN", "HR", "IQ", "IT", "MY", "NL", "PT", "SE", "SV", "TH", "TW", "ZA"] |
-| Unknown IP Sign-ins | 104 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 210 |
-| High Risk Sign-ins | 34 |
-| Managed / Unmanaged | 0 / 5523 (100.0%) |
-| Alerts | 19 (first: 2026-04-18, last: 2026-05-06) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Mahfuzur Rahman (QAD/CMBD)
-
-- **Email:** `Mahfuzur.Rahman@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Quality Assurance
-- **Current Risk:** nan
-- **Anomaly Score:** 430.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2219 (29 active days) |
-| Trusted IPs | 1 / 20 unique |
-| Countries | ["AT", "AU", "BD", "BW", "ES", "GR", "GT", "IE", "MY", "NL", "PE", "PH", "PT", "SE", "UZ", "VE", "VN", "ZA"] |
-| ISPs | ["converge ict network", "dsl-ull", "enet telecommunications networks limited", "full data comunicaciones c.a.", "hutchison drei austria gmbh", "isp 3 nat pool", "leap telecommunications pty ltd", "mobilepools", "nova telecommunications & media single member s.a", "orange espagne sa", "superwifi de guatemala s.a", "telenor sverige ab", "umobile", "uzbektelekom joint stock company", "vietnam post and telecom corporation", "vodacom_cape_town_western_cape_public_nat", "wi-net telecom sac", "wimax customer allocation for ctg zone", "ya.com internet factory", "ziggo consumers"] |
-| Non-BD Sign-ins | **76** → ["AT", "AU", "BW", "ES", "GR", "GT", "IE", "MY", "NL", "PE", "PH", "PT", "SE", "UZ", "VE", "VN", "ZA"] |
-| Unknown IP Sign-ins | 76 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 293 |
-| High Risk Sign-ins | 35 |
-| Managed / Unmanaged | 0 / 2219 (100.0%) |
-| Alerts | 26 (first: 2026-04-18, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | ["ya.com internet factory"] |
-
----
-
-### 🔴 Likely Compromised — Abu Sayed (FIN/HAY)
-
-- **Email:** `Abu.Sayed@crystal-cet.com.bd`
-- **Entity:** CETBD | **Dept:** Finance
-- **Current Risk:** nan
-- **Anomaly Score:** 420.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 7960 (25 active days) |
-| Trusted IPs | 1 / 20 unique |
-| Countries | ["AU", "BD", "ES", "GT", "HR", "ID", "IE", "KE", "MY", "PE", "PT", "PY", "SV", "VN", "ZA"] |
-| ISPs | ["conex tv e.i.r.l.", "cte s.a. de c.v.", "customer allocation for uttara zone", "dimension data", "dsl-ull", "gig net sociedad anonima", "hrvatski telekom d.d.", "iinet limited", "jorge mario  mendoza lux (punto-net)", "maxis broadband sdn bhd", "millicom cable el salvador s.a. de c.v.", "mobile broadband isp", "ms online", "procono s.a.", "pt. telekomunikasi selular (telkomsel) indonesia", "rasmilink", "telecomunicaciones de guatemala  sociedad anonima", "vietnam posts and telecommunications group", "wimax customer allocation for ctg zone"] |
-| Non-BD Sign-ins | **77** → ["AU", "ES", "GT", "HR", "ID", "IE", "KE", "MY", "PE", "PT", "PY", "SV", "VN", "ZA"] |
-| Unknown IP Sign-ins | 84 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 130 |
-| High Risk Sign-ins | 42 |
-| Managed / Unmanaged | 0 / 7960 (100.0%) |
-| Alerts | 22 (first: 2026-04-24, last: 2026-05-05) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Zakir Ahmed (HRD/CMBD)
-
-- **Email:** `Zakir.Ahmed@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Human Resources Department
-- **Current Risk:** nan
-- **Anomaly Score:** 410.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 12988 (30 active days) |
-| Trusted IPs | 3 / 123 unique |
-| Countries | ["BA", "BD", "CA", "EC", "HN", "ID", "IL", "KE", "MX", "NL", "PE", "PH", "PY", "SE", "SV"] |
-| ISPs | ["aamra networks limited  internet service provider.", "axiata (bangladesh) limited", "banco central de reserva de el salvador", "bezeq-isp-broadband", "cogent communications  llc", "customer allocation for uttara zone", "ecuanet - corporacion ecuatoriana de informacion", "gesti n de direccionamiento uninet", "giipon peru s.a.c.", "globalnet.hn", "globe telecom (gmcr inc)", "internal equipment", "level3-user", "n cleo s.a.", "odido netherlands b.v.", "pt telkom indonesia", "savar 7 brig battalion", "telecel s.a.", "telemach system", "telenor sverige ab", "telia network services", "ufinet el salvador  s. a. de c. v.", "videotron ipv6", "wimax customer allocation for ctg zone", "wimax customer allocation for dhaka zone", "ziggo consumers"] |
-| Non-BD Sign-ins | **89** → ["BA", "CA", "EC", "HN", "ID", "IL", "KE", "MX", "NL", "PE", "PH", "PY", "SE", "SV"] |
-| Unknown IP Sign-ins | 3279 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 1279 |
-| High Risk Sign-ins | 36 |
-| Managed / Unmanaged | 0 / 12988 (100.0%) |
-| Alerts | 17 (first: 2026-04-21, last: 2026-05-07) |
-| Phishing Emails | 1 |
-| Suspicious ISPs | ["ecuanet - corporacion ecuatoriana de informacion"] |
-
----
-
 ### 🔴 Likely Compromised — Abdul Mannan (DYE/HAY)
 
 - **Email:** `Abdul.Mannan@crystal-cet.com.bd`
 - **Entity:** CETBD | **Dept:** Dyeing
 - **Current Risk:** nan
-- **Anomaly Score:** 410.0
+- **Anomaly Score:** 850.0
 
 | Metric | Value |
 |--------|-------|
@@ -216,12 +91,37 @@
 
 ---
 
+### 🔴 Likely Compromised — Imran Hossain (PDD/ABL)
+
+- **Email:** `Imran_Hossain2@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Product Development Department
+- **Current Risk:** nan
+- **Anomaly Score:** 810.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 5523 (29 active days) |
+| Trusted IPs | 2 / 28 unique |
+| Countries | ["AR", "AT", "BD", "CA", "CL", "DO", "ES", "GT", "HN", "HR", "IQ", "IT", "MY", "NL", "PT", "SE", "SV", "TH", "TW", "ZA"] |
+| ISPs | ["ais fibre", "allay nawroz telecom company for communication ltd.", "cablevision del caribe  eirl", "cte s.a. de c.v.", "dsl-ull", "hero telecoms (pty) ltd", "iskon internet d.d.", "isp solutions s.a.", "jazztel triple play services", "kbro co. ltd.", "kpn b.v.", "magenta telekom", "metronet", "o3 telecom", "opnet srl", "se al nacional s.a.", "servicios innovadores de comunicaci n y entretenimiento  s.a.", "sympatico hse", "telecom personal bs as", "telefonica del sur s.a.", "telia network services", "tmnst", "wien energie gmbh", "wimax customer allocation for dhaka zone", "wind telecomunicazioni s.p.a"] |
+| Non-BD Sign-ins | **102** → ["AR", "AT", "CA", "CL", "DO", "ES", "GT", "HN", "HR", "IQ", "IT", "MY", "NL", "PT", "SE", "SV", "TH", "TW", "ZA"] |
+| Unknown IP Sign-ins | 104 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 210 |
+| High Risk Sign-ins | 34 |
+| Managed / Unmanaged | 0 / 5523 (100.0%) |
+| Alerts | 19 (first: 2026-04-18, last: 2026-05-06) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
 ### 🔴 Likely Compromised — Nargis Akter (FIN/BD-SSC)
 
 - **Email:** `Nargis.Akter@crystal-cet.com.bd`
 - **Entity:** CETBD | **Dept:** Finance
 - **Current Risk:** nan
-- **Anomaly Score:** 405.0
+- **Anomaly Score:** 805.0
 
 | Metric | Value |
 |--------|-------|
@@ -241,53 +141,53 @@
 
 ---
 
-### 🔴 Likely Compromised — Sultana Akter (HRD/HAY)
+### 🔴 Likely Compromised — Raihan Islam (ADM/ABL)
 
-- **Email:** `sultana.akter@crystal-cet.com.bd`
-- **Entity:** CETBD | **Dept:** Human Resources Department
+- **Email:** `Raihan_Islam@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Administration
 - **Current Risk:** nan
-- **Anomaly Score:** 390.0
+- **Anomaly Score:** 800.0
 
 | Metric | Value |
 |--------|-------|
-| Total Sign-ins | 1515 (24 active days) |
-| Trusted IPs | 1 / 29 unique |
-| Countries | ["AR", "AT", "BA", "BD", "BW", "CA", "CL", "DO", "IN", "IQ", "IT", "NL", "SV", "TH", "TN", "TW", "VE", "VN"] |
-| ISPs | ["airtel unoc  cp-05  sector 8  imt manesar  gurugram  haryana 122", "altice dominicana s.a.", "amx argentina s.a.", "ani broaband services", "cable modem customers (cpe)", "chunghwa telecom co. ltd.", "cte s.a. de c.v.", "earthlink telecommunications equipment trading & services dmcc", "francistown wimax128-protected", "gca telecom", "infrastructure for fastwebs main location", "kpn b.v.", "mass response service gmbh", "millicom cable el salvador s.a. de c.v.", "ooredootn", "pacifico cable spa.", "saigon tourist cable television", "sympatico hse", "telecomunicaciones role  ca (westnet)", "triple t broadband public company limited", "vietnam posts and telecommunications group", "viettel group", "wimax customer allocation for ctg zone", "y.u.t corporate company limited"] |
-| Non-BD Sign-ins | **88** → ["AR", "AT", "BA", "BW", "CA", "CL", "DO", "IN", "IQ", "IT", "NL", "SV", "TH", "TN", "TW", "VE", "VN"] |
-| Unknown IP Sign-ins | 93 |
+| Total Sign-ins | 2704 (30 active days) |
+| Trusted IPs | 1 / 57 unique |
+| Countries | ["AR", "BD", "CH", "DE", "DO", "EC", "ES", "IE", "IQ", "IT", "MX", "PE", "PT", "PY", "RS", "TH", "TW", "UZ", "ZA"] |
+| ISPs | ["a1_serbia public ip addresses", "addresses used to provide broadband access to telkom internet cu", "compa a dominicana de tel fonos s. a.", "desarrollo de infraestructura de telecomunicaciones peru s.a.c.", "dsl-ull", "hayat isp", "kbro co. ltd.", "linkem customers", "lynx inc", "moja supernova doo", "negocios y telefonia nedetel s.a.", "residential dhcp", "tamayo magda judith", "telecel s.a.", "total play telecomunicaciones  s.a.p.i. de c.v.", "triple t broadband public company limited", "uzbektelekom joint stock company", "vodafone espana s.a.u.", "wimax customer allocation for dhaka zone", "wireless connect ltd."] |
+| Non-BD Sign-ins | **84** → ["AR", "CH", "DE", "DO", "EC", "ES", "IE", "IQ", "IT", "MX", "PE", "PT", "PY", "RS", "TH", "TW", "UZ", "ZA"] |
+| Unknown IP Sign-ins | 282 |
 | Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 93 |
-| High Risk Sign-ins | 27 |
-| Managed / Unmanaged | 0 / 1515 (100.0%) |
-| Alerts | 15 (first: 2026-04-20, last: 2026-05-08) |
+| Off-hours Sign-ins | 680 |
+| High Risk Sign-ins | 38 |
+| Managed / Unmanaged | 0 / 2704 (100.0%) |
+| Alerts | 20 (first: 2026-04-18, last: 2026-05-07) |
 | Phishing Emails | 0 |
-| Suspicious ISPs | ["airtel unoc  cp-05  sector 8  imt manesar  gurugram  haryana 122"] |
+| Suspicious ISPs | [] |
 
 ---
 
-### 🔴 Likely Compromised — Jumur Akter (DYE/HAY)
+### 🔴 Likely Compromised — Mahfuzur Rahman (QAD/CMBD)
 
-- **Email:** `Jumur.Akter@crystal-cet.com.bd`
-- **Entity:** CETBD | **Dept:** Dyeing
+- **Email:** `Mahfuzur.Rahman@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Quality Assurance
 - **Current Risk:** nan
-- **Anomaly Score:** 385.0
+- **Anomaly Score:** 770.0
 
 | Metric | Value |
 |--------|-------|
-| Total Sign-ins | 7326 (30 active days) |
-| Trusted IPs | 1 / 24 unique |
-| Countries | ["AR", "AU", "BD", "CA", "ES", "GR", "HN", "HR", "ID", "IL", "IQ", "MX", "PT", "PY", "RS", "SE"] |
-| ISPs | ["013 netvision", "a1 srbija d.o.o", "axiata (bangladesh) limited", "bezeq- the israel telecommunication corp. ltd.", "cablecolor s.a.", "distributel communications limited", "dsl-ull", "gig net sociedad anonima", "iskon internet d.d.", "kurdistan net company for computer and internet ltd.", "leap telecommunications pty ltd", "mega cable s.a. de c.v.", "modhumoti internet service", "multiprotocol service provider to other isp s and end users", "pt. telekomunikasi selular (telkomsel) indonesia", "tele2 mobile handset for sweden", "telefonica de argentina", "telefonica de espana sau", "ufinet paraguay s.a.", "wimax customer allocation for ctg zone", "yesdbs"] |
-| Non-BD Sign-ins | **90** → ["AR", "AU", "CA", "ES", "GR", "HN", "HR", "ID", "IL", "IQ", "MX", "PT", "PY", "RS", "SE"] |
-| Unknown IP Sign-ins | 136 |
+| Total Sign-ins | 2219 (29 active days) |
+| Trusted IPs | 1 / 20 unique |
+| Countries | ["AT", "AU", "BD", "BW", "ES", "GR", "GT", "IE", "MY", "NL", "PE", "PH", "PT", "SE", "UZ", "VE", "VN", "ZA"] |
+| ISPs | ["converge ict network", "dsl-ull", "enet telecommunications networks limited", "full data comunicaciones c.a.", "hutchison drei austria gmbh", "isp 3 nat pool", "leap telecommunications pty ltd", "mobilepools", "nova telecommunications & media single member s.a", "orange espagne sa", "superwifi de guatemala s.a", "telenor sverige ab", "umobile", "uzbektelekom joint stock company", "vietnam post and telecom corporation", "vodacom_cape_town_western_cape_public_nat", "wi-net telecom sac", "wimax customer allocation for ctg zone", "ya.com internet factory", "ziggo consumers"] |
+| Non-BD Sign-ins | **76** → ["AT", "AU", "BW", "ES", "GR", "GT", "IE", "MY", "NL", "PE", "PH", "PT", "SE", "UZ", "VE", "VN", "ZA"] |
+| Unknown IP Sign-ins | 76 |
 | Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 1257 |
-| High Risk Sign-ins | 33 |
-| Managed / Unmanaged | 0 / 7326 (100.0%) |
-| Alerts | 29 (first: 2026-04-19, last: 2026-05-07) |
+| Off-hours Sign-ins | 293 |
+| High Risk Sign-ins | 35 |
+| Managed / Unmanaged | 0 / 2219 (100.0%) |
+| Alerts | 26 (first: 2026-04-18, last: 2026-05-07) |
 | Phishing Emails | 0 |
-| Suspicious ISPs | [] |
+| Suspicious ISPs | ["ya.com internet factory"] |
 
 ---
 
@@ -296,7 +196,7 @@
 - **Email:** `Niaz_Morshed@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Merchandising
 - **Current Risk:** nan
-- **Anomaly Score:** 385.0
+- **Anomaly Score:** 765.0
 
 | Metric | Value |
 |--------|-------|
@@ -316,12 +216,37 @@
 
 ---
 
+### 🔴 Likely Compromised — Sultana Akter (HRD/HAY)
+
+- **Email:** `sultana.akter@crystal-cet.com.bd`
+- **Entity:** CETBD | **Dept:** Human Resources Department
+- **Current Risk:** nan
+- **Anomaly Score:** 730.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 1515 (24 active days) |
+| Trusted IPs | 1 / 29 unique |
+| Countries | ["AR", "AT", "BA", "BD", "BW", "CA", "CL", "DO", "IN", "IQ", "IT", "NL", "SV", "TH", "TN", "TW", "VE", "VN"] |
+| ISPs | ["airtel unoc  cp-05  sector 8  imt manesar  gurugram  haryana 122", "altice dominicana s.a.", "amx argentina s.a.", "ani broaband services", "cable modem customers (cpe)", "chunghwa telecom co. ltd.", "cte s.a. de c.v.", "earthlink telecommunications equipment trading & services dmcc", "francistown wimax128-protected", "gca telecom", "infrastructure for fastwebs main location", "kpn b.v.", "mass response service gmbh", "millicom cable el salvador s.a. de c.v.", "ooredootn", "pacifico cable spa.", "saigon tourist cable television", "sympatico hse", "telecomunicaciones role  ca (westnet)", "triple t broadband public company limited", "vietnam posts and telecommunications group", "viettel group", "wimax customer allocation for ctg zone", "y.u.t corporate company limited"] |
+| Non-BD Sign-ins | **88** → ["AR", "AT", "BA", "BW", "CA", "CL", "DO", "IN", "IQ", "IT", "NL", "SV", "TH", "TN", "TW", "VE", "VN"] |
+| Unknown IP Sign-ins | 93 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 93 |
+| High Risk Sign-ins | 27 |
+| Managed / Unmanaged | 0 / 1515 (100.0%) |
+| Alerts | 15 (first: 2026-04-20, last: 2026-05-08) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | ["airtel unoc  cp-05  sector 8  imt manesar  gurugram  haryana 122"] |
+
+---
+
 ### 🔴 Likely Compromised — Nur Hossain (FAB/CMBD)
 
 - **Email:** `Nur.Hossain@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Fabric
 - **Current Risk:** nan
-- **Anomaly Score:** 370.0
+- **Anomaly Score:** 730.0
 
 | Metric | Value |
 |--------|-------|
@@ -341,62 +266,12 @@
 
 ---
 
-### 🔴 Likely Compromised — Mukul Hossain (DYE/HAY)
-
-- **Email:** `Mukul.Hossain@crystal-cet.com.bd`
-- **Entity:** CETBD | **Dept:** Dyeing
-- **Current Risk:** nan
-- **Anomaly Score:** 365.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 4408 (29 active days) |
-| Trusted IPs | 1 / 19 unique |
-| Countries | ["AR", "BD", "DZ", "ES", "HN", "ID", "MY", "PE", "PT", "PY", "SE", "SV", "TW"] |
-| ISPs | ["america movil peru s.a.c.", "chunghwa telecom co. ltd.", "conexis s.r.l.", "douglas back pavan (si net)", "earth telecommunication(pvt.)ltd.", "maijdee supernet", "meo - servicos de comunicacoes e multimedia s.a.", "multimedia network  s.a. de c.v.", "n cleo s.a.", "pt indo access semesta", "residentiel", "se tele2 broadband", "telef nica celular s.a", "unifi-home", "wimax customer allocation for ctg zone", "xtra telecom s.a."] |
-| Non-BD Sign-ins | **64** → ["AR", "DZ", "ES", "HN", "ID", "MY", "PE", "PT", "PY", "SE", "SV", "TW"] |
-| Unknown IP Sign-ins | 84 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 255 |
-| High Risk Sign-ins | 35 |
-| Managed / Unmanaged | 0 / 4408 (100.0%) |
-| Alerts | 24 (first: 2026-04-18, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Masud RanaWH (FGW/CMBD)
-
-- **Email:** `Masud.RanaWH@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Finished Goods Warehouse
-- **Current Risk:** nan
-- **Anomaly Score:** 365.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2109 (31 active days) |
-| Trusted IPs | 1 / 22 unique |
-| Countries | ["AT", "BD", "CL", "DO", "DZ", "ES", "HN", "HR", "IQ", "IT", "MX", "MY", "PT", "PY", "TN", "TW", "UZ"] |
-| ISPs | ["ati - agence tunisienne internet", "cable sistema s.r.l. de c.v.", "celcom axiata berhad", "customer allocation for uttara zone", "dongfong technology co. ltd.", "fawri", "gesti n de direccionamiento uninet", "high speed internet customers", "jazztel triple play services", "mega cable s.a. de c.v.", "n cleo s.a.", "nas dhcp pool nola", "nos comunicacoes s.a.", "o3 telecom", "ot - optima telekom d.d.", "r  sidentiel(oran1et 2)", "telef nica chile s.a.", "tmnst", "uzbektelekom joint stock company", "wind telecom s.a."] |
-| Non-BD Sign-ins | **84** → ["AT", "CL", "DO", "DZ", "ES", "HN", "HR", "IQ", "IT", "MX", "MY", "PT", "PY", "TN", "TW", "UZ"] |
-| Unknown IP Sign-ins | 84 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 172 |
-| High Risk Sign-ins | 27 |
-| Managed / Unmanaged | 0 / 2109 (100.0%) |
-| Alerts | 20 (first: 2026-04-19, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
 ### 🔴 Likely Compromised — Nannu Mia (DEV/CMBD)
 
 - **Email:** `Nannu.Mia@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Product Development
 - **Current Risk:** nan
-- **Anomaly Score:** 365.0
+- **Anomaly Score:** 705.0
 
 | Metric | Value |
 |--------|-------|
@@ -416,12 +291,37 @@
 
 ---
 
+### 🔴 Likely Compromised — Abu Sayed (FIN/HAY)
+
+- **Email:** `Abu.Sayed@crystal-cet.com.bd`
+- **Entity:** CETBD | **Dept:** Finance
+- **Current Risk:** nan
+- **Anomaly Score:** 700.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 7960 (25 active days) |
+| Trusted IPs | 1 / 20 unique |
+| Countries | ["AU", "BD", "ES", "GT", "HR", "ID", "IE", "KE", "MY", "PE", "PT", "PY", "SV", "VN", "ZA"] |
+| ISPs | ["conex tv e.i.r.l.", "cte s.a. de c.v.", "customer allocation for uttara zone", "dimension data", "dsl-ull", "gig net sociedad anonima", "hrvatski telekom d.d.", "iinet limited", "jorge mario  mendoza lux (punto-net)", "maxis broadband sdn bhd", "millicom cable el salvador s.a. de c.v.", "mobile broadband isp", "ms online", "procono s.a.", "pt. telekomunikasi selular (telkomsel) indonesia", "rasmilink", "telecomunicaciones de guatemala  sociedad anonima", "vietnam posts and telecommunications group", "wimax customer allocation for ctg zone"] |
+| Non-BD Sign-ins | **77** → ["AU", "ES", "GT", "HR", "ID", "IE", "KE", "MY", "PE", "PT", "PY", "SV", "VN", "ZA"] |
+| Unknown IP Sign-ins | 84 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 130 |
+| High Risk Sign-ins | 42 |
+| Managed / Unmanaged | 0 / 7960 (100.0%) |
+| Alerts | 22 (first: 2026-04-24, last: 2026-05-05) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
 ### 🔴 Likely Compromised — Saiful Islam (PDD/ABL)
 
 - **Email:** `Saiful_Islam@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Product Development Department
 - **Current Risk:** nan
-- **Anomaly Score:** 355.0
+- **Anomaly Score:** 695.0
 
 | Metric | Value |
 |--------|-------|
@@ -441,12 +341,87 @@
 
 ---
 
+### 🔴 Likely Compromised — Zakir Ahmed (HRD/CMBD)
+
+- **Email:** `Zakir.Ahmed@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Human Resources Department
+- **Current Risk:** nan
+- **Anomaly Score:** 690.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 12988 (30 active days) |
+| Trusted IPs | 3 / 123 unique |
+| Countries | ["BA", "BD", "CA", "EC", "HN", "ID", "IL", "KE", "MX", "NL", "PE", "PH", "PY", "SE", "SV"] |
+| ISPs | ["aamra networks limited  internet service provider.", "axiata (bangladesh) limited", "banco central de reserva de el salvador", "bezeq-isp-broadband", "cogent communications  llc", "customer allocation for uttara zone", "ecuanet - corporacion ecuatoriana de informacion", "gesti n de direccionamiento uninet", "giipon peru s.a.c.", "globalnet.hn", "globe telecom (gmcr inc)", "internal equipment", "level3-user", "n cleo s.a.", "odido netherlands b.v.", "pt telkom indonesia", "savar 7 brig battalion", "telecel s.a.", "telemach system", "telenor sverige ab", "telia network services", "ufinet el salvador  s. a. de c. v.", "videotron ipv6", "wimax customer allocation for ctg zone", "wimax customer allocation for dhaka zone", "ziggo consumers"] |
+| Non-BD Sign-ins | **89** → ["BA", "CA", "EC", "HN", "ID", "IL", "KE", "MX", "NL", "PE", "PH", "PY", "SE", "SV"] |
+| Unknown IP Sign-ins | 3279 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 1279 |
+| High Risk Sign-ins | 36 |
+| Managed / Unmanaged | 0 / 12988 (100.0%) |
+| Alerts | 17 (first: 2026-04-21, last: 2026-05-07) |
+| Phishing Emails | 1 |
+| Suspicious ISPs | ["ecuanet - corporacion ecuatoriana de informacion"] |
+
+---
+
+### 🔴 Likely Compromised — Jumur Akter (DYE/HAY)
+
+- **Email:** `Jumur.Akter@crystal-cet.com.bd`
+- **Entity:** CETBD | **Dept:** Dyeing
+- **Current Risk:** nan
+- **Anomaly Score:** 685.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 7326 (30 active days) |
+| Trusted IPs | 1 / 24 unique |
+| Countries | ["AR", "AU", "BD", "CA", "ES", "GR", "HN", "HR", "ID", "IL", "IQ", "MX", "PT", "PY", "RS", "SE"] |
+| ISPs | ["013 netvision", "a1 srbija d.o.o", "axiata (bangladesh) limited", "bezeq- the israel telecommunication corp. ltd.", "cablecolor s.a.", "distributel communications limited", "dsl-ull", "gig net sociedad anonima", "iskon internet d.d.", "kurdistan net company for computer and internet ltd.", "leap telecommunications pty ltd", "mega cable s.a. de c.v.", "modhumoti internet service", "multiprotocol service provider to other isp s and end users", "pt. telekomunikasi selular (telkomsel) indonesia", "tele2 mobile handset for sweden", "telefonica de argentina", "telefonica de espana sau", "ufinet paraguay s.a.", "wimax customer allocation for ctg zone", "yesdbs"] |
+| Non-BD Sign-ins | **90** → ["AR", "AU", "CA", "ES", "GR", "HN", "HR", "ID", "IL", "IQ", "MX", "PT", "PY", "RS", "SE"] |
+| Unknown IP Sign-ins | 136 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 1257 |
+| High Risk Sign-ins | 33 |
+| Managed / Unmanaged | 0 / 7326 (100.0%) |
+| Alerts | 29 (first: 2026-04-19, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Masud RanaWH (FGW/CMBD)
+
+- **Email:** `Masud.RanaWH@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Finished Goods Warehouse
+- **Current Risk:** nan
+- **Anomaly Score:** 685.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 2109 (31 active days) |
+| Trusted IPs | 1 / 22 unique |
+| Countries | ["AT", "BD", "CL", "DO", "DZ", "ES", "HN", "HR", "IQ", "IT", "MX", "MY", "PT", "PY", "TN", "TW", "UZ"] |
+| ISPs | ["ati - agence tunisienne internet", "cable sistema s.r.l. de c.v.", "celcom axiata berhad", "customer allocation for uttara zone", "dongfong technology co. ltd.", "fawri", "gesti n de direccionamiento uninet", "high speed internet customers", "jazztel triple play services", "mega cable s.a. de c.v.", "n cleo s.a.", "nas dhcp pool nola", "nos comunicacoes s.a.", "o3 telecom", "ot - optima telekom d.d.", "r  sidentiel(oran1et 2)", "telef nica chile s.a.", "tmnst", "uzbektelekom joint stock company", "wind telecom s.a."] |
+| Non-BD Sign-ins | **84** → ["AT", "CL", "DO", "DZ", "ES", "HN", "HR", "IQ", "IT", "MX", "MY", "PT", "PY", "TN", "TW", "UZ"] |
+| Unknown IP Sign-ins | 84 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 172 |
+| High Risk Sign-ins | 27 |
+| Managed / Unmanaged | 0 / 2109 (100.0%) |
+| Alerts | 20 (first: 2026-04-19, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
 ### 🔴 Likely Compromised — Golam Azam (PRD/CMBD)
 
 - **Email:** `Golam.Azam@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Production
 - **Current Risk:** nan
-- **Anomaly Score:** 355.0
+- **Anomaly Score:** 675.0
 
 | Metric | Value |
 |--------|-------|
@@ -466,137 +441,12 @@
 
 ---
 
-### 🔴 Likely Compromised — Atanu Roy (Fin/BD-SSC)
-
-- **Email:** `Atanu.roy@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Finance
-- **Current Risk:** nan
-- **Anomaly Score:** 350.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 3972 (26 active days) |
-| Trusted IPs | 1 / 22 unique |
-| Countries | ["AT", "BD", "CA", "CL", "GR", "HN", "IT", "MY", "PT", "PY", "SE", "SV", "TR", "TW"] |
-| ISPs | ["amx paraguay sa", "bismillah telecom service", "chunghwa telecom co. ltd.", "customer allocation for uttara zone", "dsl-ull", "guneydogu telekom internet bilisim ve iletisim hiz tic ltd s", "hoshin multimedia center inc", "millicom cable honduras s.a. de c.v.", "n cleo s.a.", "pacifico cable spa.", "pt comunicacoes s.a.", "siscomp network s.a de c.v(ego-internet)", "sympatico hse", "tele2 hfc", "telesystem tirol", "tellas s.a.", "tmnst", "tt adsl-tt net_ dinamik_gay", "virgo communication ltd", "wimax customer allocation for ctg zone", "wind telecomunicazioni s.p.a"] |
-| Non-BD Sign-ins | **73** → ["AT", "CA", "CL", "GR", "HN", "IT", "MY", "PT", "PY", "SE", "SV", "TR", "TW"] |
-| Unknown IP Sign-ins | 90 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 180 |
-| High Risk Sign-ins | 29 |
-| Managed / Unmanaged | 0 / 3972 (100.0%) |
-| Alerts | 17 (first: 2026-04-19, last: 2026-05-08) |
-| Phishing Emails | 1 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Ariful Islam (PPC/HAY)
-
-- **Email:** `arif.islam@crystal-cet.com.bd`
-- **Entity:** CETBD | **Dept:** Production Planning & Control
-- **Current Risk:** nan
-- **Anomaly Score:** 350.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2006 (28 active days) |
-| Trusted IPs | 1 / 22 unique |
-| Countries | ["AT", "BA", "BD", "CA", "DZ", "EC", "ES", "GR", "HN", "IE", "IT", "MX", "PT", "RS", "SV", "TH", "UZ"] |
-| ISPs | ["a1_serbia public pool", "bh telecom  pppoe dynamic pool", "cable modem customers (cpe)", "cte s.a. de c.v.", "digi net", "digi spain telecom ipv6", "eircom", "gesti n de direccionamiento uninet", "jazztel triple play services", "megatel-ec s.a.", "millicom cable honduras s.a. de c.v.", "mobilepools", "multiprotocol service provider to other isp s and end users", "nos comunicacoes s.a.", "pool xdsl et fttx", "start communications", "total play telecomunicaciones  s.a.p.i. de c.v.", "true internet co.  ltd.", "uzbektelekom joint stock company", "wimax customer allocation for ctg zone", "wind tre s.p.a."] |
-| Non-BD Sign-ins | **76** → ["AT", "BA", "CA", "DZ", "EC", "ES", "GR", "HN", "IE", "IT", "MX", "PT", "RS", "SV", "TH", "UZ"] |
-| Unknown IP Sign-ins | 79 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 113 |
-| High Risk Sign-ins | 24 |
-| Managed / Unmanaged | 0 / 2006 (100.0%) |
-| Alerts | 21 (first: 2026-04-18, last: 2026-05-05) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Shuhel Mohammed (PDD/ABL)
-
-- **Email:** `Shuhel_Mohammed@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Product Development Department
-- **Current Risk:** nan
-- **Anomaly Score:** 350.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 4078 (31 active days) |
-| Trusted IPs | 1 / 21 unique |
-| Countries | ["AR", "AT", "BA", "BD", "DZ", "GR", "HN", "IE", "IL", "IN", "NL", "PY", "RS", "TW", "UZ", "VN"] |
-| ISPs | ["013 netvision", "a1 telekom austria ag - business customers", "amx argentina s.a.", "chunghwa telecom co. ltd.", "easy (oran 1 et 2)", "hotnet pools", "ht d.o.o. mostar", "multicable de honduras", "netplus broadband services private limited", "nova telecommunications & media single member s.a", "telecel s.a.", "telekom srbija  adsl users", "telekom srbija a.d.", "uzbektelekom joint stock company", "viettel group", "vodafone ireland limited", "vodafone isp", "vos bewindvoering vof", "wimax customer allocation for dhaka zone"] |
-| Non-BD Sign-ins | **82** → ["AR", "AT", "BA", "DZ", "GR", "HN", "IE", "IL", "IN", "NL", "PY", "RS", "TW", "UZ", "VN"] |
-| Unknown IP Sign-ins | 82 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 221 |
-| High Risk Sign-ins | 26 |
-| Managed / Unmanaged | 0 / 4078 (100.0%) |
-| Alerts | 21 (first: 2026-04-21, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — A.B.M Moklasur Rahman (MER/CMBD)
-
-- **Email:** `Abm.Moklasur@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Merchandising - M&S
-- **Current Risk:** nan
-- **Anomaly Score:** 340.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 9476 (30 active days) |
-| Trusted IPs | 1 / 52 unique |
-| Countries | ["BD", "CA", "DZ", "ES", "GT", "HN", "HR", "ID", "IT", "MY", "PE", "PT", "RS", "SE", "TN", "UZ", "VN"] |
-| ISPs | ["ati - agence tunisienne internet", "axiata (bangladesh) limited", "b.net hrvatska d.o.o.", "city wide communications inc.", "connesi customers pool", "digi telecommunications sdn bhd", "dsl-ull", "fawri ca1", "jazztel triple play services", "meo mobile customers", "minju online", "pt. yasmin amanah media", "rogers communications canada inc.", "sat-trakt telecommunications", "sercom de honduras", "sympatico hse", "tele2 customer broadband access", "tigo guatemala corp", "tiscali italia spa", "uzbektelekom joint stock company", "viettel group", "wi-net telecom sac", "wimax customer allocation for ctg zone"] |
-| Non-BD Sign-ins | **78** → ["CA", "DZ", "ES", "GT", "HN", "HR", "ID", "IT", "MY", "PE", "PT", "RS", "SE", "TN", "UZ", "VN"] |
-| Unknown IP Sign-ins | 373 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 458 |
-| High Risk Sign-ins | 20 |
-| Managed / Unmanaged | 0 / 9476 (100.0%) |
-| Alerts | 19 (first: 2026-04-22, last: 2026-05-08) |
-| Phishing Emails | 2 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Babu Sarker (SPL/ABL)
-
-- **Email:** `Babu_Sarker2@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Sample
-- **Current Risk:** nan
-- **Anomaly Score:** 335.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2473 (29 active days) |
-| Trusted IPs | 1 / 24 unique |
-| Countries | ["BD", "DO", "HR", "ID", "IE", "IQ", "IT", "NL", "PE", "SE", "TH", "UZ", "VN", "ZA"] |
-| ISPs | ["ais fibre", "compa  a dominicana de tel fonos s. a.", "dai ip cho dich vu adsl dgn nan", "digi italy ipv6", "eircom", "hrvatski telekom d.d.", "kpn b.v.", "kurdistan net company for computer and internet ltd.", "nextnet s.a.c", "pt megatama cemerlang gemilang", "pt. telekomunikasi selular (telkomsel) indonesia", "spacex services  inc.", "tele2 customer broadband access", "triple t broadband public company limited", "uzbektelekom joint stock company", "vietnam posts and telecommunications group", "vodacom business (ens)", "vodafone ireland limited", "vodafone isp", "wi-net telecom sac", "wimax customer allocation for dhaka zone"] |
-| Non-BD Sign-ins | **80** → ["DO", "HR", "ID", "IE", "IQ", "IT", "NL", "PE", "SE", "TH", "UZ", "VN", "ZA"] |
-| Unknown IP Sign-ins | 81 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 172 |
-| High Risk Sign-ins | 27 |
-| Managed / Unmanaged | 0 / 2473 (100.0%) |
-| Alerts | 17 (first: 2026-04-19, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
 ### 🔴 Likely Compromised — Airin Rahman Rakhi (SUS/CMBD)
 
 - **Email:** `Airin.Rahman@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Sustainability
 - **Current Risk:** nan
-- **Anomaly Score:** 330.0
+- **Anomaly Score:** 670.0
 
 | Metric | Value |
 |--------|-------|
@@ -616,51 +466,26 @@
 
 ---
 
-### 🔴 Likely Compromised — Mahmudul Hasan (PAK/CMBD)
+### 🔴 Likely Compromised — Ariful Islam (PPC/HAY)
 
-- **Email:** `Mahmudul.Hasan@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Finishing
+- **Email:** `arif.islam@crystal-cet.com.bd`
+- **Entity:** CETBD | **Dept:** Production Planning & Control
 - **Current Risk:** nan
-- **Anomaly Score:** 330.0
+- **Anomaly Score:** 670.0
 
 | Metric | Value |
 |--------|-------|
-| Total Sign-ins | 10091 (30 active days) |
-| Trusted IPs | 1 / 56 unique |
-| Countries | ["AT", "AU", "BD", "DZ", "ES", "IE", "IL", "IN", "MX", "NL", "PE", "PS", "SV", "VE"] |
-| ISPs | ["america movil peru s.a.c.", "cellucar subscribers for ggsn rh & yv", "cpe customers nl", "cte s.a. de c.v.", "digi spain telecom ipv6", "galanet solution c.a.", "high speed internet customers", "lighthouse networks customer pool7", "mada al-arab general services company", "optus internet pty ltd", "red de servicios ip", "reseau 4g lte", "stadtwerke kufstein gmbh", "telefonica de espana sau", "uninet", "wi-net telecom sac", "wimax customer allocation for ctg zone"] |
-| Non-BD Sign-ins | **71** → ["AT", "AU", "DZ", "ES", "IE", "IL", "IN", "MX", "NL", "PE", "PS", "SV", "VE"] |
-| Unknown IP Sign-ins | 314 |
+| Total Sign-ins | 2006 (28 active days) |
+| Trusted IPs | 1 / 22 unique |
+| Countries | ["AT", "BA", "BD", "CA", "DZ", "EC", "ES", "GR", "HN", "IE", "IT", "MX", "PT", "RS", "SV", "TH", "UZ"] |
+| ISPs | ["a1_serbia public pool", "bh telecom  pppoe dynamic pool", "cable modem customers (cpe)", "cte s.a. de c.v.", "digi net", "digi spain telecom ipv6", "eircom", "gesti n de direccionamiento uninet", "jazztel triple play services", "megatel-ec s.a.", "millicom cable honduras s.a. de c.v.", "mobilepools", "multiprotocol service provider to other isp s and end users", "nos comunicacoes s.a.", "pool xdsl et fttx", "start communications", "total play telecomunicaciones  s.a.p.i. de c.v.", "true internet co.  ltd.", "uzbektelekom joint stock company", "wimax customer allocation for ctg zone", "wind tre s.p.a."] |
+| Non-BD Sign-ins | **76** → ["AT", "BA", "CA", "DZ", "EC", "ES", "GR", "HN", "IE", "IT", "MX", "PT", "RS", "SV", "TH", "UZ"] |
+| Unknown IP Sign-ins | 79 |
 | Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 1581 |
-| High Risk Sign-ins | 26 |
-| Managed / Unmanaged | 0 / 10091 (100.0%) |
-| Alerts | 11 (first: 2026-04-23, last: 2026-05-06) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Nila Hasda (MER/CMBD)
-
-- **Email:** `Nila.Hasda@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Merchandising - M&S
-- **Current Risk:** nan
-- **Anomaly Score:** 325.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 7256 (28 active days) |
-| Trusted IPs | 1 / 46 unique |
-| Countries | ["BD", "CA", "GR", "HN", "HR", "IQ", "IT", "MX", "PE", "PH", "PY", "RS", "SV"] |
-| ISPs | ["a1 srbija d.o.o", "a1_serbia public ip addresses", "aamra networks limited  internet service provider.", "cte s.a. de c.v.", "gca telecom", "gesti n de direccionamiento uninet", "giga fibra", "grameenphone ltd.", "hrvatski telekom d.d.", "ipv6 address space for residentialthr customers", "kurdistan net company for computer and internet ltd.", "millicom cable honduras s.a. de c.v.", "nova telecommunications & media single member s.a", "pacific internet philippines", "persona communications inc.", "telecel s.a.", "telekom srbija  adsl users", "wimax customer allocation for ctg zone", "wind tre s.p.a."] |
-| Non-BD Sign-ins | **62** → ["CA", "GR", "HN", "HR", "IQ", "IT", "MX", "PE", "PH", "PY", "RS", "SV"] |
-| Unknown IP Sign-ins | 631 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 675 |
-| High Risk Sign-ins | 27 |
-| Managed / Unmanaged | 0 / 7256 (100.0%) |
-| Alerts | 20 (first: 2026-04-20, last: 2026-05-08) |
+| Off-hours Sign-ins | 113 |
+| High Risk Sign-ins | 24 |
+| Managed / Unmanaged | 0 / 2006 (100.0%) |
+| Alerts | 21 (first: 2026-04-18, last: 2026-05-05) |
 | Phishing Emails | 0 |
 | Suspicious ISPs | [] |
 
@@ -671,7 +496,7 @@
 - **Email:** `Tanvir.Ahmed@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Finishing
 - **Current Risk:** nan
-- **Anomaly Score:** 325.0
+- **Anomaly Score:** 665.0
 
 | Metric | Value |
 |--------|-------|
@@ -691,12 +516,237 @@
 
 ---
 
+### 🔴 Likely Compromised — A.B.M Moklasur Rahman (MER/CMBD)
+
+- **Email:** `Abm.Moklasur@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Merchandising - M&S
+- **Current Risk:** nan
+- **Anomaly Score:** 660.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 9476 (30 active days) |
+| Trusted IPs | 1 / 52 unique |
+| Countries | ["BD", "CA", "DZ", "ES", "GT", "HN", "HR", "ID", "IT", "MY", "PE", "PT", "RS", "SE", "TN", "UZ", "VN"] |
+| ISPs | ["ati - agence tunisienne internet", "axiata (bangladesh) limited", "b.net hrvatska d.o.o.", "city wide communications inc.", "connesi customers pool", "digi telecommunications sdn bhd", "dsl-ull", "fawri ca1", "jazztel triple play services", "meo mobile customers", "minju online", "pt. yasmin amanah media", "rogers communications canada inc.", "sat-trakt telecommunications", "sercom de honduras", "sympatico hse", "tele2 customer broadband access", "tigo guatemala corp", "tiscali italia spa", "uzbektelekom joint stock company", "viettel group", "wi-net telecom sac", "wimax customer allocation for ctg zone"] |
+| Non-BD Sign-ins | **78** → ["CA", "DZ", "ES", "GT", "HN", "HR", "ID", "IT", "MY", "PE", "PT", "RS", "SE", "TN", "UZ", "VN"] |
+| Unknown IP Sign-ins | 373 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 458 |
+| High Risk Sign-ins | 20 |
+| Managed / Unmanaged | 0 / 9476 (100.0%) |
+| Alerts | 19 (first: 2026-04-22, last: 2026-05-08) |
+| Phishing Emails | 2 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Asraful Islam (QAD/ABL)
+
+- **Email:** `Asraful_Islam2@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Quality Assurance
+- **Current Risk:** nan
+- **Anomaly Score:** 650.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 2741 (28 active days) |
+| Trusted IPs | 1 / 27 unique |
+| Countries | ["BD", "CA", "DO", "EC", "ES", "GR", "HN", "ID", "IE", "IL", "KE", "NL", "PT", "RS", "SE", "SV", "TW", "ZA"] |
+| ISPs | ["caiza elbay susana iveth", "cogent communications  llc", "earth telecommunication(pvt.)ltd.", "grameenphone ltd.", "ipv6 address space for fixed broadband services", "jazztel triple play services", "ke-sfc-gprs-edge-3g-lte-mobile wifi-service-ip", "mazeda networks limited", "meo - servicos de comunicacoes e multimedia s.a.", "multicable de honduras", "ote sa (hellenic telecommunications organisation)", "ownit broadband", "pool for fixed wba users", "pt lintas network solusi", "rain group holdings (pty) ltd", "shaw communications", "sonico comunicaciones srl", "supernet for all bng dynamic delegated prefix 40 pools", "tbc", "telekom srbija  adsl users", "telia network services", "telkom sa limited", "vodafone isp", "wimax customer allocation for dhaka zone"] |
+| Non-BD Sign-ins | **72** → ["CA", "DO", "EC", "ES", "GR", "HN", "ID", "IE", "IL", "KE", "NL", "PT", "RS", "SE", "SV", "TW", "ZA"] |
+| Unknown IP Sign-ins | 94 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 276 |
+| High Risk Sign-ins | 14 |
+| Managed / Unmanaged | 0 / 2741 (100.0%) |
+| Alerts | 21 (first: 2026-04-18, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Shuhel Mohammed (PDD/ABL)
+
+- **Email:** `Shuhel_Mohammed@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Product Development Department
+- **Current Risk:** nan
+- **Anomaly Score:** 650.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 4078 (31 active days) |
+| Trusted IPs | 1 / 21 unique |
+| Countries | ["AR", "AT", "BA", "BD", "DZ", "GR", "HN", "IE", "IL", "IN", "NL", "PY", "RS", "TW", "UZ", "VN"] |
+| ISPs | ["013 netvision", "a1 telekom austria ag - business customers", "amx argentina s.a.", "chunghwa telecom co. ltd.", "easy (oran 1 et 2)", "hotnet pools", "ht d.o.o. mostar", "multicable de honduras", "netplus broadband services private limited", "nova telecommunications & media single member s.a", "telecel s.a.", "telekom srbija  adsl users", "telekom srbija a.d.", "uzbektelekom joint stock company", "viettel group", "vodafone ireland limited", "vodafone isp", "vos bewindvoering vof", "wimax customer allocation for dhaka zone"] |
+| Non-BD Sign-ins | **82** → ["AR", "AT", "BA", "DZ", "GR", "HN", "IE", "IL", "IN", "NL", "PY", "RS", "TW", "UZ", "VN"] |
+| Unknown IP Sign-ins | 82 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 221 |
+| High Risk Sign-ins | 26 |
+| Managed / Unmanaged | 0 / 4078 (100.0%) |
+| Alerts | 21 (first: 2026-04-21, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Atanu Roy (Fin/BD-SSC)
+
+- **Email:** `Atanu.roy@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Finance
+- **Current Risk:** nan
+- **Anomaly Score:** 610.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 3972 (26 active days) |
+| Trusted IPs | 1 / 22 unique |
+| Countries | ["AT", "BD", "CA", "CL", "GR", "HN", "IT", "MY", "PT", "PY", "SE", "SV", "TR", "TW"] |
+| ISPs | ["amx paraguay sa", "bismillah telecom service", "chunghwa telecom co. ltd.", "customer allocation for uttara zone", "dsl-ull", "guneydogu telekom internet bilisim ve iletisim hiz tic ltd s", "hoshin multimedia center inc", "millicom cable honduras s.a. de c.v.", "n cleo s.a.", "pacifico cable spa.", "pt comunicacoes s.a.", "siscomp network s.a de c.v(ego-internet)", "sympatico hse", "tele2 hfc", "telesystem tirol", "tellas s.a.", "tmnst", "tt adsl-tt net_ dinamik_gay", "virgo communication ltd", "wimax customer allocation for ctg zone", "wind telecomunicazioni s.p.a"] |
+| Non-BD Sign-ins | **73** → ["AT", "CA", "CL", "GR", "HN", "IT", "MY", "PT", "PY", "SE", "SV", "TR", "TW"] |
+| Unknown IP Sign-ins | 90 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 180 |
+| High Risk Sign-ins | 29 |
+| Managed / Unmanaged | 0 / 3972 (100.0%) |
+| Alerts | 17 (first: 2026-04-19, last: 2026-05-08) |
+| Phishing Emails | 1 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Mukul Hossain (DYE/HAY)
+
+- **Email:** `Mukul.Hossain@crystal-cet.com.bd`
+- **Entity:** CETBD | **Dept:** Dyeing
+- **Current Risk:** nan
+- **Anomaly Score:** 605.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 4408 (29 active days) |
+| Trusted IPs | 1 / 19 unique |
+| Countries | ["AR", "BD", "DZ", "ES", "HN", "ID", "MY", "PE", "PT", "PY", "SE", "SV", "TW"] |
+| ISPs | ["america movil peru s.a.c.", "chunghwa telecom co. ltd.", "conexis s.r.l.", "douglas back pavan (si net)", "earth telecommunication(pvt.)ltd.", "maijdee supernet", "meo - servicos de comunicacoes e multimedia s.a.", "multimedia network  s.a. de c.v.", "n cleo s.a.", "pt indo access semesta", "residentiel", "se tele2 broadband", "telef nica celular s.a", "unifi-home", "wimax customer allocation for ctg zone", "xtra telecom s.a."] |
+| Non-BD Sign-ins | **64** → ["AR", "DZ", "ES", "HN", "ID", "MY", "PE", "PT", "PY", "SE", "SV", "TW"] |
+| Unknown IP Sign-ins | 84 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 255 |
+| High Risk Sign-ins | 35 |
+| Managed / Unmanaged | 0 / 4408 (100.0%) |
+| Alerts | 24 (first: 2026-04-18, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Ariful Islam (WASH/ABL)
+
+- **Email:** `Ariful_Islam3@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Washing
+- **Current Risk:** nan
+- **Anomaly Score:** 600.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 2454 (27 active days) |
+| Trusted IPs | 1 / 22 unique |
+| Countries | ["AU", "BD", "BW", "DZ", "ES", "GT", "HN", "HR", "IE", "IN", "PT", "SV", "TH", "TN", "VE", "ZA"] |
+| ISPs | ["10 fl. 72. cat telecom tower bangrak bangkok thailand", "broadband multiplay project  o o dgm bb  noc bsnl bangalore", "confidence power bogra unit-2 limited", "digi spain telecom ipv6", "gabs wimax128-protected", "gca telecom", "hyve", "infinitum s.a.", "jumbo tech", "millicom cable el salvador s.a. de c.v.", "nos wi-fi powered by fon", "residentiel", "smartphone", "telefonica de espana sau", "telemach hrvatska d.o.o.", "this is an allocation to btcl", "three ireland (hutchison) - mobile subscriber pools", "tpg internet pty ltd.", "triple t broadband public company limited", "viginet c.a", "wimax customer allocation for dhaka zone"] |
+| Non-BD Sign-ins | **69** → ["AU", "BW", "DZ", "ES", "GT", "HN", "HR", "IE", "IN", "PT", "SV", "TH", "TN", "VE", "ZA"] |
+| Unknown IP Sign-ins | 75 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 123 |
+| High Risk Sign-ins | 15 |
+| Managed / Unmanaged | 0 / 2454 (100.0%) |
+| Alerts | 18 (first: 2026-04-19, last: 2026-05-08) |
+| Phishing Emails | 1 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Jahid Rifat (IED/ABL)
+
+- **Email:** `Jahid_Rifat@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Industrial Engineering
+- **Current Risk:** nan
+- **Anomaly Score:** 595.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 4303 (27 active days) |
+| Trusted IPs | 1 / 19 unique |
+| Countries | ["AR", "AT", "AU", "BA", "BD", "CL", "GR", "IN", "IQ", "KE", "NL", "PH", "PT", "RS", "SE", "TR"] |
+| ISPs | ["bharti airtel ltd. telemedia services", "cosmote mobile telecommunications s.a.", "fastway manesar digital vision private limited", "home_dsl", "mts d.o.o", "nos comunicacoes s.a.", "o3 telecom", "pacifico cable spa.", "paralelo 52 tv sa", "rasmilink", "satelite customers in north denmark", "starlink chile spa", "t-mobile austria gmbh", "tele2 sverige ab", "telia network services", "telstra limited", "turk telekom adsl-tt net", "wimax customer allocation for dhaka zone", "ziggo consumers"] |
+| Non-BD Sign-ins | **66** → ["AR", "AT", "AU", "BA", "CL", "GR", "IN", "IQ", "KE", "NL", "PH", "PT", "RS", "SE", "TR"] |
+| Unknown IP Sign-ins | 66 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 60 |
+| High Risk Sign-ins | 15 |
+| Managed / Unmanaged | 0 / 4303 (100.0%) |
+| Alerts | 17 (first: 2026-04-21, last: 2026-05-08) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Babu Sarker (SPL/ABL)
+
+- **Email:** `Babu_Sarker2@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Sample
+- **Current Risk:** nan
+- **Anomaly Score:** 595.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 2473 (29 active days) |
+| Trusted IPs | 1 / 24 unique |
+| Countries | ["BD", "DO", "HR", "ID", "IE", "IQ", "IT", "NL", "PE", "SE", "TH", "UZ", "VN", "ZA"] |
+| ISPs | ["ais fibre", "compa  a dominicana de tel fonos s. a.", "dai ip cho dich vu adsl dgn nan", "digi italy ipv6", "eircom", "hrvatski telekom d.d.", "kpn b.v.", "kurdistan net company for computer and internet ltd.", "nextnet s.a.c", "pt megatama cemerlang gemilang", "pt. telekomunikasi selular (telkomsel) indonesia", "spacex services  inc.", "tele2 customer broadband access", "triple t broadband public company limited", "uzbektelekom joint stock company", "vietnam posts and telecommunications group", "vodacom business (ens)", "vodafone ireland limited", "vodafone isp", "wi-net telecom sac", "wimax customer allocation for dhaka zone"] |
+| Non-BD Sign-ins | **80** → ["DO", "HR", "ID", "IE", "IQ", "IT", "NL", "PE", "SE", "TH", "UZ", "VN", "ZA"] |
+| Unknown IP Sign-ins | 81 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 172 |
+| High Risk Sign-ins | 27 |
+| Managed / Unmanaged | 0 / 2473 (100.0%) |
+| Alerts | 17 (first: 2026-04-19, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Mahmudul Hasan (PAK/CMBD)
+
+- **Email:** `Mahmudul.Hasan@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Finishing
+- **Current Risk:** nan
+- **Anomaly Score:** 590.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 10091 (30 active days) |
+| Trusted IPs | 1 / 56 unique |
+| Countries | ["AT", "AU", "BD", "DZ", "ES", "IE", "IL", "IN", "MX", "NL", "PE", "PS", "SV", "VE"] |
+| ISPs | ["america movil peru s.a.c.", "cellucar subscribers for ggsn rh & yv", "cpe customers nl", "cte s.a. de c.v.", "digi spain telecom ipv6", "galanet solution c.a.", "high speed internet customers", "lighthouse networks customer pool7", "mada al-arab general services company", "optus internet pty ltd", "red de servicios ip", "reseau 4g lte", "stadtwerke kufstein gmbh", "telefonica de espana sau", "uninet", "wi-net telecom sac", "wimax customer allocation for ctg zone"] |
+| Non-BD Sign-ins | **71** → ["AT", "AU", "DZ", "ES", "IE", "IL", "IN", "MX", "NL", "PE", "PS", "SV", "VE"] |
+| Unknown IP Sign-ins | 314 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 1581 |
+| High Risk Sign-ins | 26 |
+| Managed / Unmanaged | 0 / 10091 (100.0%) |
+| Alerts | 11 (first: 2026-04-23, last: 2026-05-06) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
 ### 🔴 Likely Compromised — Nahid Hasan (QAD/HAY)
 
 - **Email:** `Nahid.Hasan@crystal-cet.com.bd`
 - **Entity:** CETBD | **Dept:** Quality Assurance
 - **Current Risk:** nan
-- **Anomaly Score:** 325.0
+- **Anomaly Score:** 585.0
 
 | Metric | Value |
 |--------|-------|
@@ -721,7 +771,7 @@
 - **Email:** `Rayhen_Ahmed@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Cutting
 - **Current Risk:** nan
-- **Anomaly Score:** 315.0
+- **Anomaly Score:** 575.0
 
 | Metric | Value |
 |--------|-------|
@@ -741,87 +791,12 @@
 
 ---
 
-### 🔴 Likely Compromised — Asraful Islam (QAD/ABL)
-
-- **Email:** `Asraful_Islam2@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Quality Assurance
-- **Current Risk:** nan
-- **Anomaly Score:** 310.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2741 (28 active days) |
-| Trusted IPs | 1 / 27 unique |
-| Countries | ["BD", "CA", "DO", "EC", "ES", "GR", "HN", "ID", "IE", "IL", "KE", "NL", "PT", "RS", "SE", "SV", "TW", "ZA"] |
-| ISPs | ["caiza elbay susana iveth", "cogent communications  llc", "earth telecommunication(pvt.)ltd.", "grameenphone ltd.", "ipv6 address space for fixed broadband services", "jazztel triple play services", "ke-sfc-gprs-edge-3g-lte-mobile wifi-service-ip", "mazeda networks limited", "meo - servicos de comunicacoes e multimedia s.a.", "multicable de honduras", "ote sa (hellenic telecommunications organisation)", "ownit broadband", "pool for fixed wba users", "pt lintas network solusi", "rain group holdings (pty) ltd", "shaw communications", "sonico comunicaciones srl", "supernet for all bng dynamic delegated prefix 40 pools", "tbc", "telekom srbija  adsl users", "telia network services", "telkom sa limited", "vodafone isp", "wimax customer allocation for dhaka zone"] |
-| Non-BD Sign-ins | **72** → ["CA", "DO", "EC", "ES", "GR", "HN", "ID", "IE", "IL", "KE", "NL", "PT", "RS", "SE", "SV", "TW", "ZA"] |
-| Unknown IP Sign-ins | 94 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 276 |
-| High Risk Sign-ins | 14 |
-| Managed / Unmanaged | 0 / 2741 (100.0%) |
-| Alerts | 21 (first: 2026-04-18, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Ariful Islam (WASH/ABL)
-
-- **Email:** `Ariful_Islam3@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Washing
-- **Current Risk:** nan
-- **Anomaly Score:** 300.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2454 (27 active days) |
-| Trusted IPs | 1 / 22 unique |
-| Countries | ["AU", "BD", "BW", "DZ", "ES", "GT", "HN", "HR", "IE", "IN", "PT", "SV", "TH", "TN", "VE", "ZA"] |
-| ISPs | ["10 fl. 72. cat telecom tower bangrak bangkok thailand", "broadband multiplay project  o o dgm bb  noc bsnl bangalore", "confidence power bogra unit-2 limited", "digi spain telecom ipv6", "gabs wimax128-protected", "gca telecom", "hyve", "infinitum s.a.", "jumbo tech", "millicom cable el salvador s.a. de c.v.", "nos wi-fi powered by fon", "residentiel", "smartphone", "telefonica de espana sau", "telemach hrvatska d.o.o.", "this is an allocation to btcl", "three ireland (hutchison) - mobile subscriber pools", "tpg internet pty ltd.", "triple t broadband public company limited", "viginet c.a", "wimax customer allocation for dhaka zone"] |
-| Non-BD Sign-ins | **69** → ["AU", "BW", "DZ", "ES", "GT", "HN", "HR", "IE", "IN", "PT", "SV", "TH", "TN", "VE", "ZA"] |
-| Unknown IP Sign-ins | 75 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 123 |
-| High Risk Sign-ins | 15 |
-| Managed / Unmanaged | 0 / 2454 (100.0%) |
-| Alerts | 18 (first: 2026-04-19, last: 2026-05-08) |
-| Phishing Emails | 1 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Shahadat Hossain Biplob (PPC/HAY)
-
-- **Email:** `Hossain.Shahadat@crystal-cet.com.bd`
-- **Entity:** CETBD | **Dept:** Production Planning & Controlling
-- **Current Risk:** nan
-- **Anomaly Score:** 295.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2429 (27 active days) |
-| Trusted IPs | 2 / 22 unique |
-| Countries | ["AR", "BA", "BD", "DO", "DZ", "GT", "IL", "IQ", "PH", "PT", "RS", "SE", "SV", "TN"] |
-| ISPs | ["3 customer dynamic address pool", "axiata (bangladesh) limited", "bezeq-isp-broadband", "compa  a dominicana de tel fonos s. a.", "converge ict network", "dsl-ull", "fawri", "isp solutions s.a.", "millicom cable el salvador s.a. de c.v.", "nortvcom  sociedad anonima", "nos comunicacoes s.a.", "o3 telecom", "orange tunisie smartphone customer", "pool adsl et ftth", "residentiel", "starlink argentina srl", "telekom srbija a.d.", "telekom srpske pool for adsl", "wimax customer allocation for ctg zone"] |
-| Non-BD Sign-ins | **70** → ["AR", "BA", "DO", "DZ", "GT", "IL", "IQ", "PH", "PT", "RS", "SE", "SV", "TN"] |
-| Unknown IP Sign-ins | 81 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 228 |
-| High Risk Sign-ins | 19 |
-| Managed / Unmanaged | 0 / 2429 (100.0%) |
-| Alerts | 21 (first: 2026-04-23, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
 ### 🔴 Likely Compromised — Mizanur Rahman(MER/CMBD)
 
 - **Email:** `MizanurRahman.Masum@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Merchandising- M&S
 - **Current Risk:** nan
-- **Anomaly Score:** 295.0
+- **Anomaly Score:** 575.0
 
 | Metric | Value |
 |--------|-------|
@@ -841,26 +816,76 @@
 
 ---
 
-### 🔴 Likely Compromised — Jahid Rifat (IED/ABL)
+### 🔴 Likely Compromised — Nila Hasda (MER/CMBD)
 
-- **Email:** `Jahid_Rifat@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Industrial Engineering
+- **Email:** `Nila.Hasda@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Merchandising - M&S
 - **Current Risk:** nan
-- **Anomaly Score:** 295.0
+- **Anomaly Score:** 565.0
 
 | Metric | Value |
 |--------|-------|
-| Total Sign-ins | 4303 (27 active days) |
-| Trusted IPs | 1 / 19 unique |
-| Countries | ["AR", "AT", "AU", "BA", "BD", "CL", "GR", "IN", "IQ", "KE", "NL", "PH", "PT", "RS", "SE", "TR"] |
-| ISPs | ["bharti airtel ltd. telemedia services", "cosmote mobile telecommunications s.a.", "fastway manesar digital vision private limited", "home_dsl", "mts d.o.o", "nos comunicacoes s.a.", "o3 telecom", "pacifico cable spa.", "paralelo 52 tv sa", "rasmilink", "satelite customers in north denmark", "starlink chile spa", "t-mobile austria gmbh", "tele2 sverige ab", "telia network services", "telstra limited", "turk telekom adsl-tt net", "wimax customer allocation for dhaka zone", "ziggo consumers"] |
-| Non-BD Sign-ins | **66** → ["AR", "AT", "AU", "BA", "CL", "GR", "IN", "IQ", "KE", "NL", "PH", "PT", "RS", "SE", "TR"] |
-| Unknown IP Sign-ins | 66 |
+| Total Sign-ins | 7256 (28 active days) |
+| Trusted IPs | 1 / 46 unique |
+| Countries | ["BD", "CA", "GR", "HN", "HR", "IQ", "IT", "MX", "PE", "PH", "PY", "RS", "SV"] |
+| ISPs | ["a1 srbija d.o.o", "a1_serbia public ip addresses", "aamra networks limited  internet service provider.", "cte s.a. de c.v.", "gca telecom", "gesti n de direccionamiento uninet", "giga fibra", "grameenphone ltd.", "hrvatski telekom d.d.", "ipv6 address space for residentialthr customers", "kurdistan net company for computer and internet ltd.", "millicom cable honduras s.a. de c.v.", "nova telecommunications & media single member s.a", "pacific internet philippines", "persona communications inc.", "telecel s.a.", "telekom srbija  adsl users", "wimax customer allocation for ctg zone", "wind tre s.p.a."] |
+| Non-BD Sign-ins | **62** → ["CA", "GR", "HN", "HR", "IQ", "IT", "MX", "PE", "PH", "PY", "RS", "SV"] |
+| Unknown IP Sign-ins | 631 |
 | Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 60 |
+| Off-hours Sign-ins | 675 |
+| High Risk Sign-ins | 27 |
+| Managed / Unmanaged | 0 / 7256 (100.0%) |
+| Alerts | 20 (first: 2026-04-20, last: 2026-05-08) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Shahadat Hossain Biplob (PPC/HAY)
+
+- **Email:** `Hossain.Shahadat@crystal-cet.com.bd`
+- **Entity:** CETBD | **Dept:** Production Planning & Controlling
+- **Current Risk:** nan
+- **Anomaly Score:** 555.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 2429 (27 active days) |
+| Trusted IPs | 2 / 22 unique |
+| Countries | ["AR", "BA", "BD", "DO", "DZ", "GT", "IL", "IQ", "PH", "PT", "RS", "SE", "SV", "TN"] |
+| ISPs | ["3 customer dynamic address pool", "axiata (bangladesh) limited", "bezeq-isp-broadband", "compa  a dominicana de tel fonos s. a.", "converge ict network", "dsl-ull", "fawri", "isp solutions s.a.", "millicom cable el salvador s.a. de c.v.", "nortvcom  sociedad anonima", "nos comunicacoes s.a.", "o3 telecom", "orange tunisie smartphone customer", "pool adsl et ftth", "residentiel", "starlink argentina srl", "telekom srbija a.d.", "telekom srpske pool for adsl", "wimax customer allocation for ctg zone"] |
+| Non-BD Sign-ins | **70** → ["AR", "BA", "DO", "DZ", "GT", "IL", "IQ", "PH", "PT", "RS", "SE", "SV", "TN"] |
+| Unknown IP Sign-ins | 81 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 228 |
+| High Risk Sign-ins | 19 |
+| Managed / Unmanaged | 0 / 2429 (100.0%) |
+| Alerts | 21 (first: 2026-04-23, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
+### 🔴 Likely Compromised — Ezazul Karim (MER/ABL)
+
+- **Email:** `Ezazul_Karim@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Merchandising
+- **Current Risk:** nan
+- **Anomaly Score:** 535.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 6238 (27 active days) |
+| Trusted IPs | 2 / 24 unique |
+| Countries | ["AR", "AU", "BA", "BD", "DZ", "EC", "ES", "GR", "IE", "IL", "MY", "PH", "TR", "UZ"] |
+| ISPs | ["adsl constantine", "airtel 3g client", "assigned for safura pop customers", "axiata (bangladesh) limited", "cmts gradiska - dhcp pool", "corporacion nacional de telecomunicaciones - cnt ep", "dhcp 17 od", "home_dsl", "iinet limited", "maxis broadband sdn bhd", "orange adsl user", "ote sa (hellenic telecommunications organisation)", "pool adsl et ftth", "robi axitata ltd- data", "robi axitata ltd- infra data", "telecentro s.a.", "ttnet a.s.", "uzbektelekom joint stock company", "virgin media ireland limited", "wimax customer allocation for dhaka zone"] |
+| Non-BD Sign-ins | **44** → ["AR", "AU", "BA", "DZ", "EC", "ES", "GR", "IE", "IL", "MY", "PH", "TR", "UZ"] |
+| Unknown IP Sign-ins | 526 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 306 |
 | High Risk Sign-ins | 15 |
-| Managed / Unmanaged | 0 / 4303 (100.0%) |
-| Alerts | 17 (first: 2026-04-21, last: 2026-05-08) |
+| Managed / Unmanaged | 0 / 6238 (100.0%) |
+| Alerts | 20 (first: 2026-04-18, last: 2026-05-08) |
 | Phishing Emails | 0 |
 | Suspicious ISPs | [] |
 
@@ -871,7 +896,7 @@
 - **Email:** `Rahim.Uddin@crystal-cet.com.bd`
 - **Entity:** CETBD | **Dept:** Quality Assurance
 - **Current Risk:** nan
-- **Anomaly Score:** 290.0
+- **Anomaly Score:** 530.0
 
 | Metric | Value |
 |--------|-------|
@@ -891,12 +916,37 @@
 
 ---
 
+### 🔴 Likely Compromised — Mehedi Hasan Khoka (QAD/CMBD)
+
+- **Email:** `MehediHasan.Khoka@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Quality Assurance
+- **Current Risk:** nan
+- **Anomaly Score:** 515.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 4230 (29 active days) |
+| Trusted IPs | 1 / 17 unique |
+| Countries | ["AT", "BD", "DZ", "GT", "IE", "IL", "MX", "NL", "PT", "PY", "SV", "VN", "ZA"] |
+| ISPs | ["broadband", "cte s.a. de c.v.", "customer allocation for uttara zone", "dsl-ull", "eircom limited", "eurona-brisknet ltd", "gca telecom", "grameenphone ltd.", "kpn b.v.", "magenta telekom", "masternet telecomunicaciones", "residentiel", "router cores", "telecomunicaciones de guatemala  sociedad anonima", "uninet", "viettel group"] |
+| Non-BD Sign-ins | **53** → ["AT", "DZ", "GT", "IE", "IL", "MX", "NL", "PT", "PY", "SV", "VN", "ZA"] |
+| Unknown IP Sign-ins | 61 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 174 |
+| High Risk Sign-ins | 17 |
+| Managed / Unmanaged | 0 / 4230 (100.0%) |
+| Alerts | 13 (first: 2026-04-27, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+
+---
+
 ### 🔴 Likely Compromised — Islam Nurul (QAD/CMBD)
 
 - **Email:** `Islam.Nurul@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Quality Assurance
 - **Current Risk:** nan
-- **Anomaly Score:** 276.0
+- **Anomaly Score:** 496.0
 
 | Metric | Value |
 |--------|-------|
@@ -921,7 +971,7 @@
 - **Email:** `Jahidul_Islam2@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Merchandising
 - **Current Risk:** nan
-- **Anomaly Score:** 276.0
+- **Anomaly Score:** 476.0
 
 | Metric | Value |
 |--------|-------|
@@ -941,51 +991,26 @@
 
 ---
 
-### 🔴 Likely Compromised — Ezazul Karim (MER/ABL)
+### 🔴 Likely Compromised — Md Aiub Hossain (MTN/CMBD)
 
-- **Email:** `Ezazul_Karim@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Merchandising
+- **Email:** `MdAiub.Hossain@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Maintenance
 - **Current Risk:** nan
-- **Anomaly Score:** 275.0
+- **Anomaly Score:** 475.0
 
 | Metric | Value |
 |--------|-------|
-| Total Sign-ins | 6238 (27 active days) |
-| Trusted IPs | 2 / 24 unique |
-| Countries | ["AR", "AU", "BA", "BD", "DZ", "EC", "ES", "GR", "IE", "IL", "MY", "PH", "TR", "UZ"] |
-| ISPs | ["adsl constantine", "airtel 3g client", "assigned for safura pop customers", "axiata (bangladesh) limited", "cmts gradiska - dhcp pool", "corporacion nacional de telecomunicaciones - cnt ep", "dhcp 17 od", "home_dsl", "iinet limited", "maxis broadband sdn bhd", "orange adsl user", "ote sa (hellenic telecommunications organisation)", "pool adsl et ftth", "robi axitata ltd- data", "robi axitata ltd- infra data", "telecentro s.a.", "ttnet a.s.", "uzbektelekom joint stock company", "virgin media ireland limited", "wimax customer allocation for dhaka zone"] |
-| Non-BD Sign-ins | **44** → ["AR", "AU", "BA", "DZ", "EC", "ES", "GR", "IE", "IL", "MY", "PH", "TR", "UZ"] |
-| Unknown IP Sign-ins | 526 |
+| Total Sign-ins | 3165 (25 active days) |
+| Trusted IPs | 1 / 18 unique |
+| Countries | ["AT", "BD", "IT", "MX", "MY", "NL", "PE", "PH", "PT", "SE", "SV", "TN"] |
+| ISPs | ["aamra networks limited  internet service provider.", "cte s.a. de c.v.", "customer allocation for uttara zone", "digi portugal sociedade unipessoal lda", "gesti n de direccionamiento uninet", "home_dsl", "kabel-tv gmunden  e. stadlmayr gesellschaft m.b.h.", "mega cable  s.a. de c.v.", "meo mobile customers", "millicom cable el salvador s.a. de c.v.", "nextnet s.a.c", "onesky communications limited", "ooredootn", "pool for internet users", "se tele2 broadband", "total play telecomunicaciones sa de cv", "unifi-home-imse01.cbj_puj", "vodafone italia s.p.a."] |
+| Non-BD Sign-ins | **53** → ["AT", "IT", "MX", "MY", "NL", "PE", "PH", "PT", "SE", "SV", "TN"] |
+| Unknown IP Sign-ins | 66 |
 | Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 306 |
+| Off-hours Sign-ins | 370 |
 | High Risk Sign-ins | 15 |
-| Managed / Unmanaged | 0 / 6238 (100.0%) |
-| Alerts | 20 (first: 2026-04-18, last: 2026-05-08) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
-### 🔴 Likely Compromised — Mehedi Hasan Khoka (QAD/CMBD)
-
-- **Email:** `MehediHasan.Khoka@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Quality Assurance
-- **Current Risk:** nan
-- **Anomaly Score:** 275.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 4230 (29 active days) |
-| Trusted IPs | 1 / 17 unique |
-| Countries | ["AT", "BD", "DZ", "GT", "IE", "IL", "MX", "NL", "PT", "PY", "SV", "VN", "ZA"] |
-| ISPs | ["broadband", "cte s.a. de c.v.", "customer allocation for uttara zone", "dsl-ull", "eircom limited", "eurona-brisknet ltd", "gca telecom", "grameenphone ltd.", "kpn b.v.", "magenta telekom", "masternet telecomunicaciones", "residentiel", "router cores", "telecomunicaciones de guatemala  sociedad anonima", "uninet", "viettel group"] |
-| Non-BD Sign-ins | **53** → ["AT", "DZ", "GT", "IE", "IL", "MX", "NL", "PT", "PY", "SV", "VN", "ZA"] |
-| Unknown IP Sign-ins | 61 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 174 |
-| High Risk Sign-ins | 17 |
-| Managed / Unmanaged | 0 / 4230 (100.0%) |
-| Alerts | 13 (first: 2026-04-27, last: 2026-05-07) |
+| Managed / Unmanaged | 0 / 3165 (100.0%) |
+| Alerts | 23 (first: 2026-04-21, last: 2026-05-08) |
 | Phishing Emails | 0 |
 | Suspicious ISPs | [] |
 
@@ -996,7 +1021,7 @@
 - **Email:** `Sourav_Saha@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Production Planning & Controlling
 - **Current Risk:** nan
-- **Anomaly Score:** 265.0
+- **Anomaly Score:** 465.0
 
 | Metric | Value |
 |--------|-------|
@@ -1021,7 +1046,7 @@
 - **Email:** `Bablur_Rahman@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Washing
 - **Current Risk:** nan
-- **Anomaly Score:** 265.0
+- **Anomaly Score:** 465.0
 
 | Metric | Value |
 |--------|-------|
@@ -1046,7 +1071,7 @@
 - **Email:** `Fahimuzzaman_Md@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Quality Assurance
 - **Current Risk:** nan
-- **Anomaly Score:** 255.0
+- **Anomaly Score:** 455.0
 
 | Metric | Value |
 |--------|-------|
@@ -1066,37 +1091,12 @@
 
 ---
 
-### 🔴 Likely Compromised — Md Aiub Hossain (MTN/CMBD)
-
-- **Email:** `MdAiub.Hossain@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Maintenance
-- **Current Risk:** nan
-- **Anomaly Score:** 255.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 3165 (25 active days) |
-| Trusted IPs | 1 / 18 unique |
-| Countries | ["AT", "BD", "IT", "MX", "MY", "NL", "PE", "PH", "PT", "SE", "SV", "TN"] |
-| ISPs | ["aamra networks limited  internet service provider.", "cte s.a. de c.v.", "customer allocation for uttara zone", "digi portugal sociedade unipessoal lda", "gesti n de direccionamiento uninet", "home_dsl", "kabel-tv gmunden  e. stadlmayr gesellschaft m.b.h.", "mega cable  s.a. de c.v.", "meo mobile customers", "millicom cable el salvador s.a. de c.v.", "nextnet s.a.c", "onesky communications limited", "ooredootn", "pool for internet users", "se tele2 broadband", "total play telecomunicaciones sa de cv", "unifi-home-imse01.cbj_puj", "vodafone italia s.p.a."] |
-| Non-BD Sign-ins | **53** → ["AT", "IT", "MX", "MY", "NL", "PE", "PH", "PT", "SE", "SV", "TN"] |
-| Unknown IP Sign-ins | 66 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 370 |
-| High Risk Sign-ins | 15 |
-| Managed / Unmanaged | 0 / 3165 (100.0%) |
-| Alerts | 23 (first: 2026-04-21, last: 2026-05-08) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-
----
-
 ### 🔴 Likely Compromised — Rayhan Ali (QAD/ABL)
 
 - **Email:** `Rayhan_Ali@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Quality Assurance
 - **Current Risk:** nan
-- **Anomaly Score:** 227.0
+- **Anomaly Score:** 427.0
 
 | Metric | Value |
 |--------|-------|
@@ -1116,37 +1116,12 @@
 
 ---
 
-### 🔴 Likely Compromised — Ridoy Chondro Barman(RMW/CMBD)
-
-- **Email:** `Ridoy.chondrobarman@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Raw Materials Warehouse
-- **Current Risk:** nan
-- **Anomaly Score:** 183.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2664 (28 active days) |
-| Trusted IPs | 1 / 10 unique |
-| Countries | ["BA", "BD", "DZ", "ES", "NL", "PY", "SE", "TN"] |
-| ISPs | ["jazztel triple play services", "n cleo s.a.", "pool xdsl et fttx", "smartphone", "telecom algeria", "telia network services", "wimax customer allocation for ctg zone", "xento doo zepce", "ziggo consumers"] |
-| Non-BD Sign-ins | **37** → ["BA", "DZ", "ES", "NL", "PY", "SE", "TN"] |
-| Unknown IP Sign-ins | 39 |
-| Unknown Device Sign-ins | 0 |
-| Off-hours Sign-ins | 147 |
-| High Risk Sign-ins | 10 |
-| Managed / Unmanaged | 0 / 2664 (100.0%) |
-| Alerts | 21 (first: 2026-04-22, last: 2026-05-06) |
-| Phishing Emails | 1 |
-| Suspicious ISPs | [] |
-
----
-
 ### 🔴 Likely Compromised — Mustafizur Rahman (QAD/CMBD)
 
 - **Email:** `Rahman.Mustafizur@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Quality Assurance
 - **Current Risk:** nan
-- **Anomaly Score:** 155.0
+- **Anomaly Score:** 355.0
 
 | Metric | Value |
 |--------|-------|
@@ -1166,12 +1141,37 @@
 
 ---
 
+### 🔴 Likely Compromised — Ridoy Chondro Barman(RMW/CMBD)
+
+- **Email:** `Ridoy.chondrobarman@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Raw Materials Warehouse
+- **Current Risk:** nan
+- **Anomaly Score:** 323.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 2664 (28 active days) |
+| Trusted IPs | 1 / 10 unique |
+| Countries | ["BA", "BD", "DZ", "ES", "NL", "PY", "SE", "TN"] |
+| ISPs | ["jazztel triple play services", "n cleo s.a.", "pool xdsl et fttx", "smartphone", "telecom algeria", "telia network services", "wimax customer allocation for ctg zone", "xento doo zepce", "ziggo consumers"] |
+| Non-BD Sign-ins | **37** → ["BA", "DZ", "ES", "NL", "PY", "SE", "TN"] |
+| Unknown IP Sign-ins | 39 |
+| Unknown Device Sign-ins | 0 |
+| Off-hours Sign-ins | 147 |
+| High Risk Sign-ins | 10 |
+| Managed / Unmanaged | 0 / 2664 (100.0%) |
+| Alerts | 21 (first: 2026-04-22, last: 2026-05-06) |
+| Phishing Emails | 1 |
+| Suspicious ISPs | [] |
+
+---
+
 ### 🔴 Likely Compromised — Rubel Mia (CTG/ABL)
 
 - **Email:** `Rubel_Mia@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Cutting
 - **Current Risk:** nan
-- **Anomaly Score:** 148.0
+- **Anomaly Score:** 268.0
 
 | Metric | Value |
 |--------|-------|
@@ -1196,7 +1196,7 @@
 - **Email:** `Durjoy_Areng@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Information Services Department
 - **Current Risk:** nan
-- **Anomaly Score:** 148.0
+- **Anomaly Score:** 268.0
 
 | Metric | Value |
 |--------|-------|
@@ -1221,7 +1221,7 @@
 - **Email:** `Shuvrodev_Bepari@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Administration
 - **Current Risk:** nan
-- **Anomaly Score:** 120.0
+- **Anomaly Score:** 240.0
 
 | Metric | Value |
 |--------|-------|
@@ -1246,7 +1246,7 @@
 - **Email:** `button_lin@crystal-csc.cn`
 - **Entity:** OTHER | **Dept:** Information Services Department
 - **Current Risk:** nan
-- **Anomaly Score:** 110.0
+- **Anomaly Score:** 190.0
 
 | Metric | Value |
 |--------|-------|
@@ -1271,7 +1271,7 @@
 - **Email:** `sumon.mia@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Merchandising - M&S
 - **Current Risk:** nan
-- **Anomaly Score:** 90.0
+- **Anomaly Score:** 170.0
 
 | Metric | Value |
 |--------|-------|
@@ -1296,7 +1296,7 @@
 - **Email:** `Zakarul_Islam@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Finance
 - **Current Risk:** nan
-- **Anomaly Score:** 86.0
+- **Anomaly Score:** 126.0
 
 | Metric | Value |
 |--------|-------|

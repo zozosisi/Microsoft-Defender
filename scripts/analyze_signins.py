@@ -245,6 +245,17 @@ def detect_user_anomalies(user_df: pd.DataFrame, baseline: dict) -> dict:
         user_df.loc[non_bd_mask, "Country"].unique().tolist()
     )
 
+    # VPN vs Hacker Botnet logic
+    # Hacker: Non-BD sign-ins with Unknown Device (empty or not in trusted)
+    trusted_devices = set(baseline["TrustedDevices"])
+    hacker_mask = non_bd_mask & (~user_df["DeviceName"].isin(trusted_devices) | user_df["DeviceName"].isna() | (user_df["DeviceName"].str.strip() == ""))
+    vpn_mask = non_bd_mask & user_df["DeviceName"].isin(trusted_devices) & user_df["DeviceName"].notna() & (user_df["DeviceName"].str.strip() != "")
+
+    anomalies["HackerBotnetSignIns"] = int(hacker_mask.sum())
+    anomalies["VPNSignIns"] = int(vpn_mask.sum())
+    anomalies["HackerBotnetCountries"] = sorted(user_df.loc[hacker_mask, "Country"].unique().tolist())
+    anomalies["VPNCountries"] = sorted(user_df.loc[vpn_mask, "Country"].unique().tolist())
+
     # Unknown device sign-ins
     trusted_devices = set(baseline["TrustedDevices"])
     unknown_dev_mask = ~user_df["DeviceName"].isin(trusted_devices) & user_df["DeviceName"].notna()
@@ -353,9 +364,11 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     """Compute anomaly score and verdict for a user."""
     score = 0
 
-    # Foreign country sign-ins: Penalize variety, not raw count
-    # +10 points for each distinct non-BD country
-    score += len(anomalies.get("NonBDCountries", [])) * 10
+    # Foreign country sign-ins: Penalize Hacker variety, not VPN variety
+    # VPN Countries = +0 points (legitimate)
+    # Hacker Countries = +30 points per distinct country
+    score += len(anomalies.get("VPNCountries", [])) * 0
+    score += len(anomalies.get("HackerBotnetCountries", [])) * 30
 
     # Suspicious ISPs: High penalty per suspicious ISP
     score += len(isp_info.get("SuspiciousISPs", [])) * 15
