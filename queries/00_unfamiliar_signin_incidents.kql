@@ -27,6 +27,9 @@ AlertInfo
         AllEntityTypes = make_set(EntityType)
       by AlertId
 ) on AlertId
+| where AccountUpn endswith "crystal-abl.com.bd"
+    or AccountUpn endswith "bd.crystal-martin.com"
+    or AccountUpn endswith "crystal-cet.com.bd"
 | project
     AlertId,
     AlertTimestamp = Timestamp,
