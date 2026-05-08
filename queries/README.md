@@ -40,6 +40,9 @@ Query 0 (AlertInfo + AlertEvidence)
 | 4 | `04_user_profiles.kql` | `user_profiles.csv` | User identity info |
 | 5 | `05_phishing_check.kql` | `phishing_emails.csv` | Phishing emails to affected users |
 | 6 | `06_cloudapp_isp.kql` | `cloudapp_isp.csv` | Backup ISP data (CloudAppEvents) |
+| 7 | `07_vpn_vs_hacker_investigation.kql` | `07_zakir_ahmed_vpn_vs_hacker.csv` | Điều tra thiết bị VPN vs Hacker |
+| 8 | `08_post_breach_investigation.kql` | `08_zakir_ahmed_post_breach_events.csv` | Truy vết CloudApp (Single User) |
+| 9 | `09_cloudapp_events_bulk.kql` | `cloudapp_events.csv` | Bulk Data Breach export cho Python |
 
 ## Cách chạy
 
