@@ -46,7 +46,8 @@ Hệ thống so sánh các lần đăng nhập với Baseline để tìm ra sự
 *   **VPN/Công tác hợp lệ:** Truy cập từ quốc gia lạ **NHƯNG** thiết bị sử dụng là **Trusted Device** (Tên máy tính quen thuộc). → +0đ.
 
 **Tầng 2 — Suspicious IP (Bất kể quốc gia — bắt hacker nội địa):**
-*   Một IP được coi là **Suspicious** nếu nó thỏa 2 điều kiện: **Unknown IP** (không nằm trong TrustedIPs) **VÀ** **Unknown Device** (không có tên thiết bị hoặc thiết bị lạ). → Phạt +5đ/IP.
+*   Một IP được coi là **Suspicious** nếu nó là **Unknown IP** (không nằm trong TrustedIPs) **VÀ** **chưa từng xuất hiện cùng Trusted Device**. → Phạt +5đ/IP.
+*   *Lý do:* Entra ID thường xuyên bị lỗi "inconsistent telemetry" (nhả log mất thông tin DeviceName trên cùng 1 IP/Laptop hợp lệ). Việc check "IP đó đã bao giờ dùng thiết bị an toàn chưa" giúp loại trừ 100% False Positive cho nhân viên đi công tác dùng WiFi công cộng.
 *   Logic này được bổ sung sau [Post-Mortem #1](post_mortem_logic_fixes.md): hacker có thể dùng IP nội địa (cùng country với user) nên không thể chỉ dựa vào Foreign Country.
 *   **Lưu ý:** Suspicious IP scoring **không double-count** với Benign Unknown IP scoring. Mỗi IP chỉ rơi vào 1 nhóm.
 

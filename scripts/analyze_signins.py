@@ -285,8 +285,12 @@ def detect_user_anomalies(user_df: pd.DataFrame, baseline: dict) -> dict:
     unknown_dev_mask = ~user_df["DeviceName"].isin(trusted_devices) | user_df["DeviceName"].isna() | (user_df["DeviceName"].str.strip() == "")
     anomalies["UnknownDeviceSignIns"] = int(unknown_dev_mask.sum())
     
-    # Suspicious IPs for Data Breach Analysis (Unknown IP + Unknown Device)
-    suspicious_ip_mask = unknown_ip_mask & unknown_dev_mask
+    # Trusted Device IPs (IPs that have been seen with a Trusted Device at least once)
+    trusted_device_ips = set(user_df.loc[user_df["DeviceName"].isin(trusted_devices), "IPAddress"].dropna().unique())
+    
+    # Suspicious IPs for Data Breach Analysis (Unknown IP + never used with a Trusted Device)
+    # This prevents False Positives where Entra ID telemetry randomly drops the DeviceName on a legitimate connection.
+    suspicious_ip_mask = unknown_ip_mask & ~user_df["IPAddress"].isin(trusted_device_ips)
     suspicious_ip_list = sorted(user_df.loc[suspicious_ip_mask, "IPAddress"].dropna().unique().tolist())
     anomalies["SuspiciousIPList"] = suspicious_ip_list
     

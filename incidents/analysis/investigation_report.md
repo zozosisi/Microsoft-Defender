@@ -1,6 +1,6 @@
 # 🔍 Investigation Report: Unfamiliar Sign-in — BD Users
 
-> **Generated:** 2026-05-08 14:24
+> **Generated:** 2026-05-08 14:43
 > **Users analyzed:** 54
 > **Trusted threshold:** 5.0%
 
@@ -8,8 +8,8 @@
 
 ## Summary
 
-- **🚨 CONFIRMED COMPROMISED (Data Breach):** 11 users
-- **🔴 Likely Compromised:** 43 users
+- **🚨 CONFIRMED COMPROMISED (Data Breach):** 10 users
+- **🔴 Likely Compromised:** 44 users
 - **🟠 Suspicious:** 0 users
 - **🟢 Likely Safe:** 0 users
 
@@ -82,7 +82,7 @@
 - **Email:** `Zakir.Ahmed@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Human Resources Department
 - **Current Risk:** nan
-- **Anomaly Score:** 1720.0
+- **Anomaly Score:** 1728.0
 
 | Metric | Value |
 |--------|-------|
@@ -103,7 +103,7 @@
 | Last Password Reset | Unknown |
 | Account Status | Enabled |
 | Admin Account | No |
-| Data Breach Events | **299** → ["FileAccessed", "MailItemsAccessed"] |
+| Data Breach Events | **230** → ["MailItemsAccessed"] |
 
 ---
 
@@ -227,36 +227,6 @@
 
 ---
 
-### 🚨 CONFIRMED COMPROMISED (Data Breach) — Ezazul Karim (MER/ABL)
-
-- **Email:** `Ezazul_Karim@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Merchandising
-- **Current Risk:** nan
-- **Anomaly Score:** 1561.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 6238 (27 active days) |
-| Trusted IPs | 2 / 24 unique |
-| Countries | ["AR", "AU", "BA", "BD", "DZ", "EC", "ES", "GR", "IE", "IL", "MY", "PH", "TR", "UZ"] |
-| ISPs | ["adsl constantine", "airtel 3g client", "assigned for safura pop customers", "axiata (bangladesh) limited", "cmts gradiska - dhcp pool", "corporacion nacional de telecomunicaciones - cnt ep", "dhcp 17 od", "home_dsl", "iinet limited", "maxis broadband sdn bhd", "orange adsl user", "ote sa (hellenic telecommunications organisation)", "pool adsl et ftth", "robi axitata ltd- data", "robi axitata ltd- infra data", "telecentro s.a.", "ttnet a.s.", "uzbektelekom joint stock company", "virgin media ireland limited", "wimax customer allocation for dhaka zone"] |
-| Non-BD Sign-ins | **44** → ["AR", "AU", "BA", "DZ", "EC", "ES", "GR", "IE", "IL", "MY", "PH", "TR", "UZ"] |
-| Unknown IP Sign-ins | 526 |
-| Unknown Device Sign-ins | 1243 |
-| Off-hours Sign-ins | 306 |
-| High Risk Sign-ins | 15 |
-| Managed / Unmanaged | 0 / 6238 (100.0%) |
-| Alerts | 20 (first: 2026-04-18, last: 2026-05-08) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-| MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
-| Last Password Reset | Unknown |
-| Account Status | Enabled |
-| Admin Account | No |
-| Data Breach Events | **4** → ["FileAccessed"] |
-
----
-
 ### 🚨 CONFIRMED COMPROMISED (Data Breach) — Rahim Uddin (QAD/HAY)
 
 - **Email:** `Rahim.Uddin@crystal-cet.com.bd`
@@ -322,7 +292,7 @@
 - **Email:** `button_lin@crystal-csc.cn`
 - **Entity:** OTHER | **Dept:** Information Services Department
 - **Current Risk:** nan
-- **Anomaly Score:** 1128.0
+- **Anomaly Score:** 1144.0
 
 | Metric | Value |
 |--------|-------|
@@ -343,7 +313,7 @@
 | Last Password Reset | Unknown |
 | Account Status | Enabled |
 | Admin Account | No |
-| Data Breach Events | **199** → ["FileAccessed", "FileDownloaded"] |
+| Data Breach Events | **12** → ["FileAccessed", "FileDownloaded"] |
 
 ---
 
@@ -977,36 +947,6 @@
 
 ---
 
-### 🔴 Likely Compromised — Babu Sarker (SPL/ABL)
-
-- **Email:** `Babu_Sarker2@crystal-abl.com.bd`
-- **Entity:** ABL | **Dept:** Sample
-- **Current Risk:** nan
-- **Anomaly Score:** 615.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 2473 (29 active days) |
-| Trusted IPs | 1 / 24 unique |
-| Countries | ["BD", "DO", "HR", "ID", "IE", "IQ", "IT", "NL", "PE", "SE", "TH", "UZ", "VN", "ZA"] |
-| ISPs | ["ais fibre", "compa  a dominicana de tel fonos s. a.", "dai ip cho dich vu adsl dgn nan", "digi italy ipv6", "eircom", "hrvatski telekom d.d.", "kpn b.v.", "kurdistan net company for computer and internet ltd.", "nextnet s.a.c", "pt megatama cemerlang gemilang", "pt. telekomunikasi selular (telkomsel) indonesia", "spacex services  inc.", "tele2 customer broadband access", "triple t broadband public company limited", "uzbektelekom joint stock company", "vietnam posts and telecommunications group", "vodacom business (ens)", "vodafone ireland limited", "vodafone isp", "wi-net telecom sac", "wimax customer allocation for dhaka zone"] |
-| Non-BD Sign-ins | **80** → ["DO", "HR", "ID", "IE", "IQ", "IT", "NL", "PE", "SE", "TH", "UZ", "VN", "ZA"] |
-| Unknown IP Sign-ins | 81 |
-| Unknown Device Sign-ins | 2473 |
-| Off-hours Sign-ins | 172 |
-| High Risk Sign-ins | 27 |
-| Managed / Unmanaged | 0 / 2473 (100.0%) |
-| Alerts | 17 (first: 2026-04-19, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-| MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
-| Last Password Reset | Unknown |
-| Account Status | Enabled |
-| Admin Account | No |
-| Data Breach Events | **0** → [] |
-
----
-
 ### 🔴 Likely Compromised — Jahid Rifat (IED/ABL)
 
 - **Email:** `Jahid_Rifat@crystal-abl.com.bd`
@@ -1027,6 +967,36 @@
 | High Risk Sign-ins | 15 |
 | Managed / Unmanaged | 0 / 4303 (100.0%) |
 | Alerts | 17 (first: 2026-04-21, last: 2026-05-08) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+| MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
+| Last Password Reset | Unknown |
+| Account Status | Enabled |
+| Admin Account | No |
+| Data Breach Events | **0** → [] |
+
+---
+
+### 🔴 Likely Compromised — Babu Sarker (SPL/ABL)
+
+- **Email:** `Babu_Sarker2@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Sample
+- **Current Risk:** nan
+- **Anomaly Score:** 615.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 2473 (29 active days) |
+| Trusted IPs | 1 / 24 unique |
+| Countries | ["BD", "DO", "HR", "ID", "IE", "IQ", "IT", "NL", "PE", "SE", "TH", "UZ", "VN", "ZA"] |
+| ISPs | ["ais fibre", "compa  a dominicana de tel fonos s. a.", "dai ip cho dich vu adsl dgn nan", "digi italy ipv6", "eircom", "hrvatski telekom d.d.", "kpn b.v.", "kurdistan net company for computer and internet ltd.", "nextnet s.a.c", "pt megatama cemerlang gemilang", "pt. telekomunikasi selular (telkomsel) indonesia", "spacex services  inc.", "tele2 customer broadband access", "triple t broadband public company limited", "uzbektelekom joint stock company", "vietnam posts and telecommunications group", "vodacom business (ens)", "vodafone ireland limited", "vodafone isp", "wi-net telecom sac", "wimax customer allocation for dhaka zone"] |
+| Non-BD Sign-ins | **80** → ["DO", "HR", "ID", "IE", "IQ", "IT", "NL", "PE", "SE", "TH", "UZ", "VN", "ZA"] |
+| Unknown IP Sign-ins | 81 |
+| Unknown Device Sign-ins | 2473 |
+| Off-hours Sign-ins | 172 |
+| High Risk Sign-ins | 27 |
+| Managed / Unmanaged | 0 / 2473 (100.0%) |
+| Alerts | 17 (first: 2026-04-19, last: 2026-05-07) |
 | Phishing Emails | 0 |
 | Suspicious ISPs | [] |
 | MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
@@ -1067,36 +1037,6 @@
 
 ---
 
-### 🔴 Likely Compromised — Mizanur Rahman(MER/CMBD)
-
-- **Email:** `MizanurRahman.Masum@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Merchandising- M&S
-- **Current Risk:** nan
-- **Anomaly Score:** 595.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 6079 (29 active days) |
-| Trusted IPs | 1 / 24 unique |
-| Countries | ["AR", "BD", "CA", "DZ", "EC", "GR", "GT", "IT", "MX", "PE", "PH", "SE", "TN", "TR", "TW"] |
-| ISPs | ["aamra networks limited  internet service provider.", "adsl llu pools", "america movil peru s.a.c.", "amx argentina s.a.", "apon it", "cablemas telecomunicaciones sa de cv", "chunghwa telecom co. ltd.", "gazipur network system", "home_dsl", "infrastructure for fastwebs main location", "ipv6 address space for fixed broadband services", "pe-tdp-grs", "r  sidentiel(oran1et 2)", "solintelsa", "spacex services inc.", "tele2 sverige ab", "telecome sy", "telecomunicaciones de guatemala sociedad anonima", "ttnet a.s.", "used for adsl home topnet customers", "wimax customer allocation for ctg zone"] |
-| Non-BD Sign-ins | **55** → ["AR", "CA", "DZ", "EC", "GR", "GT", "IT", "MX", "PE", "PH", "SE", "TN", "TR", "TW"] |
-| Unknown IP Sign-ins | 205 |
-| Unknown Device Sign-ins | 6079 |
-| Off-hours Sign-ins | 1194 |
-| High Risk Sign-ins | 17 |
-| Managed / Unmanaged | 0 / 6079 (100.0%) |
-| Alerts | 24 (first: 2026-04-21, last: 2026-05-07) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-| MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
-| Last Password Reset | Unknown |
-| Account Status | Enabled |
-| Admin Account | No |
-| Data Breach Events | **0** → [] |
-
----
-
 ### 🔴 Likely Compromised — Rayhen Ahmed (CTG/ABL)
 
 - **Email:** `Rayhen_Ahmed@crystal-abl.com.bd`
@@ -1127,6 +1067,36 @@
 
 ---
 
+### 🔴 Likely Compromised — Mizanur Rahman(MER/CMBD)
+
+- **Email:** `MizanurRahman.Masum@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Merchandising- M&S
+- **Current Risk:** nan
+- **Anomaly Score:** 595.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 6079 (29 active days) |
+| Trusted IPs | 1 / 24 unique |
+| Countries | ["AR", "BD", "CA", "DZ", "EC", "GR", "GT", "IT", "MX", "PE", "PH", "SE", "TN", "TR", "TW"] |
+| ISPs | ["aamra networks limited  internet service provider.", "adsl llu pools", "america movil peru s.a.c.", "amx argentina s.a.", "apon it", "cablemas telecomunicaciones sa de cv", "chunghwa telecom co. ltd.", "gazipur network system", "home_dsl", "infrastructure for fastwebs main location", "ipv6 address space for fixed broadband services", "pe-tdp-grs", "r  sidentiel(oran1et 2)", "solintelsa", "spacex services inc.", "tele2 sverige ab", "telecome sy", "telecomunicaciones de guatemala sociedad anonima", "ttnet a.s.", "used for adsl home topnet customers", "wimax customer allocation for ctg zone"] |
+| Non-BD Sign-ins | **55** → ["AR", "CA", "DZ", "EC", "GR", "GT", "IT", "MX", "PE", "PH", "SE", "TN", "TR", "TW"] |
+| Unknown IP Sign-ins | 205 |
+| Unknown Device Sign-ins | 6079 |
+| Off-hours Sign-ins | 1194 |
+| High Risk Sign-ins | 17 |
+| Managed / Unmanaged | 0 / 6079 (100.0%) |
+| Alerts | 24 (first: 2026-04-21, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+| MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
+| Last Password Reset | Unknown |
+| Account Status | Enabled |
+| Admin Account | No |
+| Data Breach Events | **0** → [] |
+
+---
+
 ### 🔴 Likely Compromised — Shahadat Hossain Biplob (PPC/HAY)
 
 - **Email:** `Hossain.Shahadat@crystal-cet.com.bd`
@@ -1147,6 +1117,36 @@
 | High Risk Sign-ins | 19 |
 | Managed / Unmanaged | 0 / 2429 (100.0%) |
 | Alerts | 21 (first: 2026-04-23, last: 2026-05-07) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+| MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
+| Last Password Reset | Unknown |
+| Account Status | Enabled |
+| Admin Account | No |
+| Data Breach Events | **0** → [] |
+
+---
+
+### 🔴 Likely Compromised — Ezazul Karim (MER/ABL)
+
+- **Email:** `Ezazul_Karim@crystal-abl.com.bd`
+- **Entity:** ABL | **Dept:** Merchandising
+- **Current Risk:** nan
+- **Anomaly Score:** 569.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 6238 (27 active days) |
+| Trusted IPs | 2 / 24 unique |
+| Countries | ["AR", "AU", "BA", "BD", "DZ", "EC", "ES", "GR", "IE", "IL", "MY", "PH", "TR", "UZ"] |
+| ISPs | ["adsl constantine", "airtel 3g client", "assigned for safura pop customers", "axiata (bangladesh) limited", "cmts gradiska - dhcp pool", "corporacion nacional de telecomunicaciones - cnt ep", "dhcp 17 od", "home_dsl", "iinet limited", "maxis broadband sdn bhd", "orange adsl user", "ote sa (hellenic telecommunications organisation)", "pool adsl et ftth", "robi axitata ltd- data", "robi axitata ltd- infra data", "telecentro s.a.", "ttnet a.s.", "uzbektelekom joint stock company", "virgin media ireland limited", "wimax customer allocation for dhaka zone"] |
+| Non-BD Sign-ins | **44** → ["AR", "AU", "BA", "DZ", "EC", "ES", "GR", "IE", "IL", "MY", "PH", "TR", "UZ"] |
+| Unknown IP Sign-ins | 526 |
+| Unknown Device Sign-ins | 1243 |
+| Off-hours Sign-ins | 306 |
+| High Risk Sign-ins | 15 |
+| Managed / Unmanaged | 0 / 6238 (100.0%) |
+| Alerts | 20 (first: 2026-04-18, last: 2026-05-08) |
 | Phishing Emails | 0 |
 | Suspicious ISPs | [] |
 | MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
