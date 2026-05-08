@@ -28,14 +28,14 @@ Tài khoản **`button_lin@crystal-csc.cn`** (Button Lin) đi công tác từ Tr
 
 ### Nguyên nhân Gốc rễ
 - Sau khi áp dụng bản vá lỗi số 1 (Đưa tất cả IP lạ vào tầm ngắm Data Breach), hệ thống lại mắc phải một lỗi quá nhạy cảm.
-- Khi người dùng đi công tác, việc họ kết nối vào Wi-Fi sân bay, Wi-Fi khách sạn sẽ tự động sinh ra hàng loạt **IP lạ (Unknown IPs)**.
-- Khi Button Lin mở email bằng Laptop công ty qua Wi-Fi khách sạn, hệ thống thấy có thao tác `MailItemsAccessed` từ một `Unknown IP` nên lập tức quy kết đây là hành vi Data Breach.
+- Khi Button Lin mở email bằng Laptop công ty qua Wi-Fi khách sạn, hệ thống thấy có thao tác `MailItemsAccessed` từ một `Unknown IP`.
+- **Tuy nhiên (Bug Telemetry của Entra ID):** Mặc dù Button Lin luôn dùng Laptop công ty (Trusted Device), nhưng log của Entra ID thỉnh thoảng lại bị rớt thông tin thiết bị (DeviceName bị rỗng) trên cùng một địa chỉ IP khách sạn đó. Do đó, hệ thống tưởng lầm rằng có một "Unknown Device" đang truy cập từ "Unknown IP" và gán nhãn Suspicious cho IP này.
 
 ### Giải pháp Khắc phục
-- Bổ sung định nghĩa **Context-Aware** cho hệ thống: Điểm khác biệt lớn nhất giữa một Hacker và một Nhân viên đi công tác nằm ở **Thiết Bị (Device)**.
-- **Logic mới:** Một IP lạ chỉ bị coi là Đáng Ngờ (Suspicious IP) và bị đưa vào diện quét Data Breach **NẾU VÀ CHỈ NẾU** IP đó đi kèm với một **Thiết bị Xa lạ (Unknown Device)** hoặc không có định danh thiết bị.
-- Ngược lại, nếu người dùng truy cập từ một IP lạ (như Wi-Fi khách sạn) nhưng vẫn đang sử dụng đúng **Thiết bị Hợp lệ (Trusted Device)** (Laptop/Điện thoại đã đăng ký), hệ thống sẽ nhận diện đây là hành vi đi công tác (Travel/Remote Work) và không phạt điểm Data Breach.
-- **Kết quả:** Tài khoản Button Lin được giải oan, điểm rủi ro trở về mức an toàn (190 điểm).
+- Bổ sung định nghĩa **Context-Aware** và **Telemetry Tolerance**:
+- **Logic mới:** Một IP lạ chỉ bị coi là Đáng Ngờ (Suspicious IP) và bị đưa vào diện quét Data Breach **NẾU VÀ CHỈ NẾU** IP đó **chưa từng bao giờ** được sử dụng cùng với một **Thiết bị Hợp lệ (Trusted Device)**.
+- Nếu một IP lạ có 100 lần đăng nhập bằng Trusted Device, nhưng bị rớt log rỗng mất 5 lần, hệ thống vẫn sẽ tha bổng cho IP này vì đã chứng minh được sự hiện diện của thiết bị an toàn.
+- **Kết quả:** Các Data Breach events từ IP khách sạn của Button Lin giảm từ 199 xuống còn 12 (chỉ còn lại những IP lạ thực sự chưa từng gắn với Laptop công ty). Phân loại giảm xuống Likely Compromised.
 
 ---
 
