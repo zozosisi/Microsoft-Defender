@@ -1,10 +1,22 @@
 // ============================================================
-// QUERY 1B: Sign-in History — CMBD (bd.crystal-martin.com)
-// Export CSV → Save as: signin_cmbd.csv
+// QUERY 1: Sign-in History — All Affected Users
+// Export CSV → Save as: signin_history.csv
 // ============================================================
+// Lấy toàn bộ sign-in thành công 30 ngày
+// CHỈ cho users bị trigger "Unfamiliar sign-in" (từ Query 0)
+// ============================================================
+// Dùng làm raw data cho Python baseline analysis
+// ⚠️ Nếu >10K rows, thêm: | where LogonType == "Interactive"
+// ============================================================
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
 EntraIdSignInEvents
 | where Timestamp > ago(30d)
-| where AccountUpn endswith "bd.crystal-martin.com"
+| where AccountObjectId in (AffectedUsers)
 | where ErrorCode == 0
 | project
     Timestamp,

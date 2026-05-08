@@ -48,11 +48,9 @@ Microsoft-Defender/
 ├── queries/                                   ← KQL queries cho investigation
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
 │   ├── 00_unfamiliar_signin_incidents.kql     ← ⭐ Master query — all incidents + users + IPs
-│   ├── 01_signin_history_ABL.kql              ← Sign-in 30 ngày — ABL users
-│   ├── 01_signin_history_CMBD.kql             ← Sign-in 30 ngày — CMBD users
-│   ├── 01_signin_history_CETBD.kql            ← Sign-in 30 ngày — CETBD users
+│   ├── 01_signin_history.kql                  ← Sign-in 30 ngày — affected users only
 │   ├── 02_isp_data.kql                        ← ISP enrichment (IdentityLogonEvents)
-│   ├── 03_alert_data.kql                      ← Alert correlation
+│   ├── 03_alert_data.kql                      ← Alert evidence details
 │   ├── 04_user_profiles.kql                   ← User identity profiles
 │   ├── 05_phishing_check.kql                  ← Phishing email detection
 │   └── 06_cloudapp_isp.kql                    ← Backup ISP data (CloudAppEvents)

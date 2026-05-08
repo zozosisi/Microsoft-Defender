@@ -2,19 +2,22 @@
 // QUERY 3: Alert Data (AlertEvidence)
 // Export CSV → Save as: alert_data.csv
 // ============================================================
-// Bổ sung chi tiết evidence cho "Unfamiliar sign-in" alerts
-// Lưu ý: Query 0 đã có danh sách AlertId + AccountUpn + RemoteIP
-// Query này lấy THÊM: EvidenceRole, DetectionSource, Categories
+// Chi tiết evidence cho "Unfamiliar sign-in" alerts
+// CHỈ lấy cho users bị trigger (từ Query 0)
 // ============================================================
 // ⚠️ AAD Identity Protection dùng EntityType "User" (KHÔNG PHẢI "Account")
 // ============================================================
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
 AlertEvidence
 | where Timestamp > ago(30d)
 | where Title has "Unfamiliar sign-in"
 | where isnotempty(AccountUpn)
-| where AccountUpn endswith "crystal-abl.com.bd"
-    or AccountUpn endswith "bd.crystal-martin.com"
-    or AccountUpn endswith "crystal-cet.com.bd"
+| where AccountObjectId in (AffectedUsers)
 | project
     Timestamp,
     AlertId,

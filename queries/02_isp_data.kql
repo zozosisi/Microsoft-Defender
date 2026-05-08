@@ -4,17 +4,23 @@
 // ============================================================
 // EntraIdSignInEvents KHÔNG có ISP/ASN
 // Table này bổ sung ISP — data quan trọng nhất để chẩn đoán
+// CHỈ lấy cho users bị trigger "Unfamiliar sign-in" (từ Query 0)
 // ============================================================
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
 IdentityLogonEvents
 | where Timestamp > ago(30d)
-| where AccountUpn endswith "crystal-abl.com.bd"
-    or AccountUpn endswith "bd.crystal-martin.com"
-    or AccountUpn endswith "crystal-cet.com.bd"
+| where AccountObjectId in (AffectedUsers)
 | where ActionType == "LogonSuccess"
 | project
     Timestamp,
     AccountUpn,
     AccountDisplayName,
+    AccountObjectId,
     IPAddress,
     Location,
     ISP,

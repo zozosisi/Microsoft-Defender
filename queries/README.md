@@ -4,9 +4,24 @@
 
 ```
 Bước 0: Chạy Query 0 (Master) → Xác định danh sách users + IPs cần investigate
-Bước 1: Chạy 8 queries còn lại trong Advanced Hunting (security.microsoft.com)
+Bước 1: Chạy 6 queries còn lại trong Advanced Hunting (security.microsoft.com)
 Bước 2: Export CSV → Lưu vào folder incidents/data/export/
 Bước 3: Chạy Python script → Tự động phân tích + tạo report
+```
+
+## Kiến trúc
+
+Tất cả queries 1-6 đều sử dụng `let AffectedUsers` subquery — tự động lấy danh sách users bị trigger "Unfamiliar sign-in" từ `AlertEvidence`. **Không hardcode domain.**
+
+```
+Query 0 (AlertInfo + AlertEvidence)
+   └── Xác định 54 affected users
+         ├── Query 1: Sign-in history (EntraIdSignInEvents)
+         ├── Query 2: ISP enrichment (IdentityLogonEvents)
+         ├── Query 3: Alert details (AlertEvidence)
+         ├── Query 4: User profiles (IdentityInfo)
+         ├── Query 5: Phishing check (EmailEvents)
+         └── Query 6: CloudApp ISP backup (CloudAppEvents)
 ```
 
 ## Danh sách queries
@@ -14,13 +29,11 @@ Bước 3: Chạy Python script → Tự động phân tích + tạo report
 | # | File | Export CSV as | Mô tả |
 |---|------|---------------|--------|
 | **0** | **`00_unfamiliar_signin_incidents.kql`** | **`unfamiliar_signin_incidents.csv`** | **⭐ Master — tất cả incidents + users + IPs** |
-| 1A | `01_signin_history_ABL.kql` | `signin_abl.csv` | Sign-in history — ABL users |
-| 1B | `01_signin_history_CMBD.kql` | `signin_cmbd.csv` | Sign-in history — CMBD users |
-| 1C | `01_signin_history_CETBD.kql` | `signin_cetbd.csv` | Sign-in history — CETBD users |
+| 1 | `01_signin_history.kql` | `signin_history.csv` | Sign-in history — all affected users |
 | 2 | `02_isp_data.kql` | `isp_data.csv` | ISP enrichment (IdentityLogonEvents) |
-| 3 | `03_alert_data.kql` | `alert_data.csv` | Unfamiliar sign-in alerts |
+| 3 | `03_alert_data.kql` | `alert_data.csv` | Unfamiliar sign-in alert evidence |
 | 4 | `04_user_profiles.kql` | `user_profiles.csv` | User identity info |
-| 5 | `05_phishing_check.kql` | `phishing_emails.csv` | Phishing emails to BD users |
+| 5 | `05_phishing_check.kql` | `phishing_emails.csv` | Phishing emails to affected users |
 | 6 | `06_cloudapp_isp.kql` | `cloudapp_isp.csv` | Backup ISP data (CloudAppEvents) |
 
 ## Cách chạy
@@ -36,7 +49,7 @@ Bước 3: Chạy Python script → Tự động phân tích + tạo report
 ```bash
 cd scripts
 pip install pandas numpy
-python analyze_signins.py --data-dir ../incidents/data/exports --output-dir ../incidents/analysis
+python analyze_signins.py --data-dir ../incidents/data/export --output-dir ../incidents/analysis
 ```
 
 ### Tham số tùy chỉnh
@@ -58,8 +71,7 @@ python analyze_signins.py --data-dir /path/to/csvs --output-dir /path/to/output
 
 ## Lưu ý
 
-- **Query 0 phải chạy TRƯỚC** — output xác định danh sách users/IPs cần investigate cho các query sau
-- Query 1A-1C tách theo domain vì **KQL giới hạn 10,000 rows** per query
-- Nếu query vẫn bị truncate (>10K rows), thêm filter: `| where LogonType == "Interactive"` để chỉ lấy interactive sign-ins
+- **Query 0 phải chạy TRƯỚC** — các query 1-6 dùng cùng `let AffectedUsers` subquery
+- Nếu Query 1 vượt 10K rows, thêm filter: `| where LogonType == "Interactive"`
 - Query 6 (CloudApp ISP) là **backup** — chỉ cần chạy nếu Query 2 không có đủ data
-- File bắt buộc: `unfamiliar_signin_incidents.csv` (0) + `signin_*.csv` (1A-1C). Các file còn lại là optional enrichment
+- File bắt buộc: `unfamiliar_signin_incidents.csv` (0) + `signin_history.csv` (1). Các file còn lại là optional enrichment

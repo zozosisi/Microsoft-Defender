@@ -5,16 +5,17 @@
 // Backup ISP data từ CloudAppEvents
 // Dùng nếu IdentityLogonEvents thiếu data
 // CloudAppEvents có: ISP, CountryCode, IsAnonymousProxy
+// CHỈ lấy cho users bị trigger "Unfamiliar sign-in" (từ Query 0)
 // ============================================================
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
 CloudAppEvents
 | where Timestamp > ago(30d)
-| where AccountObjectId in (
-    (IdentityInfo
-    | where AccountUpn endswith "crystal-abl.com.bd"
-        or AccountUpn endswith "bd.crystal-martin.com"
-        or AccountUpn endswith "crystal-cet.com.bd"
-    | distinct AccountObjectId)
-)
+| where AccountObjectId in (AffectedUsers)
 | project
     Timestamp,
     AccountObjectId,

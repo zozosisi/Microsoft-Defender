@@ -2,14 +2,19 @@
 // QUERY 5: Phishing Check (EmailEvents)
 // Export CSV → Save as: phishing_emails.csv
 // ============================================================
-// Tìm email có threat gửi đến BD users trong 30 ngày
+// Tìm email có threat gửi đến affected users trong 30 ngày
 // Focus vào Phish/Malware đã delivered
+// CHỈ lấy cho users bị trigger "Unfamiliar sign-in" (từ Query 0)
 // ============================================================
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountUpn)
+    | distinct AccountUpn;
 EmailEvents
 | where Timestamp > ago(30d)
-| where RecipientEmailAddress endswith "crystal-abl.com.bd"
-    or RecipientEmailAddress endswith "bd.crystal-martin.com"
-    or RecipientEmailAddress endswith "crystal-cet.com.bd"
+| where RecipientEmailAddress in~ (AffectedUsers)
 | where EmailDirection == "Inbound"
 | where ThreatTypes != ""
 | project
