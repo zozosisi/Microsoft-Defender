@@ -270,20 +270,24 @@ def detect_user_anomalies(user_df: pd.DataFrame, baseline: dict) -> dict:
     )
 
     # VPN vs Hacker Botnet logic
-    # Hacker: Non-BD sign-ins with Unknown Device (empty or not in trusted)
+    # Hacker: Foreign country sign-ins with Unknown Device (empty or not in trusted)
     trusted_devices = set(baseline["TrustedDevices"])
-    hacker_mask = non_bd_mask & (~user_df["DeviceName"].isin(trusted_devices) | user_df["DeviceName"].isna() | (user_df["DeviceName"].str.strip() == ""))
-    vpn_mask = non_bd_mask & user_df["DeviceName"].isin(trusted_devices) & user_df["DeviceName"].notna() & (user_df["DeviceName"].str.strip() != "")
+    hacker_mask = foreign_mask & (~user_df["DeviceName"].isin(trusted_devices) | user_df["DeviceName"].isna() | (user_df["DeviceName"].str.strip() == ""))
+    vpn_mask = foreign_mask & user_df["DeviceName"].isin(trusted_devices) & user_df["DeviceName"].notna() & (user_df["DeviceName"].str.strip() != "")
 
     anomalies["HackerBotnetSignIns"] = int(hacker_mask.sum())
     anomalies["VPNSignIns"] = int(vpn_mask.sum())
-    anomalies["HackerBotnetCountries"] = sorted(user_df.loc[hacker_mask, "Country"].unique().tolist())
-    anomalies["VPNCountries"] = sorted(user_df.loc[vpn_mask, "Country"].unique().tolist())
+    anomalies["HackerBotnetCountries"] = sorted(user_df.loc[hacker_mask, "Country"].dropna().unique().tolist())
+    anomalies["VPNCountries"] = sorted(user_df.loc[vpn_mask, "Country"].dropna().unique().tolist())
 
     # Unknown device sign-ins
     trusted_devices = set(baseline["TrustedDevices"])
-    unknown_dev_mask = ~user_df["DeviceName"].isin(trusted_devices) & user_df["DeviceName"].notna()
+    unknown_dev_mask = ~user_df["DeviceName"].isin(trusted_devices) | user_df["DeviceName"].isna() | (user_df["DeviceName"].str.strip() == "")
     anomalies["UnknownDeviceSignIns"] = int(unknown_dev_mask.sum())
+    
+    # Suspicious IPs for Data Breach Analysis (Unknown IP + Unknown Device)
+    suspicious_ip_mask = unknown_ip_mask & unknown_dev_mask
+    anomalies["SuspiciousIPList"] = sorted(user_df.loc[suspicious_ip_mask, "IPAddress"].dropna().unique().tolist())
     anomalies["UnknownDeviceList"] = sorted(
         user_df.loc[unknown_dev_mask, "DeviceName"].dropna().unique().tolist()
     )
@@ -380,9 +384,9 @@ def enrich_with_phishing(user_upn: str, phish_df: pd.DataFrame) -> dict:
     return {"PhishingEmailsReceived": len(user_phish)}
 
 
-def enrich_with_cloudapp(user_upn: str, account_object_id: str, cloudapp_df: pd.DataFrame, foreign_ips: list) -> dict:
-    """Check CloudAppEvents for data breach actions from foreign IPs."""
-    if cloudapp_df.empty or not foreign_ips:
+def enrich_with_cloudapp(user_upn: str, account_object_id: str, cloudapp_df: pd.DataFrame, untrusted_ips: list) -> dict:
+    """Check CloudAppEvents for data breach actions from untrusted IPs."""
+    if cloudapp_df.empty or not untrusted_ips:
         return {"DataBreachEvents": 0, "DataBreachActions": []}
 
     # Match by email/UPN, DisplayName, OR AccountObjectId
@@ -395,8 +399,8 @@ def enrich_with_cloudapp(user_upn: str, account_object_id: str, cloudapp_df: pd.
     if user_ca.empty:
         return {"DataBreachEvents": 0, "DataBreachActions": []}
         
-    # Filter by Hacker IPs (from anomalies)
-    hacker_ca = user_ca[user_ca["IPAddress"].isin(foreign_ips)]
+    # Filter by Untrusted IPs (from anomalies)
+    hacker_ca = user_ca[user_ca["IPAddress"].isin(untrusted_ips)]
     
     suspicious_actions = ['FileDownloaded', 'New-InboxRule', 'Set-InboxRule', 'MailItemsAccessed', 'eDiscoverySearch', 'FileRecycled', 'FolderRecycled', 'MessageSent']
     
@@ -537,11 +541,10 @@ def analyze(data_dir: Path, output_dir: Path):
         phishing_info = enrich_with_phishing(upn, phish_df)
         auth_info = enrich_with_auth_status(upn, auth_df, user_df)
         
-        # Get hacker IPs for cloudapp filter
-        hacker_countries = anomalies.get("HackerBotnetCountries", [])
-        foreign_ips = user_df[user_df["Country"].isin(hacker_countries)]["IPAddress"].unique().tolist()
+        # Get suspicious IPs for cloudapp filter (Unknown IP + Unknown Device)
+        suspicious_ips = anomalies.get("SuspiciousIPList", [])
         account_object_id = user_df["AccountObjectId"].iloc[0]
-        cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, foreign_ips)
+        cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, suspicious_ips)
 
         # Compute verdict
         score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info)
