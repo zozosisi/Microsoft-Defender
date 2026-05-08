@@ -179,3 +179,20 @@ Tất cả incidents đều có `Investigation state = Unsupported alert type`. 
 > **MFA và revoke session không giải quyết được gốc rễ** vì alert phản ánh *hành vi đăng nhập bất thường*, không phải *xác thực thất bại*. Cần phải **remediate risk state trong Entra ID** và **áp dụng Conditional Access** để chặn hoặc kiểm soát các sign-in từ môi trường lạ.
 
 > **⚡ Hành động ưu tiên nhất hiện tại:** Vào Entra ID → Risky Users → Investigate từng High Risk user → Confirm safe hoặc confirm compromised → Áp dụng CA Policy based on location/device compliance.
+
+---
+
+## 10. Cập Nhật Phân Tích Bằng Python Script (May 08)
+
+Sau khi export toàn bộ log (222,000+ dòng) và phân tích bằng Python (`analyze_signins.py`), chúng ta đã phát hiện ra một số False Positives nghiêm trọng từ logic đánh giá ban đầu và đã tinh chỉnh lại:
+
+### ⚠️ False Positives Do Logic "Non-BD Sign-ins"
+- **Vấn đề:** Ban đầu, hệ thống cộng điểm dị thường cực kỳ cao cho *mọi* lượt đăng nhập ngoài Bangladesh. Điều này khiến các nhân sự hợp lệ tại chi nhánh nước ngoài (ví dụ: `button_lin@crystal-csc.cn` ở Trung Quốc) bị đẩy lên top rủi ro với Anomaly Score vọt lên >160,000 điểm.
+- **Giải pháp:** Đã sửa Python script để phạt theo **tỷ lệ và sự đa dạng (variety)** của quốc gia/IP thay vì đếm số lần. Hệ quả: Điểm của `button_lin` giảm xuống còn 110, phản ánh đúng tính chất an toàn hơn.
+
+### 🔴 Top Rủi Ro Thực Sự (Sau Khi Tinh Chỉnh Logic)
+Khi đã loại trừ nhiễu, các user có hành vi Impossible Travel / Proxy Hopping nguy hiểm nhất lộ diện:
+1. **`Zakir.Ahmed@bd.crystal-martin.com` (Top 1):** Đăng nhập từ **14 quốc gia khác nhau**, 3,279 lượt dùng IP lạ không thuộc thói quen.
+2. **`Mahmudul.Hasan@bd.crystal-martin.com` (Top 2):** Đăng nhập từ **13 quốc gia khác nhau**, 995 lượt dùng IP lạ, tỷ lệ nhảy ISP không uy tín cao.
+
+**Kết luận cuối cùng:** Tập trung khoanh vùng và chặn lập tức các user Top 5 trong file `user_investigation_summary.csv` mới nhất, do họ có dấu hiệu sử dụng proxy/botnet quy mô lớn để qua mặt hệ thống.
