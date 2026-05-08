@@ -16,6 +16,10 @@ import argparse
 import json
 import sys
 
+# Force UTF-8 output to prevent Windows console emoji encode errors
+if sys.stdout.encoding.lower() != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # ============================================================
 # CONFIGURATION
 # ============================================================
@@ -50,31 +54,17 @@ BD_DOMAINS = [
 # DATA LOADING
 # ============================================================
 def load_signin_data(data_dir: Path) -> pd.DataFrame:
-    """Load and merge sign-in CSVs from all domains."""
-    files = [
-        "signin_abl.csv",
-        "signin_cmbd.csv",
-        "signin_cetbd.csv"
-    ]
-    dfs = []
-    for f in files:
-        path = data_dir / f
-        if path.exists():
-            df = pd.read_csv(path)
-            print(f"  ✓ Loaded {f}: {len(df)} rows")
-            dfs.append(df)
-        else:
-            print(f"  ⚠ File not found: {f}")
-
-    if not dfs:
-        print("ERROR: No sign-in data files found!")
+    """Load merged sign-in history CSV."""
+    path = data_dir / "signin_history.csv"
+    if not path.exists():
+        print(f"ERROR: signin_history.csv not found in {data_dir}")
         sys.exit(1)
 
-    combined = pd.concat(dfs, ignore_index=True)
-    combined["Timestamp"] = pd.to_datetime(combined["Timestamp"])
-    print(f"  → Total sign-in records: {len(combined)}")
-    print(f"  → Unique users: {combined['AccountUpn'].nunique()}")
-    return combined
+    df = pd.read_csv(path, low_memory=False)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="mixed")
+    print(f"  ✓ Loaded signin_history.csv: {len(df)} rows")
+    print(f"  → Unique users: {df['AccountUpn'].nunique()}")
+    return df
 
 
 def load_isp_data(data_dir: Path) -> pd.DataFrame:
@@ -83,8 +73,8 @@ def load_isp_data(data_dir: Path) -> pd.DataFrame:
     if not path.exists():
         print("  ⚠ isp_data.csv not found — ISP analysis will be skipped")
         return pd.DataFrame()
-    df = pd.read_csv(path)
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    df = pd.read_csv(path, low_memory=False)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="mixed")
     print(f"  ✓ Loaded isp_data.csv: {len(df)} rows")
     return df
 
@@ -95,8 +85,8 @@ def load_alert_data(data_dir: Path) -> pd.DataFrame:
     if not path.exists():
         print("  ⚠ alert_data.csv not found — Alert analysis will be skipped")
         return pd.DataFrame()
-    df = pd.read_csv(path)
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    df = pd.read_csv(path, low_memory=False)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="mixed")
     print(f"  ✓ Loaded alert_data.csv: {len(df)} rows")
     return df
 
@@ -118,8 +108,8 @@ def load_phishing_data(data_dir: Path) -> pd.DataFrame:
     if not path.exists():
         print("  ⚠ phishing_emails.csv not found — Phishing analysis will be skipped")
         return pd.DataFrame()
-    df = pd.read_csv(path)
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    df = pd.read_csv(path, low_memory=False)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="mixed")
     print(f"  ✓ Loaded phishing_emails.csv: {len(df)} rows")
     return df
 
@@ -599,7 +589,7 @@ def main():
     parser.add_argument(
         "--data-dir",
         type=str,
-        default="../incidents/data/exports",
+        default="../incidents/data/export",
         help="Directory containing exported CSV files"
     )
     parser.add_argument(
@@ -626,9 +616,7 @@ def main():
         print(f"ERROR: Data directory not found: {data_dir}")
         print(f"Create the directory and place exported CSV files there.")
         print(f"\nExpected files:")
-        print(f"  - signin_abl.csv")
-        print(f"  - signin_cmbd.csv")
-        print(f"  - signin_cetbd.csv")
+        print(f"  - signin_history.csv (required)")
         print(f"  - isp_data.csv")
         print(f"  - alert_data.csv")
         print(f"  - user_profiles.csv")
