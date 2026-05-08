@@ -1,7 +1,7 @@
 # Microsoft Defender XDR — Investigation & Schema Reference
 
 > **Tenant:** Crystal Group (crystal-martin.com / crystal-abl.com.bd / crystal-cet.com.bd)  
-> **Last Updated:** 2026-05-07  
+> **Last Updated:** 2026-05-08  
 > **Purpose:** Tài liệu hóa schema, phân tích incidents, và hỗ trợ điều tra bảo mật trên Microsoft Defender XDR
 
 ---
@@ -10,7 +10,7 @@
 
 Repository này chứa toàn bộ tài liệu kỹ thuật phục vụ công tác **điều tra bảo mật (Security Investigation)** trên nền tảng Microsoft Defender XDR cho Crystal Group, bao gồm:
 
-- Schema reference đầy đủ từ Advanced Hunting (35/36 tables)
+- Schema reference đầy đủ từ Advanced Hunting (36/36 tables)
 - Phân tích incident "Unfamiliar Sign-in Properties" (295 incidents, 55 risky users)
 - Dữ liệu Risky Users và Incidents Queue
 - KQL queries mẫu cho điều tra
@@ -25,12 +25,12 @@ Microsoft-Defender/
 ├── README.md                                  ← File này
 │
 ├── schemas/                                   ← Schema reference & raw data
-│   ├── Complete_Schema_Reference.md           ← Schema đầy đủ 35 tables (auto-generated)
+│   ├── Complete_Schema_Reference.md           ← Schema đầy đủ 36 tables (auto-generated)
 │   ├── Advanced_Hunting_Schema_Reference.md   ← Schema reference gốc (hand-written)
-│   ├── All_Schemas_Combined.csv               ← Raw schema data (750 columns, 35 tables)
+│   ├── All_Schemas_Combined.csv               ← Raw schema data (775 columns, 36 tables)
 │   ├── get_all_schemas.kql                    ← KQL queries để export schema từ tenant
 │   └── raw/                                   ← Individual CSV exports per table
-│       ├── New query (3).csv → (37).csv       ← 35 CSV files từ Advanced Hunting
+│       ├── New query (3).csv → (38).csv       ← 36 CSV files từ Advanced Hunting
 │
 ├── incidents/                                 ← Phân tích & dữ liệu incidents
 │   ├── analysis_unfamiliar_signin.md          ← Báo cáo phân tích root cause
@@ -84,15 +84,9 @@ Microsoft-Defender/
 | Apps & Identities | 10 | 329 | `EntraIdSignInEvents`, `IdentityLogonEvents`, `IdentityInfo`, `CloudAppEvents` |
 | Email & Collaboration | 8 | 151 | `EmailEvents`, `EmailUrlInfo`, `EmailAttachmentInfo` |
 | Vulnerability Management | 8 | 76 | `DeviceTvmSoftwareVulnerabilities` |
-| Cloud Infrastructure | 3 | 73 | `CloudAuditEvents` |
+| Cloud Infrastructure | 4 | 98 | `CloudAuditEvents`, `CloudProcessEvents` |
 | Exposure Management | 2 | 17 | `ExposureGraphNodes` |
-| **Total** | **35** | **750** | |
-
-### ❌ Table Chưa Export
-
-| Table | Lý do | KQL Query |
-|-------|-------|-----------|
-| `CloudProcessEvents` | Chưa export CSV | `CloudProcessEvents \| getschema \| extend TableName = "CloudProcessEvents" \| project TableName, ColumnName, ColumnType, DataType` |
+| **Total** | **36** | **775** | |
 
 ---
 
@@ -215,8 +209,8 @@ EmailEvents
 |------|------|-------------|
 | `incidents/data/risky_users_20260506.csv` | 55 | Users At Risk với Risk Level, last updated time |
 | `incidents/data/incidents_queue_20260506.csv` | 295 | Full incidents queue với severity, status, impacted assets |
-| `schemas/All_Schemas_Combined.csv` | 751 | Toàn bộ schema 35 tables dạng CSV |
-| `schemas/raw/*.csv` | 35 files | Individual schema exports per table |
+| `schemas/All_Schemas_Combined.csv` | 776 | Toàn bộ schema 36 tables dạng CSV |
+| `schemas/raw/*.csv` | 36 files | Individual schema exports per table |
 
 ---
 

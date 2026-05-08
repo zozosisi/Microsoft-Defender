@@ -1,7 +1,7 @@
-﻿# Microsoft Defender XDR - Complete Schema Reference (From Tenant)
+# Microsoft Defender XDR - Complete Schema Reference (From Tenant)
 
-> **Tenant:** Crystal Group | **Updated:** 2026-05-07 | **Source:** Advanced Hunting CSV Exports
-> **Tables:** 35 exported | **Missing CSV:** CloudProcessEvents (to be exported)
+> **Tenant:** Crystal Group | **Updated:** 2026-05-08 | **Source:** Advanced Hunting CSV Exports
+> **Tables:** 36 exported | **All tables complete**
 
 ---
 
@@ -13,7 +13,7 @@
 | Apps & Identities | 10 | 329 |
 | Email & Collaboration | 8 | 151 |
 | Vulnerability Management | 8 | 76 |
-| Cloud Infrastructure | 3 | 73 |
+| Cloud Infrastructure | 4 | 98 |
 | Exposure Management | 2 | 17 |
 
 ---
@@ -33,12 +33,6 @@ IdentityAccountInfo.AccountUpn <-> IdentityInfo.AccountUpn
 ```
 
 ---
-
-## Missing Tables (Need Export)
-
-| # | Table | KQL Query |
-|---|-------|-----------|
-| 1 | `CloudProcessEvents` | `CloudProcessEvents \| getschema \| extend TableName = "CloudProcessEvents" \| project TableName, ColumnName, ColumnType, DataType` |
 
 ---
 
@@ -957,6 +951,36 @@ IdentityAccountInfo.AccountUpn <-> IdentityInfo.AccountUpn
 | `ReportId` | string |
 | `ActionType` | string |
 | `AdditionalFields` | dynamic |
+
+### CloudProcessEvents (25 columns)
+
+| Column | Type |
+|--------|------|
+| `Timestamp` | datetime |
+| `AzureResourceId` | string |
+| `AwsResourceName` | string |
+| `GcpFullResourceName` | string |
+| `ContainerImageName` | string |
+| `KubernetesNamespace` | string |
+| `KubernetesPodName` | string |
+| `KubernetesResource` | string |
+| `ContainerName` | string |
+| `ContainerId` | string |
+| `ActionType` | string |
+| `FileName` | string |
+| `FolderPath` | string |
+| `ProcessId` | long |
+| `ProcessName` | string |
+| `ParentProcessName` | string |
+| `ParentProcessId` | long |
+| `ProcessCommandLine` | string |
+| `ProcessCreationTime` | datetime |
+| `ProcessCurrentWorkingDirectory` | string |
+| `AccountName` | string |
+| `LogonId` | long |
+| `InitiatingProcessId` | long |
+| `AdditionalFields` | dynamic |
+| `ReportId` | string |
 
 ---
 
