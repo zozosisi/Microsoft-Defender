@@ -1,17 +1,48 @@
-// 08_post_breach_investigation_v2.kql
-// Tìm mọi thao tác của Zakir Ahmed trên các ứng dụng (không phân biệt quốc gia trước)
-// để xem có dữ liệu nào trả về hay không (tránh lỗi do sai định dạng AccountId).
+// ============================================================
+// QUERY 08: Post-Breach Investigation (Single User)
+// Export CSV → Save as: (manual investigation, không cần save)
+// ============================================================
+// Mục đích: Truy vết hành vi suspicious của 1 user trên CloudAppEvents
+// Dùng WHITELIST các ActionType nghi ngờ thay vì BLACKLIST
+// ============================================================
+// Logic (từ detection_logic_reference.md Section 3B):
+//   - Đánh cắp:    FileDownloaded
+//   - Phá hoại:    FileRecycled, FolderRecycled
+//   - Đọc trộm:   MailItemsAccessed, eDiscoverySearch, FileAccessed
+//   - Phát tán:    MessageSent (Teams)
+//   - Ẩn giấu vết: New-InboxRule, Set-InboxRule
+//   - Leo quyền:   Add member to role, Consent to application
+// ============================================================
 
 let targetUser = "Zakir.Ahmed@bd.crystal-martin.com";
 
+// Danh sách hành vi nghi ngờ cần giám sát (Whitelist approach)
+let SuspiciousActions = dynamic([
+    // Data Exfiltration
+    "FileDownloaded", "FileUploaded",
+    // Data Destruction
+    "FileRecycled", "FolderRecycled",
+    // Data Access / Snooping
+    "MailItemsAccessed", "FileAccessed", "FilePreviewed", "eDiscoverySearch",
+    // Lateral Movement / Spreading
+    "MessageSent",
+    // Persistence / Anti-forensics
+    "New-InboxRule", "Set-InboxRule", "Remove-InboxRule",
+    // Privilege Escalation
+    "Add member to role.", "Add delegated permission grant.", "Consent to application."
+]);
+
 CloudAppEvents
 | where Timestamp >= ago(30d)
-// Tìm kiếm rộng hơn thay vì chỉ khớp chính xác AccountId
-| where AccountId =~ targetUser or AccountDisplayName has "Zakir Ahmed"
-// Tạm thời hiển thị cả thao tác từ Bangladesh để kiểm tra xem có dữ liệu của user này không
-// | extend IsNonBD = iff(CountryCode != "BD", true, false)
-// | where IsNonBD == true
-| where ActionType !in ("Update", "LogonUser", "PrimaryLogon")
+// Match bằng cả UPN (AccountId) lẫn ObjectId để tránh miss data (post_mortem #3)
+| where AccountId =~ targetUser
+    or AccountObjectId in (
+        IdentityInfo
+        | where Timestamp >= ago(30d)
+        | where AccountUpn =~ targetUser
+        | distinct AccountObjectId
+    )
+| where ActionType in (SuspiciousActions)
 | project 
     Timestamp,
     ActionType,
@@ -20,5 +51,9 @@ CloudAppEvents
     IPAddress,
     CountryCode,
     ISP,
-    UserAgent
+    UserAgent,
+    DeviceType,
+    OSPlatform,
+    AccountId,
+    AccountObjectId
 | order by Timestamp asc

@@ -1,34 +1,58 @@
-// 07_vpn_vs_hacker_investigation.kql
-// Mục đích: Phân tích sự tương quan giữa IP/Quốc gia nước ngoài với Thiết bị (Device) và ISP
-// Giúp phân biệt user đang dùng VPN (thiết bị cũ, ISP thuộc VPN provider) 
-// hay bị Hacker tấn công (thiết bị mới/lạ, trình duyệt lạ, ISP dân dụng nước ngoài).
+// ============================================================
+// QUERY 07: VPN vs Hacker Investigation (All Affected Users)
+// Mục đích: Phân biệt user đang dùng VPN/đi công tác
+//           hay bị Hacker tấn công, dựa trên DeviceStatus (không dựa trên Country)
+// ============================================================
+// Logic cốt lõi (từ post_mortem_logic_fixes.md):
+//   - VPN/Công tác: Unknown IP + Trusted Device → SAFE
+//   - Hacker:       Unknown IP + Unknown Device  → SUSPICIOUS
+//   - Hacker nội địa cũng bị bắt (không phân biệt Country)
+// ============================================================
 
-let targetUser = "Zakir.Ahmed@bd.crystal-martin.com";
+// Tự động lấy danh sách affected users từ AlertEvidence
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
 
-// Lấy thông tin thiết bị và trình duyệt từ AADSignInEventsBeta
-let signins = AADSignInEventsBeta
+let TargetUPNs =
+    IdentityInfo
+    | where Timestamp >= ago(30d)
+    | where AccountObjectId in (AffectedUsers)
+    | distinct AccountUpn;
+
+// Lấy sign-in THÀNH CÔNG từ bảng chính thức (không dùng AADSignInEventsBeta deprecated)
+let signins = EntraIdSignInEvents
 | where Timestamp >= ago(30d)
-| where AccountUpn =~ targetUser
-| where isnotempty(Country);
+| where AccountUpn in (TargetUPNs)
+| where ErrorCode == 0;
 
-// Lấy thông tin nhà mạng (ISP) từ IdentityLogonEvents
+// Lấy ISP từ IdentityLogonEvents (EntraIdSignInEvents không có cột ISP)
 let isps = IdentityLogonEvents
 | where Timestamp >= ago(30d)
-| where AccountUpn =~ targetUser
+| where AccountUpn in (TargetUPNs)
 | where isnotempty(ISP)
 | distinct IPAddress, ISP;
 
-// Kết hợp và phân tích
+// Kết hợp và phân tích — pivot theo DeviceStatus thay vì Country
 signins
 | join kind=leftouter isps on IPAddress
-| extend IsNonBD = iff(Country != "BD", true, false)
-| extend DeviceStatus = iff(isempty(DeviceName), "Unknown Device", "Known Device Name")
+| extend DeviceStatus = case(
+    isempty(DeviceName) or DeviceName == "", "⚠ No Device (Suspicious)",
+    "✅ Has Device Name"
+  )
+| extend CountryDisplay = iff(isempty(Country), "Unknown", Country)
 | summarize 
     TotalSignIns = count(),
     UniqueIPs = dcount(IPAddress),
+    UniqueUsers = dcount(AccountUpn),
+    UserList = make_set(AccountUpn, 100),
     ISPList = make_set(ISP, 10),
-    DeviceList = make_set(DeviceName, 10),
+    DeviceList = make_set(DeviceName, 20),
     BrowserList = make_set(Browser, 10),
-    OSList = make_set(OSPlatform, 5)
-    by IsNonBD, Country, DeviceStatus
-| order by IsNonBD desc, TotalSignIns desc
+    OSList = make_set(OSPlatform, 5),
+    Countries = make_set(Country, 10)
+    by DeviceStatus, CountryDisplay
+| order by DeviceStatus asc, TotalSignIns desc

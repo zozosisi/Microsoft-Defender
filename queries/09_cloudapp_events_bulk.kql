@@ -1,6 +1,15 @@
-// 09_cloudapp_events_bulk.kql
-// Mục đích: Export toàn bộ log thao tác ứng dụng (CloudAppEvents) của 54 user bị ảnh hưởng
-// để Python script tự động chấm điểm Data Breach.
+// ============================================================
+// QUERY 09: CloudApp Events Bulk Export (All Affected Users)
+// Export CSV → Save as: cloudapp_events.csv
+// ============================================================
+// Mục đích: Export toàn bộ log thao tác CloudAppEvents của affected users
+//           để Python script (analyze_signins.py) tự động chấm điểm Data Breach.
+// ============================================================
+// ⚠️ LƯU Ý: Advanced Hunting giới hạn 10,000 rows per query.
+//    Nếu output bị truncate, chia query theo thời gian:
+//    - Run 1: ago(30d) → ago(15d)
+//    - Run 2: ago(15d) → now()
+// ============================================================
 
 let AffectedUsers =
     AlertEvidence
@@ -9,7 +18,7 @@ let AffectedUsers =
     | where isnotempty(AccountObjectId)
     | distinct AccountObjectId;
 
-// Lấy UPN bằng cách match qua IdentityInfo (chú ý: phải có Timestamp > ago(30d) để tránh lỗi Advanced Hunting default 24h)
+// Lấy UPN mapping (cần Timestamp >= ago(30d) để tránh lỗi Advanced Hunting default 24h)
 let TargetUsers = 
     IdentityInfo
     | where Timestamp >= ago(30d)
@@ -19,15 +28,20 @@ let TargetUsers =
 CloudAppEvents
 | where Timestamp >= ago(30d)
 | where AccountId in (TargetUsers) or AccountObjectId in (AffectedUsers)
+// Loại bỏ noise — chỉ giữ actions có ý nghĩa cho investigation
+| where ActionType !in ("LogonUser", "PrimaryLogon", "UserLoggedIn")
 | project 
     Timestamp,
     AccountId,
     AccountObjectId,
+    AccountDisplayName,
     ActionType,
     Application,
     ObjectName,
     IPAddress,
     CountryCode,
     ISP,
-    UserAgent
-| order by Timestamp asc
+    UserAgent,
+    DeviceType,
+    OSPlatform
+| order by AccountId asc, Timestamp asc

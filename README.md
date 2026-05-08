@@ -1,7 +1,7 @@
 # Microsoft Defender XDR — Investigation & Schema Reference
 
 > **Tenant:** Crystal Group (crystal-martin.com / crystal-abl.com.bd / crystal-cet.com.bd)  
-> **Last Updated:** 2026-05-08  
+> **Last Updated:** 2026-05-08 (KQL 07-10 reviewed & optimized)  
 > **Purpose:** Tài liệu hóa schema, phân tích incidents, và hỗ trợ điều tra bảo mật trên Microsoft Defender XDR
 
 ---
@@ -46,7 +46,8 @@ Microsoft-Defender/
 │       └── investigation_report.md            ← Báo cáo chi tiết (auto-generated)
 │
 ├── docs/                                      ← Tài liệu nghiệp vụ & Hướng dẫn
-│   └── detection_logic_reference.md           ← Giải thích chi tiết logic nhận diện VPN/Hacker
+│   ├── detection_logic_reference.md           ← Giải thích chi tiết logic nhận diện VPN/Hacker
+│   └── post_mortem_logic_fixes.md             ← Rút kinh nghiệm: False Positive/Negative fixes
 │
 ├── queries/                                   ← KQL queries cho investigation
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
@@ -62,9 +63,10 @@ Microsoft-Defender/
 │   ├── 04_user_profiles.kql                   ← User identity profiles
 │   ├── 05_phishing_check.kql                  ← Phishing email detection
 │   ├── 06_cloudapp_isp.kql                    ← Backup ISP data (CloudAppEvents)
-│   ├── 07_vpn_vs_hacker_investigation.kql     ← Điều tra thiết bị VPN vs Hacker
-│   ├── 08_post_breach_investigation.kql       ← Truy vết CloudApp (Single User)
-│   └── 09_cloudapp_events_bulk.kql            ← Bulk Data Breach export cho Python
+│   ├── 07_vpn_vs_hacker_investigation.kql     ← Phân biệt VPN vs Hacker theo DeviceStatus
+│   ├── 08_post_breach_investigation.kql       ← Truy vết suspicious actions (Whitelist)
+│   ├── 09_cloudapp_events_bulk.kql            ← Bulk Data Breach export cho Python
+│   └── 10_auth_status.kql                     ← MFA, Password, Account Status & Roles
 │
 └── scripts/                                   ← Scripts phân tích tự động
     └── analyze_signins.py                     ← Baseline + Anomaly detection per user

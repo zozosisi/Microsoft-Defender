@@ -40,10 +40,10 @@ Query 0 (AlertInfo + AlertEvidence)
 | 4 | `04_user_profiles.kql` | `user_profiles.csv` | User identity info |
 | 5 | `05_phishing_check.kql` | `phishing_emails.csv` | Phishing emails to affected users |
 | 6 | `06_cloudapp_isp.kql` | `cloudapp_isp.csv` | Backup ISP data (CloudAppEvents) |
-| 7 | `07_vpn_vs_hacker_investigation.kql` | `07_zakir_ahmed_vpn_vs_hacker.csv` | Điều tra thiết bị VPN vs Hacker |
-| 8 | `08_post_breach_investigation.kql` | `08_zakir_ahmed_post_breach_events.csv` | Truy vết CloudApp (Single User) |
-| 9 | `09_cloudapp_events_bulk.kql` | `cloudapp_events.csv` | Bulk Data Breach export cho Python |
-| 10| `10_auth_status.kql` | `auth_status.csv` | MFA & Password Reset Status |
+| 7 | `07_vpn_vs_hacker_investigation.kql` | *(manual)* | Phân biệt VPN vs Hacker theo DeviceStatus (dùng EntraIdSignInEvents) |
+| 8 | `08_post_breach_investigation.kql` | *(manual)* | Truy vết hành vi suspicious trên CloudApp (Whitelist approach) |
+| 9 | `09_cloudapp_events_bulk.kql` | `cloudapp_events.csv` | Bulk Data Breach export cho Python (⚠️ limit 10K rows) |
+| 10| `10_auth_status.kql` | `auth_status.csv` | MFA, Password, Account Status & Roles |
 
 ## Cách chạy
 
@@ -83,4 +83,7 @@ python analyze_signins.py --data-dir /path/to/csvs --output-dir /path/to/output
 - **Query 0 phải chạy TRƯỚC** — các query 1-6 dùng cùng `let AffectedUsers` subquery
 - **Query 1 split 6 phần** vì KQL limit 100K rows — mỗi query 5 ngày, export 6 CSV rồi merge
 - Query 6 (CloudApp ISP) là **backup** — chỉ cần chạy nếu Query 2 không có đủ data
+- Query 7 & 8 là **công cụ điều tra thủ công** (manual) — cần thay `targetUser` trước khi chạy
+- **Query 9 có thể hit giới hạn 10K rows** — nếu bị truncate, chia theo thời gian (15d + 15d)
+- Query 10 có thể trả `EnrolledMfas` trống nếu Defender for Identity chưa sync — Python có fallback
 - File bắt buộc: `unfamiliar_signin_incidents.csv` (0) + `signin_history_*.csv` (1A-1F). Các file còn lại là optional enrichment

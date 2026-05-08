@@ -1,6 +1,6 @@
 # Hệ Thống Phân Tích Sự Cố Microsoft Defender: Business Logic Reference
 
-> **Cập nhật lần cuối:** 08-May-2026
+> **Cập nhật lần cuối:** 08-May-2026 (KQL 07-10 reviewed & optimized)
 > **Mục đích:** Tài liệu này mô tả chi tiết nghiệp vụ và logic tính toán đằng sau công cụ `analyze_signins.py` để giúp đội ngũ SOC/IT hiểu rõ cách hệ thống đưa ra quyết định cảnh báo.
 
 ---
@@ -17,6 +17,12 @@ Hệ thống kết hợp dữ liệu từ bộ KQL truy vấn (từ 01 đến 10
    - *Cơ chế Fallback (Dự phòng):* Nếu dữ liệu `IdentityAccountInfo` trống (do tenant chưa tích hợp đầy đủ UEBA/Defender for Identity), hệ thống sẽ tự động quét chéo bảng `signin_history.csv` để tìm cột `AuthenticationRequirement`. Nếu có lịch sử yêu cầu MFA, user sẽ được đánh dấu là "MFA Enforced (Detected from Sign-ins)".
 
 *(Lưu ý: Query 07 và 08 là các công cụ KQL hỗ trợ điều tra thủ công (Manual Investigation) độc lập, sau khi test thành công thì logic đã được tích hợp thẳng vào Python).*
+
+> **⚠️ Quan trọng (v2 — 08-May-2026):**
+> - Query 07 đã chuyển sang dùng `EntraIdSignInEvents` (thay vì `AADSignInEventsBeta` deprecated) và phân tích theo **DeviceStatus** thay vì Country — phù hợp với bài học [Post-Mortem #1](post_mortem_logic_fixes.md).
+> - Query 08 đã chuyển sang dùng **Whitelist approach** (chỉ giữ các suspicious ActionType) thay vì Blacklist — tránh bỏ lọt hành vi hacker.
+> - Query 09 đã bổ sung `AccountDisplayName`, `DeviceType`, `OSPlatform` để hỗ trợ Python phân tích VPN vs Hacker.
+> - Query 10 đã bổ sung `AccountStatus`, `AuthenticationMethod`, `SourceProviderRiskLevel`, `AssignedRoles`.
 
 ---
 

@@ -2,9 +2,16 @@
 // QUERY 10: Authentication Status (MFA & Password)
 // Export CSV → Save as: auth_status.csv
 // ============================================================
-// Lấy trạng thái đăng ký MFA và thời gian đổi mật khẩu
-// của các affected users từ bảng IdentityAccountInfo
+// Lấy trạng thái đăng ký MFA, thời gian đổi mật khẩu,
+// account status, và role assignments của affected users
+// từ bảng IdentityAccountInfo.
 // ============================================================
+// ⚠️ LƯU Ý: Nếu EnrolledMfas trống và LastPasswordChangeTime = "Invalid date"
+//    cho tất cả users → Defender for Identity / UEBA chưa sync đầy đủ.
+//    Python script có fallback: infer MFA từ AuthenticationRequirement
+//    trong signin_history.csv (xem detection_logic_reference.md Section 1).
+// ============================================================
+
 let AffectedUsers =
     AlertEvidence
     | where Timestamp > ago(30d)
@@ -25,8 +32,11 @@ IdentityAccountInfo
 | project 
     Timestamp,
     AccountUpn,
-    AccountId,
     DisplayName,
     EnrolledMfas,
-    LastPasswordChangeTime
+    LastPasswordChangeTime,
+    AccountStatus,
+    AuthenticationMethod,
+    SourceProviderRiskLevel,
+    AssignedRoles
 | order by AccountUpn asc
