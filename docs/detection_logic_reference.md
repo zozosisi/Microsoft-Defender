@@ -32,13 +32,17 @@ Một thuộc tính (IP, Quốc gia, Thiết bị, Trình duyệt) được coi 
 
 Hệ thống so sánh các lần đăng nhập với Baseline để tìm ra sự khác biệt:
 
-### A. Phân biệt VPN hợp lệ và Hacker (Botnet)
+### A. Phân biệt VPN/Công tác hợp lệ và Hacker (Botnet)
 Đây là logic cốt lõi để loại bỏ False Positives cho các nhân viên đi công tác hoặc làm việc ở chi nhánh nước ngoài:
-*   **VPN hợp lệ:** Đăng nhập từ IP nước ngoài (Non-BD) **NHƯNG** thiết bị sử dụng là **Trusted Device** (Tên máy tính quen thuộc).
-*   **Hacker Botnet:** Đăng nhập từ IP nước ngoài (Non-BD) **VÀ** thiết bị là thiết bị lạ (không có trong Trusted Devices) hoặc không có tên thiết bị (Unknown Device).
+*   **Đi công tác / VPN hợp lệ:** Truy cập từ mạng lạ (Unknown IP) hoặc quốc gia lạ (Foreign Country) **NHƯNG** thiết bị sử dụng là **Trusted Device** (Tên máy tính quen thuộc được cấp phát). Hệ thống sẽ không phạt điểm Data Breach cho các hoạt động từ thiết bị này.
+*   **Hacker Botnet:** Đăng nhập từ quốc gia lạ (Foreign Country) **VÀ** thiết bị là thiết bị lạ (không có trong Trusted Devices) hoặc không có tên thiết bị (Unknown Device).
 
 ### B. Hành vi Xâm nhập (Post-Breach / Data Breach)
-Hệ thống quét `CloudAppEvents` bằng cách đối chiếu với các địa chỉ IP của Hacker. Nếu phát hiện Hacker có bất kỳ hành động nào dưới đây, mức độ nghiêm trọng sẽ tăng lên Tối Đa:
+Hệ thống quét `CloudAppEvents` bằng cách đối chiếu với các địa chỉ IP của Hacker. Để giải quyết các điểm mù (xem thêm tại [Tài liệu Post-Mortem](post_mortem_logic_fixes.md)), một IP chỉ được đưa vào tầm ngắm Data Breach nếu nó đáp ứng điều kiện **Suspicious IP**:
+- Là một địa chỉ mạng lạ (Unknown IP)
+- **VÀ** xuất phát từ một thiết bị lạ / không định danh (Unknown/Empty Device)
+
+Nếu phát hiện Suspicious IP có bất kỳ hành động nào dưới đây, mức độ nghiêm trọng sẽ tăng lên Tối Đa:
 - Đánh cắp: `FileDownloaded`
 - Phá hoại: `FileRecycled`, `FolderRecycled`
 - Đọc trộm: `MailItemsAccessed`, `eDiscoverySearch`, `FileAccessed`
