@@ -114,6 +114,30 @@ def load_phishing_data(data_dir: Path) -> pd.DataFrame:
     return df
 
 
+def load_cloudapp_data(data_dir: Path) -> pd.DataFrame:
+    """Load CloudAppEvents data for post-breach analysis."""
+    path = data_dir / "cloudapp_events.csv"
+    if not path.exists():
+        print("  ⚠ cloudapp_events.csv not found — Post-breach analysis will be skipped")
+        return pd.DataFrame()
+    df = pd.read_csv(path, low_memory=False)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="mixed")
+    print(f"  ✓ Loaded cloudapp_events.csv: {len(df)} rows")
+    return df
+
+
+def load_auth_status(data_dir: Path) -> pd.DataFrame:
+    """Load MFA and Password reset data."""
+    path = data_dir / "auth_status.csv"
+    if not path.exists():
+        print("  ⚠ auth_status.csv not found — Auth status enrichment will be skipped")
+        return pd.DataFrame()
+    df = pd.read_csv(path, low_memory=False)
+    print(f"  ✓ Loaded auth_status.csv: {len(df)} rows")
+    return df
+
+
+
 # ============================================================
 # BASELINE BUILDING
 # ============================================================
@@ -356,11 +380,75 @@ def enrich_with_phishing(user_upn: str, phish_df: pd.DataFrame) -> dict:
     return {"PhishingEmailsReceived": len(user_phish)}
 
 
+def enrich_with_cloudapp(user_upn: str, cloudapp_df: pd.DataFrame, foreign_ips: list) -> dict:
+    """Check CloudAppEvents for data breach actions from foreign IPs."""
+    if cloudapp_df.empty or not foreign_ips:
+        return {"DataBreachEvents": 0, "DataBreachActions": []}
+
+    # Match by email/UPN or DisplayName (CloudAppEvents uses AccountId which is usually UPN)
+    user_ca = cloudapp_df[
+        (cloudapp_df["AccountId"].str.lower() == user_upn.lower()) |
+        (cloudapp_df["AccountId"].str.contains(user_upn.split('@')[0], case=False, na=False))
+    ]
+    
+    if user_ca.empty:
+        return {"DataBreachEvents": 0, "DataBreachActions": []}
+        
+    # Filter by Hacker IPs (from anomalies)
+    hacker_ca = user_ca[user_ca["IPAddress"].isin(foreign_ips)]
+    
+    suspicious_actions = ['FileDownloaded', 'New-InboxRule', 'Set-InboxRule', 'MailItemsAccessed', 'eDiscoverySearch', 'FileRecycled', 'FolderRecycled', 'MessageSent']
+    
+    breach_events = hacker_ca[hacker_ca["ActionType"].isin(suspicious_actions)]
+    
+    return {
+        "DataBreachEvents": len(breach_events),
+        "DataBreachActions": sorted(breach_events["ActionType"].unique().tolist())
+    }
+
+
+def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame) -> dict:
+    """Extract MFA and Password reset info for a user."""
+    result = {"MFAStatus": "Unknown", "LastPasswordReset": "Unknown"}
+    if auth_df.empty:
+        return result
+
+    user_auth = auth_df[
+        (auth_df["AccountUpn"].str.lower() == user_upn.lower()) |
+        (auth_df["AccountObjectId"] == user_upn)
+    ]
+    
+    if user_auth.empty:
+        return result
+        
+    row = user_auth.iloc[0]
+    
+    # Parse MFA
+    mfa_str = str(row.get("EnrolledMfas", ""))
+    if pd.isna(row.get("EnrolledMfas")) or mfa_str == "[]" or mfa_str == "":
+        result["MFAStatus"] = "Not Enrolled"
+    else:
+        # It's usually a JSON string like ["microsoftAuthenticator", "sms"]
+        try:
+            mfa_list = json.loads(mfa_str)
+            result["MFAStatus"] = ", ".join(mfa_list)
+        except:
+            result["MFAStatus"] = mfa_str
+            
+    # Parse Password Reset
+    pwd_time = row.get("LastPasswordChangeTime")
+    if pd.notna(pwd_time):
+        result["LastPasswordReset"] = str(pwd_time)
+        
+    return result
+
+
+
 # ============================================================
 # VERDICT SCORING
 # ============================================================
 def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
-                    phishing_info: dict) -> tuple:
+                    phishing_info: dict, cloudapp_info: dict) -> tuple:
     """Compute anomaly score and verdict for a user."""
     score = 0
 
@@ -382,6 +470,10 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     # Phishing emails received
     score += phishing_info.get("PhishingEmailsReceived", 0) * 5
 
+    # Data Breach Actions (CloudAppEvents)
+    if cloudapp_info.get("DataBreachEvents", 0) > 0:
+        score += 1000  # Instant massive penalty
+
     # Off-hours sign-ins (cap at 10 pts)
     score += min(anomalies.get("OffHoursSignIns", 0), 20) * 0.5
 
@@ -393,7 +485,9 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
         score += 5
 
     # Classify
-    if score >= 30:
+    if cloudapp_info.get("DataBreachEvents", 0) > 0:
+        verdict = "🚨 CONFIRMED COMPROMISED (Data Breach)"
+    elif score >= 30:
         verdict = "🔴 Likely Compromised"
     elif score >= 15:
         verdict = "🟠 Suspicious"
@@ -419,6 +513,8 @@ def analyze(data_dir: Path, output_dir: Path):
     alert_df = load_alert_data(data_dir)
     profile_df = load_user_profiles(data_dir)
     phish_df = load_phishing_data(data_dir)
+    cloudapp_df = load_cloudapp_data(data_dir)
+    auth_df = load_auth_status(data_dir)
 
     # Get unique users
     users = sorted(signin_df["AccountUpn"].unique())
@@ -441,9 +537,15 @@ def analyze(data_dir: Path, output_dir: Path):
         alert_info = enrich_with_alerts(upn, alert_df)
         profile_info = enrich_with_profile(upn, profile_df)
         phishing_info = enrich_with_phishing(upn, phish_df)
+        auth_info = enrich_with_auth_status(upn, auth_df)
+        
+        # Get hacker IPs for cloudapp filter
+        hacker_countries = anomalies.get("HackerBotnetCountries", [])
+        foreign_ips = user_df[user_df["Country"].isin(hacker_countries)]["IPAddress"].unique().tolist()
+        cloudapp_info = enrich_with_cloudapp(upn, cloudapp_df, foreign_ips)
 
         # Compute verdict
-        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info)
+        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info)
 
         # Build summary row
         row = {
@@ -491,6 +593,12 @@ def analyze(data_dir: Path, output_dir: Path):
             # Phishing
             "PhishingEmailsReceived": phishing_info["PhishingEmailsReceived"],
             "SuspiciousISPs": json.dumps(isp_info["SuspiciousISPs"]),
+            # Data Breach
+            "DataBreachEvents": cloudapp_info["DataBreachEvents"],
+            "DataBreachActions": json.dumps(cloudapp_info["DataBreachActions"]),
+            # Auth Status
+            "MFAStatus": auth_info["MFAStatus"],
+            "LastPasswordReset": auth_info["LastPasswordReset"],
             # Verdict
             "AnomalyScore": score,
             "Verdict": verdict,
@@ -552,7 +660,7 @@ def generate_markdown_report(df: pd.DataFrame, output_path: Path):
     ]
 
     # Verdict summary
-    for verdict_type in ["🔴 Likely Compromised", "🟠 Suspicious", "🟢 Likely Safe"]:
+    for verdict_type in ["🚨 CONFIRMED COMPROMISED (Data Breach)", "🔴 Likely Compromised", "🟠 Suspicious", "🟢 Likely Safe"]:
         count = len(df[df["Verdict"] == verdict_type])
         lines.append(f"- **{verdict_type}:** {count} users")
     lines.append("")
@@ -584,6 +692,9 @@ def generate_markdown_report(df: pd.DataFrame, output_path: Path):
             f"| Alerts | {row['AlertCount']} (first: {row['FirstAlert']}, last: {row['LastAlert']}) |",
             f"| Phishing Emails | {row['PhishingEmailsReceived']} |",
             f"| Suspicious ISPs | {row['SuspiciousISPs']} |",
+            f"| MFA Enrolled | {row['MFAStatus']} |",
+            f"| Last Password Reset | {row['LastPasswordReset']} |",
+            f"| Data Breach Events | **{row['DataBreachEvents']}** → {row['DataBreachActions']} |",
             "",
             "---",
             "",

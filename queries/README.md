@@ -43,6 +43,7 @@ Query 0 (AlertInfo + AlertEvidence)
 | 7 | `07_vpn_vs_hacker_investigation.kql` | `07_zakir_ahmed_vpn_vs_hacker.csv` | Điều tra thiết bị VPN vs Hacker |
 | 8 | `08_post_breach_investigation.kql` | `08_zakir_ahmed_post_breach_events.csv` | Truy vết CloudApp (Single User) |
 | 9 | `09_cloudapp_events_bulk.kql` | `cloudapp_events.csv` | Bulk Data Breach export cho Python |
+| 10| `10_auth_status.kql` | `auth_status.csv` | MFA & Password Reset Status |
 
 ## Cách chạy
 

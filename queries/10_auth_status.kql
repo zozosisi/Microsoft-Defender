@@ -1,0 +1,26 @@
+// ============================================================
+// QUERY 10: Authentication Status (MFA & Password)
+// Export CSV → Save as: auth_status.csv
+// ============================================================
+// Lấy trạng thái đăng ký MFA và thời gian đổi mật khẩu
+// của các affected users từ bảng IdentityAccountInfo
+// ============================================================
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
+
+IdentityAccountInfo
+| where Timestamp >= ago(30d)
+| where AccountObjectId in (AffectedUsers)
+| summarize arg_max(Timestamp, *) by AccountObjectId
+| project 
+    Timestamp,
+    AccountUpn,
+    AccountObjectId,
+    AccountDisplayName,
+    EnrolledMfas,
+    LastPasswordChangeTime
+| order by AccountUpn asc
