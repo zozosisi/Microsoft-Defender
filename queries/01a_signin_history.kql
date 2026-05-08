@@ -1,9 +1,8 @@
 // ============================================================
-// QUERY 1A: Sign-in History — Affected Users (Ngày 1-10)
+// QUERY 1A: Sign-in History — Ngày 1-5 (ago 30d → 25d)
 // Export CSV → Save as: signin_history_01.csv
 // ============================================================
-// ⚠️ KQL limit 100K rows → phải split thành 3 queries (10 ngày/query)
-// Sau khi export 3 CSV, merge lại: signin_history.csv
+// ⚠️ KQL limit 100K rows → split 6 queries × 5 ngày
 // ============================================================
 let AffectedUsers =
     AlertEvidence
@@ -12,7 +11,7 @@ let AffectedUsers =
     | where isnotempty(AccountObjectId)
     | distinct AccountObjectId;
 EntraIdSignInEvents
-| where Timestamp between (ago(30d) .. ago(20d))
+| where Timestamp between (ago(30d) .. ago(25d))
 | where AccountObjectId in (AffectedUsers)
 | where ErrorCode == 0
 | project

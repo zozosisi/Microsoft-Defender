@@ -48,9 +48,12 @@ Microsoft-Defender/
 ├── queries/                                   ← KQL queries cho investigation
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
 │   ├── 00_unfamiliar_signin_incidents.kql     ← ⭐ Master query — all incidents + users + IPs
-│   ├── 01a_signin_history.kql                 ← Sign-in ngày 1-10 (ago 30d→20d)
-│   ├── 01b_signin_history.kql                 ← Sign-in ngày 11-20 (ago 20d→10d)
-│   ├── 01c_signin_history.kql                 ← Sign-in ngày 21-30 (ago 10d→now)
+│   ├── 01a_signin_history.kql                 ← Sign-in ngày 1-5 (ago 30d→25d)
+│   ├── 01b_signin_history.kql                 ← Sign-in ngày 6-10 (ago 25d→20d)
+│   ├── 01c_signin_history.kql                 ← Sign-in ngày 11-15 (ago 20d→15d)
+│   ├── 01d_signin_history.kql                 ← Sign-in ngày 16-20 (ago 15d→10d)
+│   ├── 01e_signin_history.kql                 ← Sign-in ngày 21-25 (ago 10d→5d)
+│   ├── 01f_signin_history.kql                 ← Sign-in ngày 26-30 (ago 5d→now)
 │   ├── 02_isp_data.kql                        ← ISP enrichment (IdentityLogonEvents)
 │   ├── 03_alert_data.kql                      ← Alert evidence details
 │   ├── 04_user_profiles.kql                   ← User identity profiles

@@ -4,7 +4,7 @@
 
 ```
 Bước 0: Chạy Query 0 (Master) → Xác định danh sách users + IPs cần investigate
-Bước 1: Chạy 8 queries còn lại trong Advanced Hunting (security.microsoft.com)
+Bước 1: Chạy 11 queries còn lại trong Advanced Hunting (security.microsoft.com)
 Bước 2: Export CSV → Lưu vào folder incidents/data/export/
 Bước 3: Chạy Python script → Tự động phân tích + tạo report
 ```
@@ -16,7 +16,7 @@ Tất cả queries 1-6 đều sử dụng `let AffectedUsers` subquery — tự 
 ```
 Query 0 (AlertInfo + AlertEvidence)
    └── Xác định ~54 affected users
-         ├── Query 1A/1B/1C: Sign-in history (split 10 ngày/query, limit 100K rows)
+         ├── Query 1A-1F: Sign-in history (split 5 ngày/query, limit 100K rows)
          ├── Query 2: ISP enrichment (IdentityLogonEvents)
          ├── Query 3: Alert details (AlertEvidence)
          ├── Query 4: User profiles (IdentityInfo)
@@ -29,9 +29,12 @@ Query 0 (AlertInfo + AlertEvidence)
 | # | File | Export CSV as | Mô tả |
 |---|------|---------------|--------|
 | **0** | **`00_unfamiliar_signin_incidents.kql`** | **`unfamiliar_signin_incidents.csv`** | **⭐ Master — tất cả incidents + users + IPs** |
-| 1A | `01a_signin_history.kql` | `signin_history_01.csv` | Sign-in history — ngày 1-10 (ago 30d→20d) |
-| 1B | `01b_signin_history.kql` | `signin_history_02.csv` | Sign-in history — ngày 11-20 (ago 20d→10d) |
-| 1C | `01c_signin_history.kql` | `signin_history_03.csv` | Sign-in history — ngày 21-30 (ago 10d→now) |
+| 1A | `01a_signin_history.kql` | `signin_history_01.csv` | Sign-in — ngày 1-5 (ago 30d→25d) |
+| 1B | `01b_signin_history.kql` | `signin_history_02.csv` | Sign-in — ngày 6-10 (ago 25d→20d) |
+| 1C | `01c_signin_history.kql` | `signin_history_03.csv` | Sign-in — ngày 11-15 (ago 20d→15d) |
+| 1D | `01d_signin_history.kql` | `signin_history_04.csv` | Sign-in — ngày 16-20 (ago 15d→10d) |
+| 1E | `01e_signin_history.kql` | `signin_history_05.csv` | Sign-in — ngày 21-25 (ago 10d→5d) |
+| 1F | `01f_signin_history.kql` | `signin_history_06.csv` | Sign-in — ngày 26-30 (ago 5d→now) |
 | 2 | `02_isp_data.kql` | `isp_data.csv` | ISP enrichment (IdentityLogonEvents) |
 | 3 | `03_alert_data.kql` | `alert_data.csv` | Unfamiliar sign-in alert evidence |
 | 4 | `04_user_profiles.kql` | `user_profiles.csv` | User identity info |
@@ -74,6 +77,6 @@ python analyze_signins.py --data-dir /path/to/csvs --output-dir /path/to/output
 ## Lưu ý
 
 - **Query 0 phải chạy TRƯỚC** — các query 1-6 dùng cùng `let AffectedUsers` subquery
-- **Query 1 split 3 phần** vì KQL limit 100K rows — export 3 CSV rồi merge
+- **Query 1 split 6 phần** vì KQL limit 100K rows — mỗi query 5 ngày, export 6 CSV rồi merge
 - Query 6 (CloudApp ISP) là **backup** — chỉ cần chạy nếu Query 2 không có đủ data
-- File bắt buộc: `unfamiliar_signin_incidents.csv` (0) + `signin_history_*.csv` (1A-1C). Các file còn lại là optional enrichment
+- File bắt buộc: `unfamiliar_signin_incidents.csv` (0) + `signin_history_*.csv` (1A-1F). Các file còn lại là optional enrichment
