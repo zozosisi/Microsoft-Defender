@@ -27,10 +27,10 @@ Hệ thống kết hợp dữ liệu từ bộ KQL truy vấn (từ 01 đến 10
 ---
 
 ## 2. Xây Dựng Baseline (Hành Vi Thói Quen)
-Thay vì sử dụng quy tắc tĩnh (static rules), hệ thống tự động học thói quen của từng user trong 30 ngày qua bằng cách thiết lập **Trusted Baseline** với ngưỡng `10%` (TRUSTED_THRESHOLD).
+Thay vì sử dụng quy tắc tĩnh (static rules), hệ thống tự động học thói quen của từng user trong 30 ngày qua bằng cách thiết lập **Trusted Baseline** với ngưỡng `5%` (TRUSTED_THRESHOLD).
 
-Một thuộc tính (IP, Quốc gia, Thiết bị, Trình duyệt) được coi là **"Đáng tin cậy" (Trusted)** nếu nó chiếm ít nhất 10% tổng số lần đăng nhập của người dùng đó.
-*Ví dụ: Nếu user có 100 lần đăng nhập, trong đó 90 lần bằng máy `CMA-PC438` và 10 lần bằng `iPhone`, thì cả 2 thiết bị này đều được coi là Trusted.*
+Một thuộc tính (IP, Quốc gia, Thiết bị, Trình duyệt) được coi là **"Đáng tin cậy" (Trusted)** nếu nó chiếm ít nhất 5% tổng số lần đăng nhập của người dùng đó.
+*Ví dụ: Nếu user có 100 lần đăng nhập, trong đó 90 lần bằng máy `CMA-PC438` và 5 lần bằng `iPhone`, thì cả 2 thiết bị này đều được coi là Trusted.*
 
 ---
 
@@ -55,6 +55,8 @@ Nếu phát hiện Suspicious IP có bất kỳ hành động nào dưới đây
 - Phát tán mã độc: `MessageSent` (qua Teams)
 - Ẩn giấu vết: `New-InboxRule`, `Set-InboxRule`
 
+> **Lưu ý:** `FileAccessed` (truy cập file) được bao gồm vì dữ liệu thực tế cho thấy đây là hành vi phổ biến thứ 2 của hacker (527 events), chỉ sau `MailItemsAccessed`.
+
 ---
 
 ## 4. Hệ Thống Tính Điểm (Scoring Matrix)
@@ -64,6 +66,7 @@ Nếu phát hiện Suspicious IP có bất kỳ hành động nào dưới đây
 | Rủi Ro | Công thức phạt (Penalty) | Max Cap | Ý Nghĩa |
 |--------|---------------------------|---------|---------|
 | **Data Breach Actions** | **+1000 điểm** (Ngay lập tức) | - | Hacker đã chạm vào dữ liệu (Xóa/Tải file) |
+| **Suspicious IP Sign-ins** | **+5 điểm** / mỗi IP đáng ngờ | Max 50đ | Unknown IP + Unknown Device — bắt hacker nội địa |
 | **Hacker Botnet Countries** | **+30 điểm** / mỗi quốc gia lạ | - | Hacker đang dùng Residential Proxy để ẩn danh |
 | **VPN Countries** | **+0 điểm** | - | Người dùng hợp lệ dùng VPN công ty |
 | **Suspicious ISPs** | **+15 điểm** / mỗi ISP độc hại | - | Đăng nhập từ Hosting, VPS, mạng ẩn danh |
@@ -73,6 +76,7 @@ Nếu phát hiện Suspicious IP có bất kỳ hành động nào dưới đây
 | **Phishing Target** | **+5 điểm** / email lừa đảo | - | User là mục tiêu của chiến dịch Phishing |
 | **Off-Hours Sign-ins** | **+0.5 điểm** / lần đăng nhập | Max 10đ | Đăng nhập vào ban đêm (ngoài giờ hành chính) |
 | **Unmanaged Devices** | **+5 điểm** | Tĩnh | Nếu >80% lượt đăng nhập từ thiết bị cá nhân |
+| **Admin Account Boost** | **+10 điểm** | Tĩnh | Nếu tài khoản có quyền Admin và đã bị nghi ngờ (≥ 15đ) |
 
 ---
 

@@ -389,10 +389,9 @@ def enrich_with_cloudapp(user_upn: str, account_object_id: str, cloudapp_df: pd.
     if cloudapp_df.empty or not untrusted_ips:
         return {"DataBreachEvents": 0, "DataBreachActions": []}
 
-    # Match by email/UPN, DisplayName, OR AccountObjectId
+    # Match by UPN (AccountId) OR AccountObjectId — no partial match to avoid false positives
     user_ca = cloudapp_df[
         (cloudapp_df["AccountId"].str.lower() == user_upn.lower()) |
-        (cloudapp_df["AccountId"].str.contains(user_upn.split('@')[0], case=False, na=False)) |
         (cloudapp_df["AccountObjectId"] == account_object_id)
     ]
     
@@ -402,7 +401,14 @@ def enrich_with_cloudapp(user_upn: str, account_object_id: str, cloudapp_df: pd.
     # Filter by Untrusted IPs (from anomalies)
     hacker_ca = user_ca[user_ca["IPAddress"].isin(untrusted_ips)]
     
-    suspicious_actions = ['FileDownloaded', 'New-InboxRule', 'Set-InboxRule', 'MailItemsAccessed', 'eDiscoverySearch', 'FileRecycled', 'FolderRecycled', 'MessageSent']
+    # Full list of suspicious actions (aligned with detection_logic_reference.md Section 3B)
+    suspicious_actions = [
+        'FileDownloaded', 'FileAccessed',           # Data theft / snooping
+        'New-InboxRule', 'Set-InboxRule',            # Persistence / anti-forensics
+        'MailItemsAccessed', 'eDiscoverySearch',     # Email snooping
+        'FileRecycled', 'FolderRecycled',            # Data destruction
+        'MessageSent',                               # Lateral movement via Teams
+    ]
     
     breach_events = hacker_ca[hacker_ca["ActionType"].isin(suspicious_actions)]
     
@@ -413,8 +419,13 @@ def enrich_with_cloudapp(user_upn: str, account_object_id: str, cloudapp_df: pd.
 
 
 def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame, user_df: pd.DataFrame) -> dict:
-    """Extract MFA and Password reset info for a user, using signin logs as fallback."""
-    result = {"MFAStatus": "Not Enrolled / Unknown", "LastPasswordReset": "Unknown"}
+    """Extract MFA, Password reset, Account status, and Admin roles for a user."""
+    result = {
+        "MFAStatus": "Not Enrolled / Unknown",
+        "LastPasswordReset": "Unknown",
+        "AccountStatus": "Unknown",
+        "IsAdmin": False,
+    }
     
     # Fallback 1: Infer MFA from Sign-in Logs (AuthenticationRequirement)
     if not user_df.empty and "AuthenticationRequirement" in user_df.columns:
@@ -434,13 +445,28 @@ def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame, user_df: pd.Da
                 try:
                     mfa_list = json.loads(mfa_str)
                     result["MFAStatus"] = ", ".join(mfa_list)
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError):
                     result["MFAStatus"] = mfa_str
                     
             # Parse Password Reset
             pwd_time = row.get("LastPasswordChangeTime")
             if pd.notna(pwd_time) and str(pwd_time).strip().lower() not in ("invalid date", "nat", "nan", ""):
                 result["LastPasswordReset"] = str(pwd_time)
+            
+            # Parse Account Status (from Q10 enrichment)
+            acct_status = row.get("AccountStatus", "")
+            if pd.notna(acct_status) and str(acct_status).strip():
+                result["AccountStatus"] = str(acct_status).strip()
+            
+            # Parse Assigned Roles — check if user is admin
+            roles_str = str(row.get("AssignedRoles", "[]"))
+            if pd.notna(row.get("AssignedRoles")) and roles_str.strip().lower() not in ("[]", "", "nan"):
+                try:
+                    roles_list = json.loads(roles_str)
+                    if len(roles_list) > 0:
+                        result["IsAdmin"] = True
+                except (json.JSONDecodeError, ValueError, TypeError):
+                    pass
         
     return result
 
@@ -450,7 +476,8 @@ def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame, user_df: pd.Da
 # VERDICT SCORING
 # ============================================================
 def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
-                    phishing_info: dict, cloudapp_info: dict) -> tuple:
+                    phishing_info: dict, cloudapp_info: dict,
+                    auth_info: dict = None) -> tuple:
     """Compute anomaly score and verdict for a user."""
     score = 0
 
@@ -459,6 +486,10 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     # Hacker Countries = +30 points per distinct country
     score += len(anomalies.get("VPNCountries", [])) * 0
     score += len(anomalies.get("HackerBotnetCountries", [])) * 30
+
+    # Suspicious IP sign-ins (Unknown IP + Unknown Device) — catches domestic hackers
+    # +5 points per suspicious IP, max 50 pts (post-mortem #1: hacker can use local ISP)
+    score += min(len(anomalies.get("SuspiciousIPList", [])), 10) * 5
 
     # Suspicious ISPs: High penalty per suspicious ISP
     score += len(isp_info.get("SuspiciousISPs", [])) * 15
@@ -485,6 +516,10 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     # Unmanaged device percentage
     if anomalies.get("UnmanagedPct", 0) > 80:
         score += 5
+
+    # Admin account severity boost (+10 if compromised admin)
+    if auth_info and auth_info.get("IsAdmin", False) and score >= 15:
+        score += 10
 
     # Classify
     if cloudapp_info.get("DataBreachEvents", 0) > 0:
@@ -547,7 +582,7 @@ def analyze(data_dir: Path, output_dir: Path):
         cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, suspicious_ips)
 
         # Compute verdict
-        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info)
+        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info)
 
         # Build summary row
         row = {
@@ -601,6 +636,8 @@ def analyze(data_dir: Path, output_dir: Path):
             # Auth Status
             "MFAStatus": auth_info["MFAStatus"],
             "LastPasswordReset": auth_info["LastPasswordReset"],
+            "AccountStatus": auth_info["AccountStatus"],
+            "IsAdmin": auth_info["IsAdmin"],
             # Verdict
             "AnomalyScore": score,
             "Verdict": verdict,
@@ -696,6 +733,8 @@ def generate_markdown_report(df: pd.DataFrame, output_path: Path):
             f"| Suspicious ISPs | {row['SuspiciousISPs']} |",
             f"| MFA Enrolled | {row['MFAStatus']} |",
             f"| Last Password Reset | {row['LastPasswordReset']} |",
+            f"| Account Status | {row['AccountStatus']} |",
+            f"| Admin Account | {'⚠️ YES' if row['IsAdmin'] else 'No'} |",
             f"| Data Breach Events | **{row['DataBreachEvents']}** → {row['DataBreachActions']} |",
             "",
             "---",
