@@ -1,12 +1,9 @@
 // ============================================================
-// QUERY 1: Sign-in History — All Affected Users
-// Export CSV → Save as: signin_history.csv
+// QUERY 1B: Sign-in History — Affected Users (Ngày 11-20)
+// Export CSV → Save as: signin_history_02.csv
 // ============================================================
-// Lấy toàn bộ sign-in thành công 30 ngày
-// CHỈ cho users bị trigger "Unfamiliar sign-in" (từ Query 0)
-// ============================================================
-// Dùng làm raw data cho Python baseline analysis
-// ⚠️ Nếu >10K rows, thêm: | where LogonType == "Interactive"
+// ⚠️ KQL limit 100K rows → phải split thành 3 queries (10 ngày/query)
+// Sau khi export 3 CSV, merge lại: signin_history.csv
 // ============================================================
 let AffectedUsers =
     AlertEvidence
@@ -15,7 +12,7 @@ let AffectedUsers =
     | where isnotempty(AccountObjectId)
     | distinct AccountObjectId;
 EntraIdSignInEvents
-| where Timestamp > ago(30d)
+| where Timestamp between (ago(20d) .. ago(10d))
 | where AccountObjectId in (AffectedUsers)
 | where ErrorCode == 0
 | project

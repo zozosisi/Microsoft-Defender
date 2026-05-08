@@ -1,0 +1,48 @@
+// ============================================================
+// QUERY 1A: Sign-in History — Affected Users (Ngày 1-10)
+// Export CSV → Save as: signin_history_01.csv
+// ============================================================
+// ⚠️ KQL limit 100K rows → phải split thành 3 queries (10 ngày/query)
+// Sau khi export 3 CSV, merge lại: signin_history.csv
+// ============================================================
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
+EntraIdSignInEvents
+| where Timestamp between (ago(30d) .. ago(20d))
+| where AccountObjectId in (AffectedUsers)
+| where ErrorCode == 0
+| project
+    Timestamp,
+    AccountUpn,
+    AccountDisplayName,
+    AccountObjectId,
+    LogonType,
+    IPAddress,
+    Country,
+    State,
+    City,
+    Latitude,
+    Longitude,
+    DeviceName,
+    OSPlatform,
+    Browser,
+    ClientAppUsed,
+    UserAgent,
+    IsManaged,
+    IsCompliant,
+    DeviceTrustType,
+    Application,
+    ResourceDisplayName,
+    AuthenticationRequirement,
+    RiskLevelDuringSignIn,
+    RiskLevelAggregated,
+    RiskState,
+    RiskEventTypes,
+    ConditionalAccessStatus,
+    SessionId,
+    LastPasswordChangeTimestamp
+| order by AccountUpn asc, Timestamp asc
