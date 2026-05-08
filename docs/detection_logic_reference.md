@@ -6,13 +6,15 @@
 ---
 
 ## 1. Nguồn Dữ Liệu Đầu Vào (Data Ingestion)
-Hệ thống kết hợp dữ liệu từ 6 nguồn KQL khác nhau để tạo góc nhìn 360 độ về một người dùng:
-1. **`signin_history.csv`**: Lịch sử đăng nhập từ Entra ID (`AADSignInEventsBeta`).
-2. **`isp_data.csv`**: Dữ liệu nhà mạng (`IdentityLogonEvents`).
-3. **`alert_data.csv`**: Các cảnh báo bảo mật (`AlertEvidence`).
-4. **`user_profiles.csv`**: Thông tin phòng ban, chức vụ (`IdentityInfo`).
-5. **`phishing_emails.csv`**: Lịch sử nhận email lừa đảo (`EmailEvents`).
-6. **`cloudapp_events.csv`**: Dữ liệu hành vi thao tác file/ứng dụng (`CloudAppEvents`).
+Hệ thống kết hợp dữ liệu từ bộ KQL truy vấn (từ 01 đến 09) để tạo góc nhìn 360 độ về một người dùng, đọc vào qua các file CSV:
+1. **`signin_history.csv`** (Query 01A-01F): Lịch sử đăng nhập từ Entra ID (`AADSignInEventsBeta`).
+2. **`isp_data.csv`** (Query 02): Dữ liệu nhà mạng (`IdentityLogonEvents`).
+3. **`alert_data.csv`** (Query 03): Các cảnh báo bảo mật (`AlertEvidence`).
+4. **`user_profiles.csv`** (Query 04): Thông tin phòng ban, chức vụ (`IdentityInfo`).
+5. **`phishing_emails.csv`** (Query 05): Lịch sử nhận email lừa đảo (`EmailEvents`).
+6. **`cloudapp_events.csv`** (Query 09): Dữ liệu hành vi thao tác file/ứng dụng (`CloudAppEvents`) dùng để phát hiện Data Breach.
+
+*(Lưu ý: Query 07 và 08 là các công cụ KQL hỗ trợ điều tra thủ công (Manual Investigation) độc lập, sau khi test thành công thì logic đã được tích hợp thẳng vào Python).*
 
 ---
 
