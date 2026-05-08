@@ -12,15 +12,21 @@ let AffectedUsers =
     | where isnotempty(AccountObjectId)
     | distinct AccountObjectId;
 
+let TargetUPNs = 
+    IdentityInfo
+    | where Timestamp >= ago(30d)
+    | where AccountObjectId in (AffectedUsers)
+    | distinct AccountUpn;
+
 IdentityAccountInfo
 | where Timestamp >= ago(30d)
-| where AccountObjectId in (AffectedUsers)
-| summarize arg_max(Timestamp, *) by AccountObjectId
+| where AccountUpn in (TargetUPNs)
+| summarize arg_max(Timestamp, *) by AccountUpn
 | project 
     Timestamp,
     AccountUpn,
-    AccountObjectId,
-    AccountDisplayName,
+    AccountId,
+    DisplayName,
     EnrolledMfas,
     LastPasswordChangeTime
 | order by AccountUpn asc
