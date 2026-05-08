@@ -380,15 +380,16 @@ def enrich_with_phishing(user_upn: str, phish_df: pd.DataFrame) -> dict:
     return {"PhishingEmailsReceived": len(user_phish)}
 
 
-def enrich_with_cloudapp(user_upn: str, cloudapp_df: pd.DataFrame, foreign_ips: list) -> dict:
+def enrich_with_cloudapp(user_upn: str, account_object_id: str, cloudapp_df: pd.DataFrame, foreign_ips: list) -> dict:
     """Check CloudAppEvents for data breach actions from foreign IPs."""
     if cloudapp_df.empty or not foreign_ips:
         return {"DataBreachEvents": 0, "DataBreachActions": []}
 
-    # Match by email/UPN or DisplayName (CloudAppEvents uses AccountId which is usually UPN)
+    # Match by email/UPN, DisplayName, OR AccountObjectId
     user_ca = cloudapp_df[
         (cloudapp_df["AccountId"].str.lower() == user_upn.lower()) |
-        (cloudapp_df["AccountId"].str.contains(user_upn.split('@')[0], case=False, na=False))
+        (cloudapp_df["AccountId"].str.contains(user_upn.split('@')[0], case=False, na=False)) |
+        (cloudapp_df["AccountObjectId"] == account_object_id)
     ]
     
     if user_ca.empty:
@@ -407,38 +408,35 @@ def enrich_with_cloudapp(user_upn: str, cloudapp_df: pd.DataFrame, foreign_ips: 
     }
 
 
-def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame) -> dict:
-    """Extract MFA and Password reset info for a user."""
-    result = {"MFAStatus": "Unknown", "LastPasswordReset": "Unknown"}
-    if auth_df.empty:
-        return result
+def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame, user_df: pd.DataFrame) -> dict:
+    """Extract MFA and Password reset info for a user, using signin logs as fallback."""
+    result = {"MFAStatus": "Not Enrolled / Unknown", "LastPasswordReset": "Unknown"}
+    
+    # Fallback 1: Infer MFA from Sign-in Logs (AuthenticationRequirement)
+    if not user_df.empty and "AuthenticationRequirement" in user_df.columns:
+        mfa_signins = user_df[user_df["AuthenticationRequirement"].str.lower() == "multifactorauthentication"]
+        if len(mfa_signins) > 0:
+            result["MFAStatus"] = "MFA Enforced (Detected from Sign-ins)"
 
-    user_auth = auth_df[
-        (auth_df["AccountUpn"].str.lower() == user_upn.lower()) |
-        (auth_df["AccountObjectId"] == user_upn)
-    ]
-    
-    if user_auth.empty:
-        return result
-        
-    row = user_auth.iloc[0]
-    
-    # Parse MFA
-    mfa_str = str(row.get("EnrolledMfas", ""))
-    if pd.isna(row.get("EnrolledMfas")) or mfa_str == "[]" or mfa_str == "":
-        result["MFAStatus"] = "Not Enrolled"
-    else:
-        # It's usually a JSON string like ["microsoftAuthenticator", "sms"]
-        try:
-            mfa_list = json.loads(mfa_str)
-            result["MFAStatus"] = ", ".join(mfa_list)
-        except:
-            result["MFAStatus"] = mfa_str
+    # Fallback 2: IdentityAccountInfo (auth_status.csv)
+    if not auth_df.empty:
+        user_auth = auth_df[auth_df["AccountUpn"].str.lower() == user_upn.lower()]
+        if not user_auth.empty:
+            row = user_auth.iloc[0]
             
-    # Parse Password Reset
-    pwd_time = row.get("LastPasswordChangeTime")
-    if pd.notna(pwd_time):
-        result["LastPasswordReset"] = str(pwd_time)
+            # Parse MFA
+            mfa_str = str(row.get("EnrolledMfas", ""))
+            if pd.notna(row.get("EnrolledMfas")) and mfa_str.strip().lower() not in ("[]", "", "nan"):
+                try:
+                    mfa_list = json.loads(mfa_str)
+                    result["MFAStatus"] = ", ".join(mfa_list)
+                except:
+                    result["MFAStatus"] = mfa_str
+                    
+            # Parse Password Reset
+            pwd_time = row.get("LastPasswordChangeTime")
+            if pd.notna(pwd_time) and str(pwd_time).strip().lower() not in ("invalid date", "nat", "nan", ""):
+                result["LastPasswordReset"] = str(pwd_time)
         
     return result
 
@@ -537,12 +535,13 @@ def analyze(data_dir: Path, output_dir: Path):
         alert_info = enrich_with_alerts(upn, alert_df)
         profile_info = enrich_with_profile(upn, profile_df)
         phishing_info = enrich_with_phishing(upn, phish_df)
-        auth_info = enrich_with_auth_status(upn, auth_df)
+        auth_info = enrich_with_auth_status(upn, auth_df, user_df)
         
         # Get hacker IPs for cloudapp filter
         hacker_countries = anomalies.get("HackerBotnetCountries", [])
         foreign_ips = user_df[user_df["Country"].isin(hacker_countries)]["IPAddress"].unique().tolist()
-        cloudapp_info = enrich_with_cloudapp(upn, cloudapp_df, foreign_ips)
+        account_object_id = user_df["AccountObjectId"].iloc[0]
+        cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, foreign_ips)
 
         # Compute verdict
         score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info)
