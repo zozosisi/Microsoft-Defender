@@ -536,8 +536,10 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     # Foreign country sign-ins: Penalize Hacker variety, not VPN variety
     # VPN Countries = +0 points (legitimate)
     # Hacker Countries = +30 points per distinct country
-    score += len(anomalies.get("VPNCountries", [])) * 0
-    score += len(anomalies.get("HackerBotnetCountries", [])) * 30
+    # IMPORTANT: Dedup — if a country has BOTH hacker and VPN sign-ins, don't penalize it
+    # (e.g., button_lin in CN: 16900 trusted device sign-ins + 10 telemetry drops)
+    hacker_only_countries = set(anomalies.get("HackerBotnetCountries", [])) - set(anomalies.get("VPNCountries", []))
+    score += len(hacker_only_countries) * 30
 
     # Suspicious IP sign-ins (Unknown IP + Unknown Device) — catches domestic hackers
     # +5 points per suspicious IP, max 50 pts (post-mortem #1: hacker can use local ISP)
@@ -655,7 +657,8 @@ def analyze(data_dir: Path, output_dir: Path):
             "TrustedIPs": json.dumps(baseline["TrustedIPs"]),
             "TrustedIPCount": len(baseline["TrustedIPs"]),
             "TotalUniqueIPs": baseline["TotalUniqueIPs"],
-            "TrustedCountries": json.dumps(baseline["AllCountries"]),
+            "TrustedCountries": json.dumps(baseline["TrustedCountries"]),
+            "AllCountries": json.dumps(baseline["AllCountries"]),
             "TrustedCountryCount": len(baseline["TrustedCountries"]),
             "TrustedCities": json.dumps(baseline["TrustedCities"]),
             "TrustedDevices": json.dumps(baseline["TrustedDevices"]),
@@ -684,6 +687,7 @@ def analyze(data_dir: Path, output_dir: Path):
             # Phishing
             "PhishingEmailsReceived": phishing_info["PhishingEmailsReceived"],
             "SuspiciousISPs": json.dumps(isp_info["SuspiciousISPs"]),
+            "SuspiciousIPs": json.dumps(anomalies.get("SuspiciousIPList", [])),
             # Data Breach
             "DataBreachEvents": cloudapp_info["DataBreachEvents"],
             "DataBreachActions": json.dumps(cloudapp_info["DataBreachActions"]),
@@ -782,7 +786,8 @@ def generate_markdown_report(df: pd.DataFrame, output_path: Path):
             f"|--------|-------|",
             f"| Total Sign-ins | {row['TotalSignIns']} ({row['ActiveDays']} active days) |",
             f"| Trusted IPs | {row['TrustedIPCount']} / {row['TotalUniqueIPs']} unique |",
-            f"| Countries | {row['TrustedCountries']} |",
+            f"| Trusted Countries (≥5%) | {row['TrustedCountries']} |",
+            f"| All Countries Seen | {row['AllCountries']} |",
             f"| ISPs | {row['ISPList']} |",
             f"| Non-BD Sign-ins | **{row['NonBDSignIns']}** → {row['NonBDCountries']} |",
             f"| Unknown IP Sign-ins | {row['UnknownIPSignIns']} |",
