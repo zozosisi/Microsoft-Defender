@@ -35,6 +35,12 @@ EntraIdSignInEvents
     by SessionId, AccountUpn
 // Nếu 1 phiên đăng nhập (SessionId) bị xé ra dùng ở 2 IP/Quốc gia khác nhau, và có dùng Token để vượt MFA
 | where UniqueIPs > 1 
-| extend IsCompromised = iff(UniqueCountries > 1 and TokenTheftSuspected == true, "🚨 100% AiTM Token Theft", "🟠 Suspicious Session Sharing")
-| project IsCompromised, AccountUpn, FirstSeen, LastSeen, SessionId, UniqueCountries, CountryList, UniqueIPs, IPList, DeviceList
-| sort by UniqueCountries desc, UniqueIPs desc
+// Kiểm tra xem Session này có bị nhảy sang một thiết bị rỗng (Unknown Device) không?
+| extend HasUnknownDevice = iff(DeviceList has "\"\"" or DeviceList has "[]", true, false)
+| extend IsCompromised = case(
+    UniqueCountries > 1 and TokenTheftSuspected == true and HasUnknownDevice == true, "🚨 100% AiTM Token Theft",
+    UniqueCountries > 1 and TokenTheftSuspected == true and HasUnknownDevice == false, "🟢 Safe - VPN on Trusted Device",
+    "🟠 Suspicious Session Sharing"
+)
+| project IsCompromised, AccountUpn, FirstSeen, LastSeen, SessionId, UniqueCountries, CountryList, UniqueIPs, IPList, DeviceList, TokenTheftSuspected, HasUnknownDevice
+| sort by IsCompromised asc, UniqueCountries desc, UniqueIPs desc
