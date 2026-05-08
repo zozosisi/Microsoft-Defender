@@ -1,0 +1,33 @@
+// 09_cloudapp_events_bulk.kql
+// Mục đích: Export toàn bộ log thao tác ứng dụng (CloudAppEvents) của 54 user bị ảnh hưởng
+// để Python script tự động chấm điểm Data Breach.
+
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
+
+// Lấy UPN bằng cách match qua IdentityInfo (chú ý: phải có Timestamp > ago(30d) để tránh lỗi Advanced Hunting default 24h)
+let TargetUsers = 
+    IdentityInfo
+    | where Timestamp >= ago(30d)
+    | where AccountObjectId in (AffectedUsers)
+    | distinct AccountUpn;
+
+CloudAppEvents
+| where Timestamp >= ago(30d)
+| where AccountId in (TargetUsers) or AccountObjectId in (AffectedUsers)
+| project 
+    Timestamp,
+    AccountId,
+    AccountObjectId,
+    ActionType,
+    Application,
+    ObjectName,
+    IPAddress,
+    CountryCode,
+    ISP,
+    UserAgent
+| order by Timestamp asc
