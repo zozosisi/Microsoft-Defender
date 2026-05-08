@@ -20,8 +20,8 @@ EntraIdSignInEvents
 | where Timestamp > ago(30d)
 | where AccountUpn in~ (CompromisedUsers)
 // Trích xuất chi tiết xác thực để xem MFA có bị bypass bằng Token không
-| extend AuthDetails = tostring(AuthenticationDetails)
-| extend MfaSatisfiedByToken = iff(AuthDetails has "MFA requirement satisfied by claim in the token" or AuthDetails has "MFA requirement satisfied by primary refresh token", true, false)
+| extend AuthDetails = tostring(AuthenticationProcessingDetails)
+| extend MfaSatisfiedByToken = iff(AuthDetails has "MFA requirement satisfied by claim in the token" or AuthDetails has "MFA requirement satisfied by primary refresh token" or AuthenticationRequirement == "singleFactorAuthentication", true, false)
 | summarize 
     FirstSeen = min(Timestamp),
     LastSeen = max(Timestamp),
