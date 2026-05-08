@@ -6,47 +6,30 @@
 // (cả involving one user + involving multiple users)
 // ============================================================
 // Pivot: mỗi AlertId = 1 row duy nhất
-// Account info + IP info được gộp trên cùng 1 row
+// Dùng take_anyif() để lấy Account + IP từ bất kỳ EntityType nào
 // ============================================================
 // ⚠️ Query này là FOUNDATION — chạy TRƯỚC tất cả queries khác
 // Output dùng để: xác định danh sách users + IPs cần investigate
 // ============================================================
-let AccountEvidence =
-    AlertEvidence
-    | where Timestamp > ago(30d)
-    | where Title has "Unfamiliar sign-in"
-    | where EntityType == "Account"
-    | summarize
-        AccountUpn = take_any(AccountUpn),
-        AccountObjectId = take_any(AccountObjectId),
-        AccountName = take_any(AccountName),
-        AccountDomain = take_any(AccountDomain)
-      by AlertId;
-let IpEvidence =
-    AlertEvidence
-    | where Timestamp > ago(30d)
-    | where Title has "Unfamiliar sign-in"
-    | where EntityType == "Ip"
-    | summarize
-        RemoteIP = take_any(RemoteIP)
-      by AlertId;
-// --- Main query: AlertInfo + Account + IP ---
 AlertInfo
 | where Timestamp > ago(30d)
 | where Title has "Unfamiliar sign-in properties"
+| join kind=inner (
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | summarize
+        AccountUpn = take_anyif(AccountUpn, isnotempty(AccountUpn)),
+        AccountObjectId = take_anyif(AccountObjectId, isnotempty(AccountObjectId)),
+        AccountName = take_anyif(AccountName, isnotempty(AccountName)),
+        AccountDomain = take_anyif(AccountDomain, isnotempty(AccountDomain)),
+        RemoteIP = take_anyif(RemoteIP, isnotempty(RemoteIP)),
+        AllEntityTypes = make_set(EntityType)
+      by AlertId
+) on AlertId
 | project
     AlertId,
     AlertTimestamp = Timestamp,
-    Title,
-    Severity,
-    Category,
-    ServiceSource,
-    AttackTechniques
-| join kind=leftouter AccountEvidence on AlertId
-| join kind=leftouter IpEvidence on AlertId
-| project
-    AlertId,
-    AlertTimestamp,
     Title,
     Severity,
     Category,
@@ -55,6 +38,7 @@ AlertInfo
     AccountName,
     AccountDomain,
     RemoteIP,
+    AllEntityTypes,
     ServiceSource,
     AttackTechniques
 | order by AlertTimestamp desc

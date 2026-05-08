@@ -5,7 +5,7 @@
 ```
 Bước 0: Chạy Query 0 (Master) → Xác định danh sách users + IPs cần investigate
 Bước 1: Chạy 8 queries còn lại trong Advanced Hunting (security.microsoft.com)
-Bước 2: Export CSV → Lưu vào folder incidents/data/exports/
+Bước 2: Export CSV → Lưu vào folder incidents/data/export/
 Bước 3: Chạy Python script → Tự động phân tích + tạo report
 ```
 
@@ -29,7 +29,7 @@ Bước 3: Chạy Python script → Tự động phân tích + tạo report
 2. Mở từng file `.kql`, copy toàn bộ nội dung vào query editor
 3. Nhấn **Run query**
 4. Nhấn **Export** → **CSV**
-5. Lưu file CSV với tên đúng theo bảng trên vào `incidents/data/exports/`
+5. Lưu file CSV với tên đúng theo bảng trên vào `incidents/data/export/`
 
 ## Chạy Python phân tích
 

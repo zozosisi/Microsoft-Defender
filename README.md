@@ -39,13 +39,15 @@ Microsoft-Defender/
 │   │   ├── risky_users_20260506.csv           ← 55 users At Risk
 │   │   ├── incidents_queue_20260506.csv       ← 295 incidents queue
 │   │   ├── entra_id_settings.png              ← Screenshot Identity Protection
-│   │   └── exports/                           ← CSV exports từ Advanced Hunting queries
+│   │   └── export/                            ← CSV exports từ Advanced Hunting queries
+│   │       └── unfamiliar_signin_incidents.csv ← ⭐ Query 0 output (991 rows)
 │   └── analysis/                              ← Output từ Python analysis script
 │       ├── user_investigation_summary.csv     ← Bảng tổng hợp per user (auto-generated)
 │       └── investigation_report.md            ← Báo cáo chi tiết (auto-generated)
 │
 ├── queries/                                   ← KQL queries cho investigation
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
+│   ├── 00_unfamiliar_signin_incidents.kql     ← ⭐ Master query — all incidents + users + IPs
 │   ├── 01_signin_history_ABL.kql              ← Sign-in 30 ngày — ABL users
 │   ├── 01_signin_history_CMBD.kql             ← Sign-in 30 ngày — CMBD users
 │   ├── 01_signin_history_CETBD.kql            ← Sign-in 30 ngày — CETBD users
