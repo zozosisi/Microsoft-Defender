@@ -4,65 +4,57 @@
 // ============================================================
 // Lấy TOÀN BỘ incidents "Unfamiliar sign-in properties"
 // (cả involving one user + involving multiple users)
-// Join AlertInfo + AlertEvidence để có full context:
-//   - Alert metadata (severity, timestamp, title)
-//   - Account evidence (AccountUpn, AccountObjectId)
-//   - IP evidence (RemoteIP)
+// ============================================================
+// Pivot: mỗi AlertId = 1 row duy nhất
+// Account info + IP info được gộp trên cùng 1 row
 // ============================================================
 // ⚠️ Query này là FOUNDATION — chạy TRƯỚC tất cả queries khác
 // Output dùng để: xác định danh sách users + IPs cần investigate
 // ============================================================
-let UnfamiliarAlerts = 
-    AlertInfo
-    | where Timestamp > ago(30d)
-    | where Title has "Unfamiliar sign-in properties"
-    | project
-        AlertId,
-        AlertTimestamp = Timestamp,
-        Title,
-        Severity,
-        Category,
-        ServiceSource,
-        DetectionSource,
-        AttackTechniques;
-// --- JOIN với AlertEvidence để lấy account + IP evidence ---
-UnfamiliarAlerts
-| join kind=inner (
+let AccountEvidence =
     AlertEvidence
     | where Timestamp > ago(30d)
-    | where EntityType in ("Account", "Ip")
-    | project
-        AlertId,
-        EvidenceTimestamp = Timestamp,
-        EntityType,
-        EvidenceRole,
-        // Account fields
-        AccountUpn,
-        AccountObjectId,
-        AccountName,
-        AccountDomain,
-        // IP fields
-        RemoteIP,
-        // Device fields
-        DeviceName,
-        // Additional
-        AdditionalFields
-) on AlertId
+    | where Title has "Unfamiliar sign-in"
+    | where EntityType == "Account"
+    | summarize
+        AccountUpn = take_any(AccountUpn),
+        AccountObjectId = take_any(AccountObjectId),
+        AccountName = take_any(AccountName),
+        AccountDomain = take_any(AccountDomain)
+      by AlertId;
+let IpEvidence =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where EntityType == "Ip"
+    | summarize
+        RemoteIP = take_any(RemoteIP)
+      by AlertId;
+// --- Main query: AlertInfo + Account + IP ---
+AlertInfo
+| where Timestamp > ago(30d)
+| where Title has "Unfamiliar sign-in properties"
+| project
+    AlertId,
+    AlertTimestamp = Timestamp,
+    Title,
+    Severity,
+    Category,
+    ServiceSource,
+    AttackTechniques
+| join kind=leftouter AccountEvidence on AlertId
+| join kind=leftouter IpEvidence on AlertId
 | project
     AlertId,
     AlertTimestamp,
     Title,
     Severity,
     Category,
-    ServiceSource,
-    AttackTechniques,
-    EvidenceTimestamp,
-    EntityType,
-    EvidenceRole,
     AccountUpn,
     AccountObjectId,
     AccountName,
     AccountDomain,
     RemoteIP,
-    DeviceName
-| order by AlertTimestamp desc, AlertId asc, EntityType asc
+    ServiceSource,
+    AttackTechniques
+| order by AlertTimestamp desc
