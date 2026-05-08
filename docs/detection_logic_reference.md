@@ -7,7 +7,7 @@
 
 ## 1. Nguồn Dữ Liệu Đầu Vào (Data Ingestion)
 Hệ thống kết hợp dữ liệu từ bộ KQL truy vấn (từ 01 đến 10) để tạo góc nhìn 360 độ về một người dùng, đọc vào qua các file CSV:
-1. **`signin_history.csv`** (Query 01A-01F): Lịch sử đăng nhập từ Entra ID (`AADSignInEventsBeta`).
+1. **`signin_history.csv`** (Query 01A-01F): Lịch sử đăng nhập từ Entra ID (`AADSignInEventsBeta` — ⚠️ deprecated, sẽ chuyển sang `EntraIdSignInEvents`).
 2. **`isp_data.csv`** (Query 02): Dữ liệu nhà mạng (`IdentityLogonEvents`).
 3. **`alert_data.csv`** (Query 03): Các cảnh báo bảo mật (`AlertEvidence`).
 4. **`user_profiles.csv`** (Query 04): Thông tin phòng ban, chức vụ (`IdentityInfo`).
@@ -38,10 +38,17 @@ Một thuộc tính (IP, Quốc gia, Thiết bị, Trình duyệt) được coi 
 
 Hệ thống so sánh các lần đăng nhập với Baseline để tìm ra sự khác biệt:
 
-### A. Phân biệt VPN/Công tác hợp lệ và Hacker (Botnet)
+### A. Phân biệt VPN/Công tác hợp lệ và Hacker (2 tầng nhận diện)
 Đây là logic cốt lõi để loại bỏ False Positives cho các nhân viên đi công tác hoặc làm việc ở chi nhánh nước ngoài:
-*   **Đi công tác / VPN hợp lệ:** Truy cập từ mạng lạ (Unknown IP) hoặc quốc gia lạ (Foreign Country) **NHƯNG** thiết bị sử dụng là **Trusted Device** (Tên máy tính quen thuộc được cấp phát). Hệ thống sẽ không phạt điểm Data Breach cho các hoạt động từ thiết bị này.
-*   **Hacker Botnet:** Đăng nhập từ quốc gia lạ (Foreign Country) **VÀ** thiết bị là thiết bị lạ (không có trong Trusted Devices) hoặc không có tên thiết bị (Unknown Device).
+
+**Tầng 1 — Hacker Botnet (Foreign Country):**
+*   **Hacker Botnet:** Đăng nhập từ **quốc gia lạ** (Foreign Country — không nằm trong TrustedCountries) **VÀ** thiết bị là thiết bị lạ (Unknown Device). → Phạt +30đ/country.
+*   **VPN/Công tác hợp lệ:** Truy cập từ quốc gia lạ **NHƯNG** thiết bị sử dụng là **Trusted Device** (Tên máy tính quen thuộc). → +0đ.
+
+**Tầng 2 — Suspicious IP (Bất kể quốc gia — bắt hacker nội địa):**
+*   Một IP được coi là **Suspicious** nếu nó thỏa 2 điều kiện: **Unknown IP** (không nằm trong TrustedIPs) **VÀ** **Unknown Device** (không có tên thiết bị hoặc thiết bị lạ). → Phạt +5đ/IP.
+*   Logic này được bổ sung sau [Post-Mortem #1](post_mortem_logic_fixes.md): hacker có thể dùng IP nội địa (cùng country với user) nên không thể chỉ dựa vào Foreign Country.
+*   **Lưu ý:** Suspicious IP scoring **không double-count** với Benign Unknown IP scoring. Mỗi IP chỉ rơi vào 1 nhóm.
 
 ### B. Hành vi Xâm nhập (Post-Breach / Data Breach)
 Hệ thống quét `CloudAppEvents` bằng cách đối chiếu với các địa chỉ IP của Hacker. Để giải quyết các điểm mù (xem thêm tại [Tài liệu Post-Mortem](post_mortem_logic_fixes.md)), một IP chỉ được đưa vào tầm ngắm Data Breach nếu nó đáp ứng điều kiện **Suspicious IP**:
@@ -70,7 +77,7 @@ Nếu phát hiện Suspicious IP có bất kỳ hành động nào dưới đây
 | **Hacker Botnet Countries** | **+30 điểm** / mỗi quốc gia lạ | - | Hacker đang dùng Residential Proxy để ẩn danh |
 | **VPN Countries** | **+0 điểm** | - | Người dùng hợp lệ dùng VPN công ty |
 | **Suspicious ISPs** | **+15 điểm** / mỗi ISP độc hại | - | Đăng nhập từ Hosting, VPS, mạng ẩn danh |
-| **Unknown IPs** | **+2 điểm** / mỗi IP lạ | Max 30đ | Hành vi Password Spraying (nhảy IP liên tục) |
+| **Unknown IPs** | **+2 điểm** / mỗi IP lạ | Max 30đ | IP lạ nhưng dùng Trusted Device (VPN/công tác) — không overlap SuspiciousIP |
 | **Entra ID Risk Events** | **+5 điểm** / sự kiện | - | Microsoft đã gắn cờ High Risk cho session này |
 | **Defender Alerts** | **+5 điểm** / cảnh báo | Max 25đ | Số lượng Alert do Defender tự động sinh ra |
 | **Phishing Target** | **+5 điểm** / email lừa đảo | - | User là mục tiêu của chiến dịch Phishing |

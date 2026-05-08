@@ -287,7 +287,16 @@ def detect_user_anomalies(user_df: pd.DataFrame, baseline: dict) -> dict:
     
     # Suspicious IPs for Data Breach Analysis (Unknown IP + Unknown Device)
     suspicious_ip_mask = unknown_ip_mask & unknown_dev_mask
-    anomalies["SuspiciousIPList"] = sorted(user_df.loc[suspicious_ip_mask, "IPAddress"].dropna().unique().tolist())
+    suspicious_ip_list = sorted(user_df.loc[suspicious_ip_mask, "IPAddress"].dropna().unique().tolist())
+    anomalies["SuspiciousIPList"] = suspicious_ip_list
+    
+    # Benign Unknown IPs = Unknown IP but Trusted Device (e.g., employee on hotel WiFi)
+    # These are NOT double-counted with SuspiciousIPList in scoring
+    all_unknown_ips = set(anomalies["UnknownIPList"])
+    suspicious_ips_set = set(suspicious_ip_list)
+    benign_unknown_ips = all_unknown_ips - suspicious_ips_set
+    anomalies["BenignUnknownIPCount"] = len(benign_unknown_ips)
+    
     anomalies["UnknownDeviceList"] = sorted(
         user_df.loc[unknown_dev_mask, "DeviceName"].dropna().unique().tolist()
     )
@@ -494,8 +503,9 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     # Suspicious ISPs: High penalty per suspicious ISP
     score += len(isp_info.get("SuspiciousISPs", [])) * 15
 
-    # Unknown IPs: Penalize variety of unknown IPs (max 30 pts)
-    score += min(len(anomalies.get("UnknownIPList", [])), 15) * 2
+    # Benign Unknown IPs (Unknown IP + Trusted Device = likely travel/VPN)
+    # Only count IPs NOT already in SuspiciousIPList to avoid double-counting
+    score += min(anomalies.get("BenignUnknownIPCount", 0), 15) * 2
 
     # High risk sign-ins (Entra ID Risk Event)
     score += anomalies.get("HighRiskSignIns", 0) * 5
