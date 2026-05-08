@@ -3,7 +3,8 @@
 ## Workflow
 
 ```
-Bước 1: Chạy 8 queries trong Advanced Hunting (security.microsoft.com)
+Bước 0: Chạy Query 0 (Master) → Xác định danh sách users + IPs cần investigate
+Bước 1: Chạy 8 queries còn lại trong Advanced Hunting (security.microsoft.com)
 Bước 2: Export CSV → Lưu vào folder incidents/data/exports/
 Bước 3: Chạy Python script → Tự động phân tích + tạo report
 ```
@@ -12,6 +13,7 @@ Bước 3: Chạy Python script → Tự động phân tích + tạo report
 
 | # | File | Export CSV as | Mô tả |
 |---|------|---------------|--------|
+| **0** | **`00_unfamiliar_signin_incidents.kql`** | **`unfamiliar_signin_incidents.csv`** | **⭐ Master — tất cả incidents + users + IPs** |
 | 1A | `01_signin_history_ABL.kql` | `signin_abl.csv` | Sign-in history — ABL users |
 | 1B | `01_signin_history_CMBD.kql` | `signin_cmbd.csv` | Sign-in history — CMBD users |
 | 1C | `01_signin_history_CETBD.kql` | `signin_cetbd.csv` | Sign-in history — CETBD users |
@@ -56,7 +58,8 @@ python analyze_signins.py --data-dir /path/to/csvs --output-dir /path/to/output
 
 ## Lưu ý
 
+- **Query 0 phải chạy TRƯỚC** — output xác định danh sách users/IPs cần investigate cho các query sau
 - Query 1A-1C tách theo domain vì **KQL giới hạn 10,000 rows** per query
-- Nếu query vẫn bị truncate (> 10K rows), thêm filter: `| where LogonType == "Interactive"` để chỉ lấy interactive sign-ins
+- Nếu query vẫn bị truncate (>10K rows), thêm filter: `| where LogonType == "Interactive"` để chỉ lấy interactive sign-ins
 - Query 6 (CloudApp ISP) là **backup** — chỉ cần chạy nếu Query 2 không có đủ data
-- File bắt buộc: `signin_*.csv` (1A-1C). Các file còn lại là optional enrichment
+- File bắt buộc: `unfamiliar_signin_incidents.csv` (0) + `signin_*.csv` (1A-1C). Các file còn lại là optional enrichment
