@@ -1,0 +1,40 @@
+// 11_aitm_token_theft_investigation.kql
+// Mục đích: Xác nhận 100% Hacker sử dụng kỹ thuật Adversary-in-the-Middle (AiTM) để trộm Session Cookie.
+// Logic: Tìm kiếm các SessionId được sử dụng trên nhiều IP/Quốc gia khác nhau trong một thời gian ngắn,
+//        đặc biệt khi MFA bị "bypass" do đã có sẵn Claim trong Token.
+
+let CompromisedUsers = pack_array(
+    "Niaz_Morshed@crystal-abl.com.bd",
+    "sultana.akter@crystal-cet.com.bd",
+    "Zakir.Ahmed@bd.crystal-martin.com",
+    "Jumur.Akter@crystal-cet.com.bd",
+    "Asraful_Islam2@crystal-abl.com.bd",
+    "Nahid.Hasan@crystal-cet.com.bd",
+    "Nila.Hasda@bd.crystal-martin.com",
+    "Ezazul_Karim@crystal-abl.com.bd",
+    "Rahim.Uddin@crystal-cet.com.bd",
+    "Durjoy_Areng@crystal-abl.com.bd"
+);
+
+EntraIdSignInEvents
+| where Timestamp > ago(30d)
+| where AccountUpn in~ (CompromisedUsers)
+// Trích xuất chi tiết xác thực để xem MFA có bị bypass bằng Token không
+| extend AuthDetails = tostring(AuthenticationDetails)
+| extend MfaSatisfiedByToken = iff(AuthDetails has "MFA requirement satisfied by claim in the token" or AuthDetails has "MFA requirement satisfied by primary refresh token", true, false)
+| summarize 
+    FirstSeen = min(Timestamp),
+    LastSeen = max(Timestamp),
+    UniqueIPs = dcount(IPAddress),
+    IPList = make_set(IPAddress),
+    UniqueCountries = dcount(Country),
+    CountryList = make_set(Country),
+    UniqueDevices = dcount(DeviceName),
+    DeviceList = make_set(DeviceName),
+    TokenTheftSuspected = max(MfaSatisfiedByToken)
+    by SessionId, AccountUpn
+// Nếu 1 phiên đăng nhập (SessionId) bị xé ra dùng ở 2 IP/Quốc gia khác nhau, và có dùng Token để vượt MFA
+| where UniqueIPs > 1 
+| extend IsCompromised = iff(UniqueCountries > 1 and TokenTheftSuspected == true, "🚨 100% AiTM Token Theft", "🟠 Suspicious Session Sharing")
+| project IsCompromised, AccountUpn, FirstSeen, LastSeen, SessionId, UniqueCountries, CountryList, UniqueIPs, IPList, DeviceList
+| sort by UniqueCountries desc, UniqueIPs desc

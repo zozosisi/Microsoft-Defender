@@ -1,0 +1,30 @@
+// 12_infostealer_endpoint_investigation.kql
+// Mục đích: Xác nhận 100% việc rò rỉ mật khẩu/cookie là do máy tính công ty (Trusted Device) của user bị nhiễm mã độc Infostealer.
+// Logic: Tìm kiếm các Alert trên Endpoint liên quan đến "trộm cắp dữ liệu" (stealer, credential, cookie, password)
+//        xảy ra trên thiết bị của các user bị Compromised trong vòng 30 ngày qua.
+
+let CompromisedUsers = pack_array(
+    "Niaz_Morshed@crystal-abl.com.bd",
+    "sultana.akter@crystal-cet.com.bd",
+    "Zakir.Ahmed@bd.crystal-martin.com",
+    "Jumur.Akter@crystal-cet.com.bd",
+    "Asraful_Islam2@crystal-abl.com.bd",
+    "Nahid.Hasan@crystal-cet.com.bd",
+    "Nila.Hasda@bd.crystal-martin.com",
+    "Ezazul_Karim@crystal-abl.com.bd",
+    "Rahim.Uddin@crystal-cet.com.bd",
+    "Durjoy_Areng@crystal-abl.com.bd"
+);
+
+AlertEvidence
+| where Timestamp > ago(30d)
+// Tìm kiếm dấu vết Alert liên quan đến user (có thể qua Email hoặc ObjectId)
+| where AccountUpn in~ (CompromisedUsers) or AccountObjectId in~ (CompromisedUsers)
+| join kind=inner (
+    AlertInfo
+    | where Severity in ("High", "Medium", "Low")
+    // Bộ từ khóa quét các loại mã độc chuyên trộm Cookie/Password (Redline, Raccoon, Lumma, Vidar...)
+    | where Title has_any ("steal", "credential", "cookie", "malware", "token", "password", "Redline", "Raccoon", "Lumma", "Mimikatz", "dump")
+) on AlertId
+| project Timestamp, AccountUpn, DeviceName, Severity, Title, Category, ThreatFamily, DetectionSource
+| sort by Timestamp desc

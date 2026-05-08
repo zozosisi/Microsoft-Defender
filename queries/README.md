@@ -41,9 +41,12 @@ Query 0 (AlertInfo + AlertEvidence)
 | 5 | `05_phishing_check.kql` | `phishing_emails.csv` | Phishing emails to affected users |
 | 6 | `06_cloudapp_isp.kql` | `cloudapp_isp.csv` | Backup ISP data (CloudAppEvents) |
 | 7 | `07_vpn_vs_hacker_investigation.kql` | *(manual)* | Phân biệt VPN vs Hacker theo DeviceStatus (dùng EntraIdSignInEvents) |
-| 8 | `08_post_breach_investigation.kql` | *(manual)* | Truy vết hành vi suspicious trên CloudApp (Whitelist approach) |
-| 9 | `09_cloudapp_events_bulk.kql` | `cloudapp_events.csv` | Bulk Data Breach export cho Python (⚠️ limit 10K rows) |
-| 10| `10_auth_status.kql` | `auth_status.csv` | MFA, Password, Account Status & Roles |
+| 08 | `08_post_breach_investigation.kql` | Hỗ trợ điều tra tay để săn lùng các hành động xâm nhập dữ liệu. | `CloudAppEvents` |
+| 09 | `09_cloudapp_events_bulk.kql` | Export hàng loạt dữ liệu hành vi ứng dụng cho toàn bộ tổ chức (dùng cho pipeline). | `CloudAppEvents` |
+| 10 | `10_auth_status.kql` | Export thông tin MFA, trạng thái tài khoản, và lịch sử đổi mật khẩu. | `IdentityInfo`, `IdentityAccountInfo` |
+| 11 | `11_aitm_token_theft_investigation.kql` | **Chốt hạ:** Phát hiện Hacker trộm Cookie Session (Pass-the-Cookie/AiTM) bằng cách truy vết IP theo SessionId. | `EntraIdSignInEvents` |
+| 12 | `12_infostealer_endpoint_investigation.kql` | **Chốt hạ:** Quét xem máy tính của user có bị nhiễm mã độc trộm mật khẩu (Redline, Raccoon) hay không. | `AlertEvidence`, `AlertInfo` |
+| 13 | `13_hidden_inbox_rules_investigation.kql` | **Chốt hạ:** Phát hiện Hacker cài cắm các Rule ẩn để forward trộm email ra bên ngoài. | `CloudAppEvents` |
 
 ## Cách chạy
 

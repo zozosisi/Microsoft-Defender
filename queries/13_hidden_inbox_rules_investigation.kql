@@ -1,0 +1,33 @@
+// 13_hidden_inbox_rules_investigation.kql
+// Mục đích: Xác nhận 100% Hacker đã chui vào hòm thư và thiết lập các Rule ẩn (Invisible Inbox Rule)
+//           nhằm bí mật Forward email của nạn nhân ra bên ngoài (để trích xuất hóa đơn, hợp đồng).
+// Logic: Tìm các hành động tạo/sửa Inbox Rule từ các IP nằm ngoài Bangladesh,
+//        đặc biệt chú ý đến các Rule có tên vô nghĩa (".", "..") hoặc chứa lệnh ForwardTo.
+
+let CompromisedUsers = pack_array(
+    "Niaz_Morshed@crystal-abl.com.bd",
+    "sultana.akter@crystal-cet.com.bd",
+    "Zakir.Ahmed@bd.crystal-martin.com",
+    "Jumur.Akter@crystal-cet.com.bd",
+    "Asraful_Islam2@crystal-abl.com.bd",
+    "Nahid.Hasan@crystal-cet.com.bd",
+    "Nila.Hasda@bd.crystal-martin.com",
+    "Ezazul_Karim@crystal-abl.com.bd",
+    "Rahim.Uddin@crystal-cet.com.bd",
+    "Durjoy_Areng@crystal-abl.com.bd"
+);
+
+CloudAppEvents
+| where Timestamp > ago(30d)
+| where AccountUpn in~ (CompromisedUsers)
+// Tập trung vào các hành vi thao tác Rule hòm thư
+| where ActionType in ("New-InboxRule", "Set-InboxRule", "UpdateInboxRules")
+// Bóc tách chi tiết cấu hình Rule từ chuỗi JSON RawEventData
+| extend RuleName = tostring(RawEventData.Parameters[0].Value) 
+| extend RuleConfig = tostring(RawEventData.Parameters)
+| extend HasForwarding = iff(RuleConfig has "ForwardTo" or RuleConfig has "RedirectTo", true, false)
+| extend HasDeletion = iff(RuleConfig has "DeleteMessage" or RuleConfig has "MoveToFolder", true, false)
+| extend SuspiciousName = iff(RuleName matches regex @"^[\.\s\_]+$", true, false) // Tên Rule chỉ có dấu chấm, khoảng trắng
+| extend IsCompromised = iff((HasForwarding == true or SuspiciousName == true) and CountryCode != "BD", "🚨 100% Hacker Rule", "🟠 Needs Review")
+| project IsCompromised, Timestamp, AccountUpn, ActionType, RuleName, HasForwarding, HasDeletion, IPAddress, CountryCode, RuleConfig
+| sort by Timestamp desc
