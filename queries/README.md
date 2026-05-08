@@ -44,7 +44,7 @@ Query 0 (AlertInfo + AlertEvidence)
 | 08 | `08_post_breach_investigation.kql` | Hỗ trợ điều tra tay để săn lùng các hành động xâm nhập dữ liệu. | `CloudAppEvents` |
 | 09 | `09_cloudapp_events_bulk.kql` | Export hàng loạt dữ liệu hành vi ứng dụng cho toàn bộ tổ chức (dùng cho pipeline). | `CloudAppEvents` |
 | 10 | `10_auth_status.kql` | Export thông tin MFA, trạng thái tài khoản, và lịch sử đổi mật khẩu. | `IdentityInfo`, `IdentityAccountInfo` |
-| 11 | `11_aitm_token_theft_investigation.kql` | **Chốt hạ:** Phát hiện Hacker trộm Cookie Session (Pass-the-Cookie/AiTM) bằng cách truy vết IP theo SessionId. | `EntraIdSignInEvents` |
+| 11 | `11_aitm_token_theft_investigation.kql` | **Chốt hạ:** Phát hiện Hacker trộm Cookie Session (Pass-the-Cookie/AiTM). Phân biệt VPN vs AiTM bằng DeviceList + TrustedCountries baseline. **v2:** Filter Microsoft infra IPs, thêm 🟡 Review Required tier. | `EntraIdSignInEvents` |
 | 12 | `12_infostealer_endpoint_investigation.kql` | **Chốt hạ:** Quét xem máy tính của user có bị nhiễm mã độc trộm mật khẩu (Redline, Raccoon) hay không. | `AlertEvidence`, `AlertInfo` |
 | 13 | `13_hidden_inbox_rules_investigation.kql` | **Chốt hạ:** Phát hiện Hacker cài cắm các Rule ẩn để forward trộm email ra bên ngoài. | `CloudAppEvents` |
 
@@ -89,4 +89,5 @@ python analyze_signins.py --data-dir /path/to/csvs --output-dir /path/to/output
 - Query 7 & 8 là **công cụ điều tra thủ công** (manual) — cần thay `targetUser` trước khi chạy
 - **Query 9 có thể hit giới hạn 10K rows** — nếu bị truncate, chia theo thời gian (15d + 15d)
 - Query 10 có thể trả `EnrolledMfas` trống nếu Defender for Identity chưa sync — Python có fallback
+- **Query 11 (v2):** Filter Microsoft infrastructure IPs (`2603:10x6:`, `40.107.`, `52.100.`) + TrustedCountries baseline awareness (4-tier verdict: 🚨→🟡→🟢→🟠)
 - File bắt buộc: `unfamiliar_signin_incidents.csv` (0) + `signin_history_*.csv` (1A-1F). Các file còn lại là optional enrichment

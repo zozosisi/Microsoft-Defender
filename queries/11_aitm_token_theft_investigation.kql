@@ -1,7 +1,13 @@
 // 11_aitm_token_theft_investigation.kql
-// Mục đích: Xác nhận 100% Hacker sử dụng kỹ thuật Adversary-in-the-Middle (AiTM) để trộm Session Cookie.
-// Logic: Tìm kiếm các SessionId được sử dụng trên nhiều IP/Quốc gia khác nhau trong một thời gian ngắn,
-//        đặc biệt khi MFA bị "bypass" do đã có sẵn Claim trong Token.
+// Mục đích: Phát hiện kỹ thuật Adversary-in-the-Middle (AiTM) — Session Cookie bị trộm và dùng ở IP/Quốc gia khác.
+// Logic: Tìm SessionId xuất hiện trên nhiều IP/Quốc gia khác nhau, kết hợp MFA bypass + Device + Baseline check.
+// 
+// Fixes (08-May-2026 — Audit Report v2):
+//   - Filter Microsoft infrastructure IPs (2603:10x6::/32, 40.107.x, 52.100.x) để tránh False Positive
+//     → Fix cho case Rahim Uddin (BD→JP): IP JP thực tế là Exchange Online datacenter
+//   - Thêm TrustedCountries baseline per user: nếu cả 2 countries đều nằm trong baseline,
+//     giảm severity xuống "Review Required" thay vì kết luận AiTM ngay
+//     → Fix cho case Niaz Morshed (HK↔CN): cần thêm bằng chứng trước khi kết luận
 
 let CompromisedUsers = pack_array(
     "Niaz_Morshed@crystal-abl.com.bd",
@@ -15,10 +21,47 @@ let CompromisedUsers = pack_array(
     "Rahim.Uddin@crystal-cet.com.bd",
     "Durjoy_Areng@crystal-abl.com.bd"
 );
-
+// ─── Step 1: Build per-user TrustedCountries baseline (countries with ≥5% of sign-ins) ───
+let TrustedCountryBaseline = EntraIdSignInEvents
+| where Timestamp > ago(30d)
+| where AccountUpn in~ (CompromisedUsers)
+// Loại Microsoft infrastructure IPs khỏi baseline calculation
+| where not(IPAddress startswith "2603:1046:")    // Microsoft Corp MSN AS Block (Exchange Online - East Japan, etc.)
+| where not(IPAddress startswith "2603:1036:")    // Microsoft Corp (US regions)
+| where not(IPAddress startswith "2603:1026:")    // Microsoft Corp (EU regions)
+| where not(IPAddress startswith "2603:1056:")    // Microsoft Corp (APAC regions)
+| where not(IPAddress startswith "40.107.")       // Microsoft Exchange Online Protection
+| where not(IPAddress startswith "52.100.")       // Microsoft Exchange Online
+| where isnotempty(Country)
+| summarize CountrySignIns = count() by AccountUpn, Country
+| extend TotalPerUser = toscalar(
+    EntraIdSignInEvents
+    | where Timestamp > ago(30d)
+    | where AccountUpn in~ (CompromisedUsers)
+    | where not(IPAddress startswith "2603:1046:")
+    | where not(IPAddress startswith "2603:1036:")
+    | where not(IPAddress startswith "2603:1026:")
+    | where not(IPAddress startswith "2603:1056:")
+    | where not(IPAddress startswith "40.107.")
+    | where not(IPAddress startswith "52.100.")
+    | summarize count()
+)
+| where CountrySignIns * 1.0 / TotalPerUser >= 0.05
+| summarize TrustedCountries = make_set(Country) by AccountUpn;
+// ─── Step 2: Main AiTM detection query ───
 EntraIdSignInEvents
 | where Timestamp > ago(30d)
 | where AccountUpn in~ (CompromisedUsers)
+// ★ FIX #2: Filter Microsoft infrastructure IPs (Exchange Online backend, datacenter)
+// Dải 2603:10x6::/32 thuộc MICROSOFT-CORP-MSN-AS-BLOCK (AS8075)
+// Khi Exchange Online xử lý tác vụ nền (Managed Folder Assistant, mailbox auditing),
+// nó ghi log sign-in từ IP datacenter → Country = JP/US/EU nhưng KHÔNG phải user thực
+| where not(IPAddress startswith "2603:1046:")    // Exchange Online - East Japan, etc.
+| where not(IPAddress startswith "2603:1036:")    // Exchange Online - US regions
+| where not(IPAddress startswith "2603:1026:")    // Exchange Online - EU regions
+| where not(IPAddress startswith "2603:1056:")    // Exchange Online - APAC regions
+| where not(IPAddress startswith "40.107.")       // Exchange Online Protection
+| where not(IPAddress startswith "52.100.")       // Exchange Online
 // Trích xuất chi tiết xác thực để xem MFA có bị bypass bằng Token không
 | extend AuthDetails = tostring(AuthenticationProcessingDetails)
 | extend MfaSatisfiedByToken = iff(AuthDetails has "MFA requirement satisfied by claim in the token" or AuthDetails has "MFA requirement satisfied by primary refresh token" or AuthenticationRequirement == "singleFactorAuthentication", true, false)
@@ -33,14 +76,27 @@ EntraIdSignInEvents
     DeviceList = make_set(DeviceName),
     TokenTheftSuspected = max(MfaSatisfiedByToken)
     by SessionId, AccountUpn
-// Nếu 1 phiên đăng nhập (SessionId) bị xé ra dùng ở 2 IP/Quốc gia khác nhau, và có dùng Token để vượt MFA
+// Nếu 1 phiên đăng nhập (SessionId) bị xé ra dùng ở 2 IP/Quốc gia khác nhau
 | where UniqueIPs > 1 
 // Kiểm tra xem Session này có bị nhảy sang một thiết bị rỗng (Unknown Device) không?
 | extend HasUnknownDevice = iff(DeviceList has "\"\"" or DeviceList has "[]", true, false)
+// ★ FIX #3: Join TrustedCountries baseline để check xem tất cả countries trong session có nằm trong baseline không
+| join kind=leftouter (TrustedCountryBaseline) on AccountUpn
+| extend AllCountriesTrusted = iff(set_difference(CountryList, TrustedCountries) == dynamic([]), true, false)
+// ★ Verdict logic cập nhật: Không còn "100% AiTM" — thêm tầng "Review Required"
 | extend IsCompromised = case(
-    UniqueCountries > 1 and TokenTheftSuspected == true and HasUnknownDevice == true, "🚨 100% AiTM Token Theft",
-    UniqueCountries > 1 and TokenTheftSuspected == true and HasUnknownDevice == false, "🟢 Safe - VPN on Trusted Device",
+    // Case 1: Multi-country + Token bypass + Unknown device + Countries KHÔNG nằm trong baseline → Highly Likely AiTM
+    UniqueCountries > 1 and TokenTheftSuspected == true and HasUnknownDevice == true and AllCountriesTrusted == false, 
+        "🚨 Highly Likely AiTM Token Theft",
+    // Case 2: Multi-country + Token bypass + Unknown device + NHƯNG countries đều nằm trong baseline → Cần review thêm
+    // (Có thể là corporate WAN/VPN nội bộ, hoặc baseline đã bị contaminated bởi hacker)
+    UniqueCountries > 1 and TokenTheftSuspected == true and HasUnknownDevice == true and AllCountriesTrusted == true, 
+        "🟡 Review Required - Countries in user baseline",
+    // Case 3: Multi-country + Token bypass + Trusted device → VPN hợp lệ
+    UniqueCountries > 1 and TokenTheftSuspected == true and HasUnknownDevice == false, 
+        "🟢 Safe - VPN on Trusted Device",
+    // Default: Suspicious nhưng chưa rõ ràng
     "🟠 Suspicious Session Sharing"
 )
-| project IsCompromised, AccountUpn, FirstSeen, LastSeen, SessionId, UniqueCountries, CountryList, UniqueIPs, IPList, DeviceList, TokenTheftSuspected, HasUnknownDevice
+| project IsCompromised, AccountUpn, FirstSeen, LastSeen, SessionId, UniqueCountries, CountryList, UniqueIPs, IPList, DeviceList, TokenTheftSuspected, HasUnknownDevice, AllCountriesTrusted, TrustedCountries
 | sort by IsCompromised asc, UniqueCountries desc, UniqueIPs desc

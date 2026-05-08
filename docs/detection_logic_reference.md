@@ -1,6 +1,6 @@
 # Hệ Thống Phân Tích Sự Cố Microsoft Defender: Business Logic Reference
 
-> **Cập nhật lần cuối:** 08-May-2026 (KQL 07-10 reviewed & optimized)
+> **Cập nhật lần cuối:** 08-May-2026 (KQL 11 Audit Report v2 fixes applied)
 > **Mục đích:** Tài liệu này mô tả chi tiết nghiệp vụ và logic tính toán đằng sau công cụ `analyze_signins.py` để giúp đội ngũ SOC/IT hiểu rõ cách hệ thống đưa ra quyết định cảnh báo.
 
 ---
@@ -31,6 +31,10 @@ Thay vì sử dụng quy tắc tĩnh (static rules), hệ thống tự động h
 
 Một thuộc tính (IP, Quốc gia, Thiết bị, Trình duyệt) được coi là **"Đáng tin cậy" (Trusted)** nếu nó chiếm ít nhất 5% tổng số lần đăng nhập của người dùng đó.
 *Ví dụ: Nếu user có 100 lần đăng nhập, trong đó 90 lần bằng máy `CMA-PC438` và 5 lần bằng `iPhone`, thì cả 2 thiết bị này đều được coi là Trusted.*
+
+> **⚠️ Cảnh báo Baseline Contamination (v2 — 08-May-2026):**
+> Nếu Hacker đã tạo đủ nhiều sign-in từ các quốc gia khác nhau (≥ 5% mỗi nước), các quốc gia đó sẽ bị tính nhầm thành "TrustedCountries". Hệ thống sẽ tự động **cảnh báo** khi một user có hơn 15 TrustedCountries — đây là dấu hiệu baseline bị ô nhiễm bởi attacker.
+> *Nguồn: Audit Report KQL 11 — case Niaz Morshed (20 TrustedCountries, bao gồm HK/CN do hacker tạo).*
 
 ---
 
@@ -64,6 +68,24 @@ Nếu phát hiện Suspicious IP có bất kỳ hành động nào dưới đây
 - Ẩn giấu vết: `New-InboxRule`, `Set-InboxRule`
 
 > **Lưu ý:** `FileAccessed` (truy cập file) được bao gồm vì dữ liệu thực tế cho thấy đây là hành vi phổ biến thứ 2 của hacker (527 events), chỉ sau `MailItemsAccessed`.
+
+### C. Loại trừ Microsoft Infrastructure IPs (v2 — 08-May-2026)
+
+Hệ thống tự động loại trừ các IP thuộc hạ tầng nội bộ của Microsoft trước khi tính anomaly. Các IP này phát sinh khi Exchange Online thực hiện tác vụ nền (Managed Folder Assistant, mailbox auditing, auto-forwarding check) và ghi log sign-in từ IP datacenter — KHÔNG phải hoạt động của user thực.
+
+**Dải IP được loại trừ:**
+| Prefix | Mô tả |
+|--------|--------|
+| `2603:1046:` | Microsoft Corp MSN AS Block (Exchange Online - East Japan, etc.) |
+| `2603:1036:` | Microsoft Corp (US regions) |
+| `2603:1026:` | Microsoft Corp (EU regions) |
+| `2603:1056:` | Microsoft Corp (APAC regions) |
+| `40.107.` | Microsoft Exchange Online Protection |
+| `52.100.` | Microsoft Exchange Online |
+| `20.190.` | Azure AD / Entra ID authentication endpoints |
+| `40.126.` | Azure AD / Entra ID authentication endpoints |
+
+> *Nguồn: Audit Report KQL 11 — case Rahim Uddin (BD→JP): IP `2603:1046:c09:4bb::5` bị flag là AiTM Token Theft, nhưng thực tế là Exchange Online datacenter tại East Japan.*
 
 ---
 

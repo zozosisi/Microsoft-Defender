@@ -43,6 +43,26 @@ SUSPICIOUS_ISP_KEYWORDS = [
     "private internet", "protonvpn", "tor", "cloudflare"
 ]
 
+# Microsoft Infrastructure IP prefixes (Exchange Online backend, datacenter services)
+# These IPs generate sign-in logs from M365 internal services, NOT from actual users.
+# Source: MICROSOFT-CORP-MSN-AS-BLOCK (AS8075)
+# Fix: Audit Report v2 — Rahim Uddin False Positive (BD→JP was Exchange Online datacenter)
+MICROSOFT_INFRA_IP_PREFIXES = [
+    "2603:1046:",   # Microsoft Corp MSN AS Block (Exchange Online - East Japan, etc.)
+    "2603:1036:",   # Microsoft Corp (US regions)
+    "2603:1026:",   # Microsoft Corp (EU regions)
+    "2603:1056:",   # Microsoft Corp (APAC regions)
+    "40.107.",      # Microsoft Exchange Online Protection
+    "52.100.",      # Microsoft Exchange Online
+    "20.190.",      # Azure AD / Entra ID authentication endpoints
+    "40.126.",      # Azure AD / Entra ID authentication endpoints
+]
+
+# Baseline contamination threshold — if a user has more than this many TrustedCountries,
+# the baseline may have been polluted by attacker-generated sign-ins.
+# Fix: Audit Report v2 — Niaz Morshed had 20 TrustedCountries (likely hacker-generated)
+BASELINE_COUNTRY_WARNING_THRESHOLD = 15
+
 BD_DOMAINS = [
     "crystal-abl.com.bd",
     "bd.crystal-martin.com",
@@ -136,6 +156,18 @@ def load_auth_status(data_dir: Path) -> pd.DataFrame:
     print(f"  ✓ Loaded auth_status.csv: {len(df)} rows")
     return df
 
+
+
+def is_microsoft_infra_ip(ip: str) -> bool:
+    """Check if an IP belongs to Microsoft infrastructure (Exchange Online backend, etc.).
+    
+    These IPs generate sign-in logs from internal M365 services (Managed Folder Assistant,
+    mailbox auditing, auto-forwarding checks), NOT from actual user activity.
+    Country field may show JP/US/EU based on datacenter location, causing False Positives.
+    """
+    if pd.isna(ip) or ip == "":
+        return False
+    return any(str(ip).startswith(prefix) for prefix in MICROSOFT_INFRA_IP_PREFIXES)
 
 
 # ============================================================
@@ -245,6 +277,13 @@ def build_user_baseline(user_df: pd.DataFrame) -> dict:
 def detect_user_anomalies(user_df: pd.DataFrame, baseline: dict) -> dict:
     """Compare each sign-in against baseline, compute anomaly metrics."""
     anomalies = {}
+
+    # ★ FIX: Filter out Microsoft infrastructure IPs before anomaly detection
+    # These are Exchange Online backend IPs that appear as foreign sign-ins but are NOT user activity
+    ms_infra_mask = user_df["IPAddress"].apply(is_microsoft_infra_ip)
+    ms_infra_count = int(ms_infra_mask.sum())
+    anomalies["MicrosoftInfraIPsFiltered"] = ms_infra_count
+    user_df = user_df[~ms_infra_mask].copy()
 
     # Unknown IP sign-ins
     trusted_ips = set(baseline["TrustedIPs"])
@@ -617,6 +656,7 @@ def analyze(data_dir: Path, output_dir: Path):
             "TrustedIPCount": len(baseline["TrustedIPs"]),
             "TotalUniqueIPs": baseline["TotalUniqueIPs"],
             "TrustedCountries": json.dumps(baseline["AllCountries"]),
+            "TrustedCountryCount": len(baseline["TrustedCountries"]),
             "TrustedCities": json.dumps(baseline["TrustedCities"]),
             "TrustedDevices": json.dumps(baseline["TrustedDevices"]),
             "TrustedBrowsers": json.dumps(baseline["TrustedBrowsers"]),
@@ -652,6 +692,14 @@ def analyze(data_dir: Path, output_dir: Path):
             "LastPasswordReset": auth_info["LastPasswordReset"],
             "AccountStatus": auth_info["AccountStatus"],
             "IsAdmin": auth_info["IsAdmin"],
+            # Microsoft Infra IPs filtered
+            "MicrosoftInfraIPsFiltered": anomalies.get("MicrosoftInfraIPsFiltered", 0),
+            # Baseline contamination warning (Audit Report v2 — Fix #3)
+            "BaselineWarning": (
+                f"⚠️ {len(baseline['TrustedCountries'])} Trusted Countries — possible baseline contamination by attacker"
+                if len(baseline["TrustedCountries"]) > BASELINE_COUNTRY_WARNING_THRESHOLD
+                else ""
+            ),
             # Verdict
             "AnomalyScore": score,
             "Verdict": verdict,
@@ -750,6 +798,8 @@ def generate_markdown_report(df: pd.DataFrame, output_path: Path):
             f"| Account Status | {row['AccountStatus']} |",
             f"| Admin Account | {'⚠️ YES' if row['IsAdmin'] else 'No'} |",
             f"| Data Breach Events | **{row['DataBreachEvents']}** → {row['DataBreachActions']} |",
+            f"| MS Infra IPs Filtered | {row.get('MicrosoftInfraIPsFiltered', 0)} |",
+            f"| Baseline Warning | {row.get('BaselineWarning', '')} |",
             "",
             "---",
             "",

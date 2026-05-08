@@ -1,7 +1,7 @@
 # Microsoft Defender XDR — Investigation & Schema Reference
 
 > **Tenant:** Crystal Group (crystal-martin.com / crystal-abl.com.bd / crystal-cet.com.bd)  
-> **Last Updated:** 2026-05-08 (KQL 07-10 reviewed & optimized)  
+> **Last Updated:** 2026-05-08 (KQL 11 Audit Report v2 — MS infra IP filter + baseline contamination warning)  
 > **Purpose:** Tài liệu hóa schema, phân tích incidents, và hỗ trợ điều tra bảo mật trên Microsoft Defender XDR
 
 ---

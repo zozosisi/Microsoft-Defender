@@ -69,4 +69,39 @@ Báo cáo điều tra (Report) hiển thị `Unknown` cho trạng thái MFA và 
 - **Kết quả:** Hệ thống vẫn trích xuất được bằng chứng 100% mà không bị phụ thuộc chết vào một nguồn dữ liệu duy nhất.
 
 ---
+
+## 5. Lỗi Gán Nhãm AiTM Cho IP Hạ Tầng Microsoft (False Positive — KQL 11)
+
+### Mô tả Vấn đề
+Tài khoản **`Rahim.Uddin@crystal-cet.com.bd`** bị KQL 11 flag là **"🚨 100% AiTM Token Theft"** do SessionId xuất hiện ở cả Bangladesh (BD) và Nhật Bản (JP). Tuy nhiên, đây là False Positive.
+
+### Nguyên nhân Gốc rễ
+- IP "Nhật Bản" (`2603:1046:c09:4bb::5` và `2603:1046:c09:4ad::5`) thuộc dải `2603:1046::/32` — đây là **MICROSOFT-CORP-MSN-AS-BLOCK (AS8075)**, IP hạ tầng nội bộ của Microsoft Exchange Online.
+- Khi Exchange Online thực hiện các tác vụ nền (Managed Folder Assistant, mailbox auditing, auto-forwarding check), nó ghi log sign-in từ IP datacenter. Country hiển thị JP vì Microsoft có datacenter tại East Japan.
+- DeviceList rỗng `[""]` vì đây là service-level activity, không phải user sign-in từ thiết bị thực.
+- KQL 11 cũ không phân biệt được IP infrastructure và IP user → gán nhãn sai.
+
+### Giải pháp Khắc phục
+- Thêm filter loại trừ Microsoft infrastructure IP ranges vào cả **KQL 11** và **Python pipeline**.
+- Dải IP được loại trừ: `2603:1046:`, `2603:1036:`, `2603:1026:`, `2603:1056:`, `40.107.`, `52.100.`, `20.190.`, `40.126.`
+- **Kết quả:** Rahim Uddin không còn bị flag False Positive. Các session từ Exchange Online backend được tự động loại trừ.
+
+---
+
+## 6. Lỗi Baseline Bị Ô Nhiễm Bởi Hacker (Baseline Contamination — Python Pipeline)
+
+### Mô tả Vấn đề
+Pipeline kết luận **Niaz Morshed** là "100% AiTM" dựa trên session nhảy từ BD sang HK/CN. Tuy nhiên, phân tích sâu cho thấy HK và CN đều nằm trong TrustedCountries baseline của Niaz (20 countries). Kết luận "100%" quá tự tin và không chính xác.
+
+### Nguyên nhân Gốc rễ
+- `build_user_baseline()` tính TrustedCountries từ **toàn bộ 30 ngày** sign-in data, bao gồm cả khoảng thời gian hacker đã hoạt động.
+- Nếu hacker tạo đủ nhiều sign-in từ 1 quốc gia (≥ 5% tổng sign-ins), quốc gia đó lọt vào TrustedCountries → pipeline coi đó là bình thường.
+- Các user bị compromised nặng nhất (Touhith=24, Sumi=24, Abdul=23, Nargis=21, Niaz=20 TrustedCountries) cũng là những user có TrustedCountries cao nhất — gợi ý chính hacker đã tạo ra các sign-in đó.
+
+### Giải pháp Khắc phục
+- Thêm **Baseline Contamination Warning**: Khi user có hơn 15 TrustedCountries, pipeline tự động cảnh báo `"⚠️ X Trusted Countries — possible baseline contamination by attacker"`.
+- Trong KQL 11: Thay đổi verdict logic — nếu tất cả countries trong session đều nằm trong TrustedCountries, severity giảm từ "🚨 Highly Likely AiTM" xuống "🟡 Review Required" để analyst review thủ công.
+- **Lưu ý:** Đây là giải pháp Option A (Warning-based). Option B (tính baseline chỉ từ pre-attack window) phức tạp hơn và yêu cầu biết thời điểm tấn công bắt đầu.
+
+---
 *Tài liệu này được tạo ra để lưu trữ làm Knowledge Base cho các vòng phát triển SOC Automation tiếp theo.*
