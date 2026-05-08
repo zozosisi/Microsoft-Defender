@@ -1,0 +1,24 @@
+// 08_post_breach_investigation_v2.kql
+// Tìm mọi thao tác của Zakir Ahmed trên các ứng dụng (không phân biệt quốc gia trước)
+// để xem có dữ liệu nào trả về hay không (tránh lỗi do sai định dạng AccountId).
+
+let targetUser = "Zakir.Ahmed@bd.crystal-martin.com";
+
+CloudAppEvents
+| where Timestamp >= ago(30d)
+// Tìm kiếm rộng hơn thay vì chỉ khớp chính xác AccountId
+| where AccountId =~ targetUser or AccountDisplayName has "Zakir Ahmed"
+// Tạm thời hiển thị cả thao tác từ Bangladesh để kiểm tra xem có dữ liệu của user này không
+// | extend IsNonBD = iff(CountryCode != "BD", true, false)
+// | where IsNonBD == true
+| where ActionType !in ("Update", "LogonUser", "PrimaryLogon")
+| project 
+    Timestamp,
+    ActionType,
+    Application,
+    ObjectName,
+    IPAddress,
+    CountryCode,
+    ISP,
+    UserAgent
+| order by Timestamp asc

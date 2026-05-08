@@ -1,0 +1,34 @@
+// 07_vpn_vs_hacker_investigation.kql
+// Mục đích: Phân tích sự tương quan giữa IP/Quốc gia nước ngoài với Thiết bị (Device) và ISP
+// Giúp phân biệt user đang dùng VPN (thiết bị cũ, ISP thuộc VPN provider) 
+// hay bị Hacker tấn công (thiết bị mới/lạ, trình duyệt lạ, ISP dân dụng nước ngoài).
+
+let targetUser = "Zakir.Ahmed@bd.crystal-martin.com";
+
+// Lấy thông tin thiết bị và trình duyệt từ AADSignInEventsBeta
+let signins = AADSignInEventsBeta
+| where Timestamp >= ago(30d)
+| where AccountUpn =~ targetUser
+| where isnotempty(Country);
+
+// Lấy thông tin nhà mạng (ISP) từ IdentityLogonEvents
+let isps = IdentityLogonEvents
+| where Timestamp >= ago(30d)
+| where AccountUpn =~ targetUser
+| where isnotempty(ISP)
+| distinct IPAddress, ISP;
+
+// Kết hợp và phân tích
+signins
+| join kind=leftouter isps on IPAddress
+| extend IsNonBD = iff(Country != "BD", true, false)
+| extend DeviceStatus = iff(isempty(DeviceName), "Unknown Device", "Known Device Name")
+| summarize 
+    TotalSignIns = count(),
+    UniqueIPs = dcount(IPAddress),
+    ISPList = make_set(ISP, 10),
+    DeviceList = make_set(DeviceName, 10),
+    BrowserList = make_set(Browser, 10),
+    OSList = make_set(OSPlatform, 5)
+    by IsNonBD, Country, DeviceStatus
+| order by IsNonBD desc, TotalSignIns desc

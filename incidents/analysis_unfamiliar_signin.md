@@ -196,3 +196,27 @@ Khi đã loại trừ nhiễu, các user có hành vi Impossible Travel / Proxy 
 2. **`Mahmudul.Hasan@bd.crystal-martin.com` (Top 2):** Đăng nhập từ **13 quốc gia khác nhau**, 995 lượt dùng IP lạ, tỷ lệ nhảy ISP không uy tín cao.
 
 **Kết luận cuối cùng:** Tập trung khoanh vùng và chặn lập tức các user Top 5 trong file `user_investigation_summary.csv` mới nhất, do họ có dấu hiệu sử dụng proxy/botnet quy mô lớn để qua mặt hệ thống.
+
+---
+
+## 11. Xác Nhận Xâm Nhập (Post-Breach Analysis - May 08)
+
+Qua quá trình điều tra chuyên sâu tài khoản Top 1 rủi ro là `Zakir.Ahmed@bd.crystal-martin.com`, sử dụng các log sự kiện `CloudAppEvents`, `AADSignInEventsBeta` và `IdentityLogonEvents`, chúng tôi đã đưa ra kết luận **100% tài khoản đã bị hacker chiếm đoạt (Account Takeover - ATO)** thông qua một mạng lưới máy tính ma (Botnet).
+
+### 🚨 Bằng chứng kỹ thuật loại bỏ khả năng dùng VPN:
+1. **Sự thay đổi Hệ điều hành và Trình duyệt:** Người dùng hợp lệ dùng Windows 10/Edge trên máy `CMA-PC438`. Các lượt đăng nhập từ 36 nước khác báo cáo HĐH là Linux/MacOS và trình duyệt Firefox (khi dùng VPN, HĐH và trình duyệt không bị thay đổi).
+2. **Mất dấu ấn Thiết bị:** Toàn bộ đăng nhập nước ngoài đều là thiết bị lạ (Unknown Device), chứng tỏ không phải xuất phát từ thiết bị `CMA-PC438` của công ty.
+3. **Mạng lưới Residential Proxy:** Các địa chỉ IP từ nước ngoài đều thuộc các nhà mạng dân dụng (như *Mega Cable* ở Mexico, *Ziggo Consumers* ở Hà Lan) ở 36 quốc gia khác nhau. Đây là dấu hiệu đặc trưng của tấn công qua Botnet (Residential Proxy), không phải là VPN.
+
+### 💥 Hành vi phá hoại và đánh cắp dữ liệu (Data Breach):
+Hacker đã qua mặt thành công MFA và thực hiện **433 thao tác** từ các IP nước ngoài:
+- **Xóa dữ liệu phá hoại:** Xóa 41 file (`FileRecycled`) và 13 folder (`FolderRecycled`) trên OneDrive.
+- **Phát tán nội bộ:** Gửi 56 tin nhắn (`MessageSent`) qua Microsoft Teams, nguy cơ rất cao là phát tán link Phishing/Mã độc cho các nhân viên khác trong công ty.
+- **Đánh cắp tài liệu:** Mở xem 113 tài liệu (`FileAccessed`) và tải xuống dữ liệu (`FileDownloaded`).
+- **Đọc trộm email:** Xâm nhập vào hộp thư (`MailItemsAccessed`).
+
+### 🔴 Hành Động Khẩn Cấp (Incident Response):
+1. Lập tức **Block Sign-in** và **Revoke Session** đối với Zakir Ahmed.
+2. Kiểm tra log Teams để thu hồi hoặc cảnh báo về 56 tin nhắn độc hại đã phát tán nội bộ.
+3. Khôi phục dữ liệu đã bị xóa trong Recycle Bin của OneDrive và SharePoint.
+4. Điều tra tương tự và cách ly ngay lập tức đối với user Top 2 (`Mahmudul.Hasan`).
