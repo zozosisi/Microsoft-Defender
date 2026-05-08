@@ -22,7 +22,10 @@ let CompromisedUsers = pack_array(
     "Durjoy_Areng@crystal-abl.com.bd"
 );
 // ─── Step 1: Build per-user TrustedCountries baseline (countries with ≥5% of sign-ins) ───
-let TrustedCountryBaseline = EntraIdSignInEvents
+// ★ FIX: Sử dụng join thay vì toscalar() — toscalar() cũ tính tổng sign-ins của TẤT CẢ 10 users
+//   cộng lại, khiến mẫu số quá lớn → hầu hết countries bị loại khỏi baseline.
+//   Fix: join để tính TotalPerUser riêng cho từng user.
+let FilteredSignIns = EntraIdSignInEvents
 | where Timestamp > ago(30d)
 | where AccountUpn in~ (CompromisedUsers)
 // Loại Microsoft infrastructure IPs khỏi baseline calculation
@@ -32,20 +35,15 @@ let TrustedCountryBaseline = EntraIdSignInEvents
 | where not(IPAddress startswith "2603:1056:")    // Microsoft Corp (APAC regions)
 | where not(IPAddress startswith "40.107.")       // Microsoft Exchange Online Protection
 | where not(IPAddress startswith "52.100.")       // Microsoft Exchange Online
+| where not(IPAddress startswith "20.190.")       // Azure AD / Entra ID authentication endpoints
+| where not(IPAddress startswith "40.126.");      // Azure AD / Entra ID authentication endpoints
+let TrustedCountryBaseline = FilteredSignIns
 | where isnotempty(Country)
 | summarize CountrySignIns = count() by AccountUpn, Country
-| extend TotalPerUser = toscalar(
-    EntraIdSignInEvents
-    | where Timestamp > ago(30d)
-    | where AccountUpn in~ (CompromisedUsers)
-    | where not(IPAddress startswith "2603:1046:")
-    | where not(IPAddress startswith "2603:1036:")
-    | where not(IPAddress startswith "2603:1026:")
-    | where not(IPAddress startswith "2603:1056:")
-    | where not(IPAddress startswith "40.107.")
-    | where not(IPAddress startswith "52.100.")
-    | summarize count()
-)
+| join kind=inner (
+    FilteredSignIns
+    | summarize TotalPerUser = count() by AccountUpn
+) on AccountUpn
 | where CountrySignIns * 1.0 / TotalPerUser >= 0.05
 | summarize TrustedCountries = make_set(Country) by AccountUpn;
 // ─── Step 2: Main AiTM detection query ───
@@ -62,6 +60,8 @@ EntraIdSignInEvents
 | where not(IPAddress startswith "2603:1056:")    // Exchange Online - APAC regions
 | where not(IPAddress startswith "40.107.")       // Exchange Online Protection
 | where not(IPAddress startswith "52.100.")       // Exchange Online
+| where not(IPAddress startswith "20.190.")       // Azure AD / Entra ID authentication endpoints
+| where not(IPAddress startswith "40.126.")       // Azure AD / Entra ID authentication endpoints
 // Trích xuất chi tiết xác thực để xem MFA có bị bypass bằng Token không
 | extend AuthDetails = tostring(AuthenticationProcessingDetails)
 | extend MfaSatisfiedByToken = iff(AuthDetails has "MFA requirement satisfied by claim in the token" or AuthDetails has "MFA requirement satisfied by primary refresh token" or AuthenticationRequirement == "singleFactorAuthentication", true, false)
