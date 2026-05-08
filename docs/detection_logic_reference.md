@@ -14,6 +14,7 @@ Hệ thống kết hợp dữ liệu từ bộ KQL truy vấn (từ 01 đến 10
 5. **`phishing_emails.csv`** (Query 05): Lịch sử nhận email lừa đảo (`EmailEvents`).
 6. **`cloudapp_events.csv`** (Query 09): Dữ liệu hành vi thao tác file/ứng dụng (`CloudAppEvents`) dùng để phát hiện Data Breach.
 7. **`auth_status.csv`** (Query 10): Trạng thái đăng ký MFA và thời gian đổi mật khẩu (`IdentityAccountInfo`).
+   - *Cơ chế Fallback (Dự phòng):* Nếu dữ liệu `IdentityAccountInfo` trống (do tenant chưa tích hợp đầy đủ UEBA/Defender for Identity), hệ thống sẽ tự động quét chéo bảng `signin_history.csv` để tìm cột `AuthenticationRequirement`. Nếu có lịch sử yêu cầu MFA, user sẽ được đánh dấu là "MFA Enforced (Detected from Sign-ins)".
 
 *(Lưu ý: Query 07 và 08 là các công cụ KQL hỗ trợ điều tra thủ công (Manual Investigation) độc lập, sau khi test thành công thì logic đã được tích hợp thẳng vào Python).*
 
