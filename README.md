@@ -49,7 +49,8 @@ Microsoft-Defender/
 │   ├── detection_logic_reference.md           ← Giải thích chi tiết logic nhận diện VPN/Hacker (v4.1)
 │   ├── post_mortem_logic_fixes.md             ← Rút kinh nghiệm: False Positive/Negative fixes
 │   ├── alert_pipeline_source_of_truth.md      ← ⭐ Source of Truth: MS docs + CA policies verified
-│   └── pillar_alignment.md                    ← Gap analysis: 3 pillars alignment
+│   ├── pillar_alignment.md                    ← Gap analysis: 3 pillars alignment\r
+│   └── entra_defender_sentinel_architecture.md ← Entra ↔ Defender XDR ↔ Sentinel architecture
 │
 ├── queries/                                   ← KQL queries cho investigation
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
