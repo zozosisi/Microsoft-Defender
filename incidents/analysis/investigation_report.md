@@ -1,6 +1,6 @@
 # 🔍 Investigation Report: Unfamiliar Sign-in — BD Users
 
-> **Generated:** 2026-05-09 11:08
+> **Generated:** 2026-05-09 14:37
 > **Users analyzed:** 54
 > **Trusted threshold:** 5.0%
 
@@ -9,9 +9,9 @@
 ## Summary
 
 - **🚨 CONFIRMED COMPROMISED (Data Breach):** 10 users
-- **🔴 Likely Compromised:** 44 users
-- **🟠 Suspicious:** 0 users
-- **🟢 Likely Safe:** 0 users
+- **🔴 Likely Compromised:** 42 users
+- **🟠 Suspicious:** 1 users
+- **🟢 Likely Safe:** 1 users
 
 ---
 
@@ -1535,6 +1535,39 @@
 
 ---
 
+### 🔴 Likely Compromised — Mustafizur Rahman (QAD/CMBD)
+
+- **Email:** `Rahman.Mustafizur@bd.crystal-martin.com`
+- **Entity:** CMBD | **Dept:** Quality Assurance
+- **Current Risk:** nan
+- **Anomaly Score:** 408.0
+
+| Metric | Value |
+|--------|-------|
+| Total Sign-ins | 39 (7 active days) |
+| Trusted IPs | 1 / 11 unique |
+| Trusted Countries (≥5%) | ["BD"] |
+| All Countries Seen | ["AR", "BD", "CL", "EC", "FR", "KE", "MX", "NL", "PT", "RS", "TH"] |
+| ISPs | ["dsl-ull", "eweka internet services b.v.", "ke-sfc-gprs-edge-3g-lte-mobile wifi-service-ip", "pacifico cable spa.", "sistemas y soluciones de campeche sas de cv", "soluciones avanzadas informaticas y telecomunicaciones saitel", "telecom argentina s.a.", "telekom srbija  adsl users", "true broadband", "wimax customer allocation for ctg zone", "ziggo consumers"] |
+| Non-BD Sign-ins | **32** → ["AR", "CL", "EC", "FR", "KE", "MX", "NL", "PT", "RS", "TH"] |
+| Unknown IP Sign-ins | 32 |
+| Unknown Device Sign-ins | 39 |
+| Off-hours Sign-ins | 0 |
+| High Risk Sign-ins | 5 |
+| Managed / Unmanaged | 0 / 39 (100.0%) |
+| Alerts | 14 (first: 2026-04-22, last: 2026-05-04) |
+| Phishing Emails | 0 |
+| Suspicious ISPs | [] |
+| MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
+| Last Password Reset | Unknown |
+| Account Status | Enabled |
+| Admin Account | No |
+| Data Breach Events | **0** → [] |
+| MS Infra IPs Filtered | 0 |
+| Baseline Warning | ⚠️ LOW VOLUME (39 sign-ins) — threshold raised to 15% |
+
+---
+
 ### 🔴 Likely Compromised — Ridoy Chondro Barman(RMW/CMBD)
 
 - **Email:** `Ridoy.chondrobarman@bd.crystal-martin.com`
@@ -1667,39 +1700,6 @@
 
 ---
 
-### 🔴 Likely Compromised — Mustafizur Rahman (QAD/CMBD)
-
-- **Email:** `Rahman.Mustafizur@bd.crystal-martin.com`
-- **Entity:** CMBD | **Dept:** Quality Assurance
-- **Current Risk:** nan
-- **Anomaly Score:** 55.0
-
-| Metric | Value |
-|--------|-------|
-| Total Sign-ins | 39 (7 active days) |
-| Trusted IPs | 11 / 11 unique |
-| Trusted Countries (≥5%) | ["BD", "FR", "RS", "EC", "PT", "MX", "KE", "NL", "AR", "CL", "TH"] |
-| All Countries Seen | ["AR", "BD", "CL", "EC", "FR", "KE", "MX", "NL", "PT", "RS", "TH"] |
-| ISPs | ["dsl-ull", "eweka internet services b.v.", "ke-sfc-gprs-edge-3g-lte-mobile wifi-service-ip", "pacifico cable spa.", "sistemas y soluciones de campeche sas de cv", "soluciones avanzadas informaticas y telecomunicaciones saitel", "telecom argentina s.a.", "telekom srbija  adsl users", "true broadband", "wimax customer allocation for ctg zone", "ziggo consumers"] |
-| Non-BD Sign-ins | **32** → ["AR", "CL", "EC", "FR", "KE", "MX", "NL", "PT", "RS", "TH"] |
-| Unknown IP Sign-ins | 0 |
-| Unknown Device Sign-ins | 39 |
-| Off-hours Sign-ins | 0 |
-| High Risk Sign-ins | 5 |
-| Managed / Unmanaged | 0 / 39 (100.0%) |
-| Alerts | 14 (first: 2026-04-22, last: 2026-05-04) |
-| Phishing Emails | 0 |
-| Suspicious ISPs | [] |
-| MFA Enrolled | MFA Enforced (Detected from Sign-ins) |
-| Last Password Reset | Unknown |
-| Account Status | Enabled |
-| Admin Account | No |
-| Data Breach Events | **0** → [] |
-| MS Infra IPs Filtered | 0 |
-| Baseline Warning |  |
-
----
-
 ### 🔴 Likely Compromised — Sumon Mia (MER/CMBD)
 
 - **Email:** `sumon.mia@bd.crystal-martin.com`
@@ -1729,16 +1729,16 @@
 | Admin Account | No |
 | Data Breach Events | **0** → [] |
 | MS Infra IPs Filtered | 0 |
-| Baseline Warning |  |
+| Baseline Warning | ⚠️ LOW VOLUME (14 sign-ins) — threshold raised to 15% |
 
 ---
 
-### 🔴 Likely Compromised — cmaadmmk
+### 🟠 Suspicious — cmaadmmk
 
 - **Email:** `cmaadmmk@bd.crystal-martin.com`
 - **Entity:** CMBD | **Dept:** Information Services Department
 - **Current Risk:** nan
-- **Anomaly Score:** 40.0
+- **Anomaly Score:** 15.0
 
 | Metric | Value |
 |--------|-------|
@@ -1766,12 +1766,12 @@
 
 ---
 
-### 🔴 Likely Compromised — Abdullah Zubair (ASG/ABL)
+### 🟢 Likely Safe — Abdullah Zubair (ASG/ABL)
 
 - **Email:** `Abdullah_Zubair@crystal-abl.com.bd`
 - **Entity:** ABL | **Dept:** Assembly
 - **Current Risk:** nan
-- **Anomaly Score:** 30.0
+- **Anomaly Score:** 5.0
 
 | Metric | Value |
 |--------|-------|

@@ -63,6 +63,12 @@ MICROSOFT_INFRA_IP_PREFIXES = [
 # Fix: Audit Report v2 — Niaz Morshed had 20 TrustedCountries (likely hacker-generated)
 BASELINE_COUNTRY_WARNING_THRESHOLD = 15
 
+# Minimum sign-in count for reliable baseline (5% threshold).
+# Users below this use a higher threshold (15%) to prevent baseline contamination.
+# Fix: Output Audit v4 — sumon.mia (14 sign-ins, 100% hacker data → all countries become Trusted)
+BASELINE_LOW_VOLUME_THRESHOLD = 50
+BASELINE_LOW_VOLUME_TRUSTED_THRESHOLD = 0.15  # 15% for low-volume users
+
 BD_DOMAINS = [
     "crystal-abl.com.bd",
     "bd.crystal-martin.com",
@@ -240,37 +246,48 @@ def build_user_baseline(user_df: pd.DataFrame) -> dict:
     baseline["LastSignIn"] = user_df["Timestamp"].max().strftime("%Y-%m-%d %H:%M")
     baseline["ActiveDays"] = user_df["Timestamp"].dt.date.nunique()
 
+    # Determine effective threshold based on sign-in volume
+    # Fix: Output Audit v4 — low-volume users (< 50 sign-ins) use higher threshold (15%)
+    # to prevent baseline contamination by hacker-generated sign-ins
+    effective_threshold = TRUSTED_THRESHOLD
+    if baseline["TotalSignIns"] < BASELINE_LOW_VOLUME_THRESHOLD:
+        effective_threshold = BASELINE_LOW_VOLUME_TRUSTED_THRESHOLD
+        baseline["BaselineLowVolume"] = True
+    else:
+        baseline["BaselineLowVolume"] = False
+    baseline["EffectiveThreshold"] = effective_threshold
+
     # Trusted IPs
     baseline["TrustedIPs"] = build_trusted_set(
-        user_df["IPAddress"].dropna(), TRUSTED_THRESHOLD
+        user_df["IPAddress"].dropna(), effective_threshold
     )
     baseline["TotalUniqueIPs"] = user_df["IPAddress"].nunique()
 
     # Trusted Countries
     baseline["TrustedCountries"] = build_trusted_set(
-        user_df["Country"].dropna(), TRUSTED_THRESHOLD
+        user_df["Country"].dropna(), effective_threshold
     )
     baseline["AllCountries"] = sorted(user_df["Country"].dropna().unique().tolist())
 
     # Trusted Cities
     baseline["TrustedCities"] = build_trusted_set(
-        user_df["City"].dropna(), TRUSTED_THRESHOLD
+        user_df["City"].dropna(), effective_threshold
     )
 
     # Trusted Devices
     baseline["TrustedDevices"] = build_trusted_set(
-        user_df["DeviceName"].dropna(), TRUSTED_THRESHOLD
+        user_df["DeviceName"].dropna(), effective_threshold
     )
     baseline["TotalUniqueDevices"] = user_df["DeviceName"].nunique()
 
     # Trusted Browsers
     baseline["TrustedBrowsers"] = build_trusted_set(
-        user_df["Browser"].dropna(), TRUSTED_THRESHOLD
+        user_df["Browser"].dropna(), effective_threshold
     )
 
     # Trusted OS
     baseline["TrustedOS"] = build_trusted_set(
-        user_df["OSPlatform"].dropna(), TRUSTED_THRESHOLD
+        user_df["OSPlatform"].dropna(), effective_threshold
     )
 
     # Normal hours (UTC)
@@ -632,8 +649,19 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     # Off-hours sign-ins (cap at 10 pts)
     score += min(anomalies.get("OffHoursSignIns", 0), 20) * 0.5
 
-    # Alert count (Defender Alerts)
-    score += min(alert_info.get("AlertCount", 0), 5) * 5
+    # Alert count (Defender Alerts) — CONDITIONAL scoring (v4 fix)
+    # Only apply alert penalty when user has COMPROMISE indicators
+    # (foreign sign-ins, suspicious IPs, or HighRisk events).
+    # Users with ONLY blocked attacks (0 foreign, 0 suspicious, 0 risk) get 0 alert score.
+    # Fix: Output Audit v4 — Abdullah_Zubair (40 alerts, 0 foreign → was falsely Likely Compromised)
+    has_compromise_indicators = (
+        len(hacker_only_countries) > 0
+        or len(anomalies.get("SuspiciousIPList", [])) > 0
+        or anomalies.get("HighRiskSignIns", 0) > 0
+        or anomalies.get("ForeignCountrySignIns", 0) > 0
+    )
+    if has_compromise_indicators:
+        score += min(alert_info.get("AlertCount", 0), 5) * 5
 
     # Alert IP correlation bonus (Unfamiliar Sign-in Incidents — Q00)
     # +3 per suspicious IP that is ALSO an Entra ID alert IP, max 30 pts
@@ -781,11 +809,17 @@ def analyze(data_dir: Path, output_dir: Path):
             "CrossUserAlertIPs": json.dumps(unfamiliar_info["CrossUserAlertIPs"]),
             # Microsoft Infra IPs filtered
             "MicrosoftInfraIPsFiltered": anomalies.get("MicrosoftInfraIPsFiltered", 0),
-            # Baseline contamination warning (Audit Report v2 — Fix #3)
+            # Baseline reliability (Output Audit v4 fix)
+            "EffectiveThreshold": f"{baseline['EffectiveThreshold']*100:.0f}%",
+            # Baseline contamination warning (v2 + v4 low-volume fix)
             "BaselineWarning": (
-                f"⚠️ {len(baseline['TrustedCountries'])} Trusted Countries — possible baseline contamination by attacker"
-                if len(baseline["TrustedCountries"]) > BASELINE_COUNTRY_WARNING_THRESHOLD
-                else ""
+                f"⚠️ LOW VOLUME ({baseline['TotalSignIns']} sign-ins) — threshold raised to {baseline['EffectiveThreshold']*100:.0f}%"
+                if baseline.get("BaselineLowVolume", False)
+                else (
+                    f"⚠️ {len(baseline['TrustedCountries'])} Trusted Countries — possible baseline contamination by attacker"
+                    if len(baseline["TrustedCountries"]) > BASELINE_COUNTRY_WARNING_THRESHOLD
+                    else ""
+                )
             ),
             # Verdict
             "AnomalyScore": score,
