@@ -364,6 +364,7 @@ Vì **thiếu Sentinel** và **thiếu Defender for Endpoint**:
 
 | # | Action | Cost | Value |
 |---|--------|------|-------|
+| 0 | **Dismiss Risk + Enable on-prem password reset** | Free | Dừng alert loop cho users đã remediate ([chi tiết](risk_remediation_hybrid_ad.md)) |
 | 1 | **CA Policy: Medium + Non-compliant → MFA** | Free | Chặn hacker không có device |
 | 2 | **Deploy Microsoft Sentinel** | ~$2-5/GB/day | Auto-correlate + SOAR |
 | 3 | **Sentinel Analytics Rule** cho Data Breach | Free (after Sentinel) | Phát hiện breach real-time |
@@ -379,5 +380,6 @@ Vì **thiếu Sentinel** và **thiếu Defender for Endpoint**:
 | What are risk detections? | https://learn.microsoft.com/en-us/entra/id-protection/concept-identity-protection-risks |
 | Risk-based Conditional Access policies | https://learn.microsoft.com/en-us/entra/id-protection/concept-identity-protection-policies |
 | Investigate risk | https://learn.microsoft.com/en-us/entra/id-protection/howto-identity-protection-investigate-risk |
+| **Remediate risks and unblock users** | https://learn.microsoft.com/en-us/entra/id-protection/howto-identity-protection-remediate-unblock |
 | Defender XDR + Sentinel integration | https://learn.microsoft.com/en-us/defender-xdr/microsoft-365-defender-integration-with-azure-sentinel |
 | Connect Sentinel to Defender portal | https://learn.microsoft.com/en-us/defender-xdr/microsoft-sentinel-onboard |

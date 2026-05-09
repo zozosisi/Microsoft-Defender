@@ -49,7 +49,8 @@ Microsoft-Defender/
 │   ├── post_mortem_logic_fixes.md             ← Rút kinh nghiệm: False Positive/Negative fixes
 │   ├── alert_pipeline_source_of_truth.md      ← ⭐ Source of Truth: MS docs + CA policies verified
 │   ├── pillar_alignment.md                    ← Gap analysis: 3 pillars alignment\r
-│   └── entra_defender_sentinel_architecture.md ← Entra ↔ Defender XDR ↔ Sentinel architecture
+│   ├── entra_defender_sentinel_architecture.md ← Entra ↔ Defender XDR ↔ Sentinel architecture\r
+│   └── risk_remediation_hybrid_ad.md          ← ⭐ Hybrid AD: user risk remediation guide
 │
 ├── queries/                                   ← KQL queries cho investigation
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
