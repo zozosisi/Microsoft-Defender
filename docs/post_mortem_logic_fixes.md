@@ -136,4 +136,27 @@ Tài khoản **`Rahman.Mustafizur@bd.crystal-martin.com`** chỉ có 39 sign-ins
 - **Kết quả:** Rahman.Mustafizur: 55 → **408** (10 hacker countries bị phát hiện đúng). sumon.mia: ForeignCountries vẫn 0 nhưng HighRisk vẫn catch (Score 50).
 
 ---
+
+## 9. Lỗi Phạt Oan Nhân Viên Entity Nước Ngoài — CSC (False Positive — Whitelist Override)
+
+### Mô tả Vấn đề
+Tài khoản **`button_lin@crystal-csc.cn`** (Button Lin — ISD/CSC) bị hệ thống gán nhãn **🚨 CONFIRMED COMPROMISED (Data Breach)** với Anomaly Score = **1147 điểm**, dù nhân viên này hoàn toàn an toàn — đi công tác qua các quốc gia HK, VN, CN.
+
+### Nguyên nhân Gốc rễ
+- Domain `crystal-csc.cn` **KHÔNG nằm** trong `BD_DOMAINS` → Entity = "OTHER". Hệ thống được tối ưu chỉ cho nhân viên Bangladesh.
+- 100% unmanaged devices (16,966/16,966) — thiết bị CSC không enroll Intune → hệ thống coi tất cả là Unknown Device.
+- Mặc dù Post-Mortem #2 đã giảm DataBreachEvents từ 199 → 12, nhưng **12 events còn lại** vẫn trigger verdict CONFIRMED COMPROMISED (chỉ cần >0 = +1000 điểm).
+- 12 events này đến từ IP WiFi khách sạn / hotspot di động ở thành phố mới (ghé 1 lần) — IP chưa bao giờ xuất hiện cùng Trusted Device → bị gán Suspicious IP → quét CloudAppEvents → thấy FileAccessed/FileDownloaded → Data Breach.
+- ISP của user (China Mobile, ChinaNet, Viettel, VNPT) đều hợp lệ nhưng không nằm trong `BD_ISPS_KEYWORDS` → bị gán "Unknown".
+
+### Giải pháp Khắc phục
+1. **Verified Safe User Whitelist:** Thêm cơ chế `VERIFIED_SAFE_USERS` dictionary cho phép SOC analyst đánh dấu user đã xác minh thủ công là an toàn. User trong whitelist:
+   - CloudAppEvents bị **bỏ qua hoàn toàn** (DataBreachEvents = 0)
+   - Verdict override thành `"🟢 Verified Safe (SOC Override: [lý do])"`
+   - Anomaly Score = 0
+2. **Entity CSC:** Thêm `crystal-csc.cn` vào `get_entity()` → Entity = "CSC" thay vì "OTHER".
+3. **ISP Trust mở rộng:** Thêm `CN_ISPS_KEYWORDS` và `VN_ISPS_KEYWORDS` để `classify_isp()` trả "CN-Trusted" / "VN-Trusted" thay vì "Unknown".
+- **Kết quả:** Button Lin: 1147 → **0 (🟢 Verified Safe)**.
+
+---
 *Tài liệu này được tạo ra để lưu trữ làm Knowledge Base cho các vòng phát triển SOC Automation tiếp theo.*

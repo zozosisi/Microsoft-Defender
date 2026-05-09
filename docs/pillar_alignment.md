@@ -1,6 +1,6 @@
 # 🔗 Alignment Analysis: 3 Pillars — REVISED (Data-Driven)
 
-> **Version:** v2 — Đã tự-audit và sửa sai  
+> **Version:** v3 — Đã tự-audit, sửa sai, và cập nhật v4.2 (Verified Safe User Override)  
 > **Ngày:** 2026-05-09
 
 ---
@@ -39,7 +39,7 @@ Total sign-ins:     222,366
 
 - 20 users có High-risk successful sign-ins
 - Đây là AiTM token theft — hacker có token chứa MFA claim → bypass cả HIGH-risk policy
-- Bao gồm cả `button_lin@crystal-csc.cn` (4 sign-ins from CA)
+- Bao gồm cả `button_lin@crystal-csc.cn` (4 sign-ins from CA) — **đã xác minh SAFE** (SOC Override v4.2)
 
 ---
 
@@ -60,14 +60,12 @@ Total sign-ins:     222,366
 
 ### ❌ GAPS THỰC SỰ (Revised)
 
-#### Gap 1: Pipeline không load `unfamiliar_signin_incidents.csv` — 🟡 Medium
+#### Gap 1: ~~Pipeline không load unfamiliar_signin_incidents.csv~~ → ✅ ĐÃ FIX (v4)
 
 ```python
-# Pipeline load alert_data.csv (Q03) → đếm AlertCount
-# KHÔNG load unfamiliar_signin_incidents.csv (Q00) → 991 Alert IPs invisible
-# 
-# Impact: Scoring thiếu Alert IP bonus, không có cross-user correlation
-# Verdict impact: THẤP — DataBreach (+1000) vẫn bắt đúng 10 users
+# Đã thêm load_unfamiliar_signin_data() + enrich_with_unfamiliar_signins()
+# Alert IP correlation scoring: +3/IP khi Suspicious IP trùng với Alert IP
+# Cross-user correlation: phát hiện botnet proxy infrastructure
 ```
 
 #### Gap 2: ~~Risk Level~~ → ✅ ĐÃ CÓ (False alarm)
@@ -100,7 +98,7 @@ Total sign-ins:     222,366
 
 | Gap | Bản trước | Bản sau (data-driven) | Lý do thay đổi |
 |-----|----------|----------------------|----------------|
-| 1. Load Q00 | 🟡 Medium | 🟡 Medium | Không đổi |
+| 1. Load Q00 | 🟡 Medium | ✅ Đã fix (v4) | Thêm Alert IP correlation scoring |
 | 2. Risk Level | 🟡 Medium | ✅ Không phải gap | Code line 358-364 đã có |
 | 3. Temporal Split | 🔴 High | 🟡 Medium | DataBreach override → verdicts đúng |
 | 4. ErrorCode filter | 🟢 Low | 🟢 Low | Không đổi |
@@ -119,14 +117,15 @@ Total sign-ins:     222,366
 | MS Infra IP filter | Loại trừ false positives từ Exchange Online backend |
 | RiskLevel scoring | Cover Medium(50) + High(100) — +5 mỗi event |
 | Baseline Warning | Cảnh báo khi TrustedCountryCount > 15 |
+| SOC Override (v4.2) | Verified Safe User Whitelist — bỏ qua CloudAppEvents + force Safe verdict |
 
 ### 🟡 CẢI TIẾN optional (không thay đổi verdicts hiện tại):
 
 | # | Cải tiến | Giá trị | Effort |
 |---|---------|---------|--------|
-| 1 | Load Q00 → Alert IP scoring bonus (+3/IP) | Tăng confidence cho medium-score users | Thấp |
+| 1 | ~~Load Q00 → Alert IP scoring bonus (+3/IP)~~ | ~~Tăng confidence~~ | ✅ Đã fix (v4) |
 | 2 | Temporal baseline split | Tránh contamination cho future cases | Trung bình |
-| 3 | Cross-user IP correlation | Phát hiện botnet proxy infrastructure | Trung bình |
+| 3 | Cross-user IP correlation | Phát hiện botnet proxy infrastructure | ✅ Đã fix (v4) |
 | 4 | Export failed sign-ins | Attack intelligence đầy đủ hơn | Thấp (chỉ sửa KQL) |
 
 ### 🔴 ACTION ITEM QUAN TRỌNG NHẤT (KHÔNG phải pipeline):

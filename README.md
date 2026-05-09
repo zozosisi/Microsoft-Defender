@@ -1,7 +1,7 @@
 # Microsoft Defender XDR — Investigation & Schema Reference
 
-> **Tenant:** Crystal Group (crystal-martin.com / crystal-abl.com.bd / crystal-cet.com.bd)  
-> **Last Updated:** 2026-05-09 (Output Audit v4.1 — conditional alert scoring, dynamic baseline, Alert IP correlation)  
+> **Tenant:** Crystal Group (crystal-martin.com / crystal-abl.com.bd / crystal-cet.com.bd / crystal-csc.cn)  
+> **Last Updated:** 2026-05-09 (v4.2 — Verified Safe User Override, CSC entity, CN/VN ISP trust)  
 > **Purpose:** Tài liệu hóa schema, phân tích incidents, và hỗ trợ điều tra bảo mật trên Microsoft Defender XDR
 
 ---
@@ -42,8 +42,7 @@ Microsoft-Defender/
 │   │   └── export/                            ← CSV exports từ Advanced Hunting queries
 │   │       └── unfamiliar_signin_incidents.csv ← ⭐ Query 0 output (991 rows)
 │   └── analysis/                              ← Output từ Python analysis script
-│       ├── user_investigation_summary.csv     ← Bảng tổng hợp per user (auto-generated)
-│       └── investigation_report.md            ← Báo cáo chi tiết (auto-generated)
+│       └── investigation_report.xlsx          ← ⭐ Excel report 4-sheet (auto-generated)
 │
 ├── docs/                                      ← Tài liệu nghiệp vụ & Hướng dẫn
 │   ├── detection_logic_reference.md           ← Giải thích chi tiết logic nhận diện VPN/Hacker (v4.1)
@@ -72,7 +71,8 @@ Microsoft-Defender/
 │   └── 10_auth_status.kql                     ← MFA, Password, Account Status & Roles
 │
 └── scripts/                                   ← Scripts phân tích tự động
-    └── analyze_signins.py                     ← Baseline + Anomaly detection per user
+    ├── analyze_signins.py                     ← Baseline + Anomaly detection per user
+    └── excel_report.py                        ← Excel report generator (openpyxl)
 ```
 
 ---
@@ -130,7 +130,7 @@ CloudAppEvents.AccountObjectId       ←→  IdentityInfo.AccountObjectId
 | Tổng incidents | **295** |
 | Risky users | **55** (4 High, 51 Medium) |
 | Thời gian bùng phát | 17/04/2026 → hiện tại (leo thang) |
-| Entity chính | ABL (~20 users), CMBD (~18), CETBD (~10) |
+| Entity chính | ABL (~20 users), CMBD (~18), CETBD (~10), CSC (~1) |
 | Alert type | AAD Identity Protection → InitialAccess |
 
 ### Root Cause
@@ -242,16 +242,21 @@ Phase 1 — Raw Data Export
   4. Chạy 8 KQL queries trong Advanced Hunting (queries/*.kql)
   5. Export CSV → Lưu vào incidents/data/exports/
 
-Phase 2 — Automated Analysis (v4.1)
+Phase 2 — Automated Analysis (v4.2)
   6. Chạy: python scripts/analyze_signins.py --data-dir incidents/data/export --output-dir incidents/analysis
      → Load 8 data sources (signin + ISP + alerts + profiles + phishing + cloudapp + auth + Q00)
      → Dynamic baseline threshold (5% or 15% for low-volume users)
      → Detect anomalies (unknown IP, foreign country, suspicious ISP)
      → Alert IP correlation (cross-reference Q00 alert IPs)
      → Conditional alert scoring (only penalize when compromise indicators present)
-     → Tạo bảng tổng hợp + verdict (Safe/Suspicious/Likely Compromised/Confirmed)
+     → Verified Safe User Override (SOC whitelist → skip CloudAppEvents + force Safe verdict)
+     → Tạo bảng tổng hợp + verdict (Safe/Suspicious/Likely Compromised/Confirmed/Verified Safe)
 
 Phase 3 — Investigation
-  7. Review report    →  incidents/analysis/investigation_report.md
-  8. Action plan      →  Dựa trên verdict để xử lý từng user
+  7. Review report    →  incidents/analysis/investigation_report.xlsx
+     Sheet 1: Executive Summary (verdict counts, entity breakdown, key metrics)
+     Sheet 2: User Investigation (core columns, conditional formatting)
+     Sheet 3: Detailed Metrics (full 57 columns for technical deep-dive)
+     Sheet 4: Action Plan (P1-P4 remediation per user)
+  8. Action plan      →  Dựa trên verdict + Action Plan sheet để xử lý từng user
 ```

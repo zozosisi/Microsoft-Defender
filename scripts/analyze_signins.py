@@ -16,6 +16,9 @@ import argparse
 import json
 import sys
 
+# Excel report generation
+from excel_report import generate_excel_report
+
 # Force UTF-8 output to prevent Windows console emoji encode errors
 if sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
@@ -26,6 +29,15 @@ if sys.stdout.encoding.lower() != 'utf-8':
 TRUSTED_THRESHOLD = 0.05  # 5% — IP/Device/Browser >= 5% total sign-ins = Trusted
 NORMAL_HOUR_THRESHOLD = 0.03  # 3% — hour with >= 3% sign-ins = Normal hour
 
+# Danh sách user đã được SOC team xác minh thủ công là AN TOÀN.
+# Verdict sẽ bị override thành "🟢 Verified Safe (SOC Override)"
+# bất kể Anomaly Score là bao nhiêu. CloudAppEvents sẽ bị BỎ QUA hoàn toàn.
+# Format: { "email": "Lý do xác minh — Ngày xác minh" }
+# Fix: Post-Mortem #9 — Button Lin (CSC entity, công tác HK/VN/CN)
+VERIFIED_SAFE_USERS = {
+    "button_lin@crystal-csc.cn": "Đi công tác HK/VN/CN — SOC xác minh 09-May-2026",
+}
+
 # Known BD ISPs (legitimate)
 BD_ISPS_KEYWORDS = [
     "grameenphone", "robi", "banglalink", "teletalk", "btcl",
@@ -33,6 +45,18 @@ BD_ISPS_KEYWORDS = [
     "aamra", "agni", "bracnet", "dhakacom", "earth telecommunication",
     "fiber@home", "isp", "maxnet", "ranks itt", "square",
     "summit communications", "x-press"
+]
+
+# Known CN ISPs (legitimate) — Fix: Post-Mortem #9 (Button Lin CSC entity)
+CN_ISPS_KEYWORDS = [
+    "china mobile", "chinanet", "chinatelecom", "china telecom",
+    "china unicom", "tencent", "alibaba",
+]
+
+# Known VN ISPs (legitimate) — Fix: Post-Mortem #9 (Button Lin CSC entity)
+VN_ISPS_KEYWORDS = [
+    "viettel", "vnpt", "vietnam posts", "vietnam telecom",
+    "netnam", "fpt telecom",
 ]
 
 # Suspicious ISP keywords (VPN/Hosting/Proxy)
@@ -206,6 +230,8 @@ def get_entity(upn: str) -> str:
         return "CMBD"
     elif "crystal-cet.com.bd" in upn:
         return "CETBD"
+    elif "crystal-csc.cn" in upn:  # Fix: Post-Mortem #9 — CSC China entity
+        return "CSC"
     return "OTHER"
 
 
@@ -223,7 +249,7 @@ def build_trusted_set(series: pd.Series, threshold: float) -> list:
 
 
 def classify_isp(isp: str) -> str:
-    """Classify ISP as BD/Suspicious/Unknown."""
+    """Classify ISP as BD-Trusted/CN-Trusted/VN-Trusted/Suspicious/Unknown."""
     if pd.isna(isp) or isp == "":
         return "Unknown"
     isp_lower = isp.lower()
@@ -233,6 +259,13 @@ def classify_isp(isp: str) -> str:
     for kw in BD_ISPS_KEYWORDS:
         if kw in isp_lower:
             return "BD-Trusted"
+    # Fix: Post-Mortem #9 — nhận diện ISP Trung Quốc và Việt Nam
+    for kw in CN_ISPS_KEYWORDS:
+        if kw in isp_lower:
+            return "CN-Trusted"
+    for kw in VN_ISPS_KEYWORDS:
+        if kw in isp_lower:
+            return "VN-Trusted"
     return "Unknown"
 
 
@@ -613,8 +646,16 @@ def enrich_with_unfamiliar_signins(user_upn: str, unfamiliar_df: pd.DataFrame,
 def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
                     phishing_info: dict, cloudapp_info: dict,
                     auth_info: dict = None,
-                    unfamiliar_info: dict = None) -> tuple:
+                    unfamiliar_info: dict = None,
+                    user_upn: str = "") -> tuple:
     """Compute anomaly score and verdict for a user."""
+    
+    # Fix: Post-Mortem #9 — Verified Safe User Override
+    # Nếu user đã được SOC xác minh an toàn → override verdict ngay lập tức
+    if user_upn.lower() in {k.lower() for k in VERIFIED_SAFE_USERS}:
+        reason = VERIFIED_SAFE_USERS.get(user_upn, "SOC Override")
+        return 0, f"🟢 Verified Safe (SOC Override: {reason})"
+    
     score = 0
 
     # Foreign country sign-ins: Penalize Hacker variety, not VPN variety
@@ -733,16 +774,22 @@ def analyze(data_dir: Path, output_dir: Path):
         phishing_info = enrich_with_phishing(upn, phish_df)
         auth_info = enrich_with_auth_status(upn, auth_df, user_df)
         
+        # Fix: Post-Mortem #9 — Bỏ qua CloudAppEvents hoàn toàn cho Verified Safe Users
+        is_verified_safe = upn.lower() in {k.lower() for k in VERIFIED_SAFE_USERS}
+        
         # Get suspicious IPs for cloudapp filter (Unknown IP + Unknown Device)
         suspicious_ips = anomalies.get("SuspiciousIPList", [])
         account_object_id = user_df["AccountObjectId"].iloc[0]
-        cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, suspicious_ips)
+        if is_verified_safe:
+            cloudapp_info = {"DataBreachEvents": 0, "DataBreachActions": []}
+        else:
+            cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, suspicious_ips)
 
         # Enrich with Unfamiliar Sign-in alert IPs (Q00)
         unfamiliar_info = enrich_with_unfamiliar_signins(upn, unfamiliar_df, suspicious_ips)
 
         # Compute verdict
-        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info, unfamiliar_info)
+        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info, unfamiliar_info, user_upn=upn)
 
         # Build summary row
         row = {
@@ -834,15 +881,10 @@ def analyze(data_dir: Path, output_dir: Path):
     # Export
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # CSV
-    csv_path = output_dir / "user_investigation_summary.csv"
-    summary_df.to_csv(csv_path, index=False)
-    print(f"\n📊 Summary CSV saved: {csv_path}")
-
-    # Markdown report
-    md_path = output_dir / "investigation_report.md"
-    generate_markdown_report(summary_df, md_path)
-    print(f"📄 Markdown report saved: {md_path}")
+    # Excel report (professional multi-sheet workbook)
+    xlsx_path = output_dir / "investigation_report.xlsx"
+    generate_excel_report(summary_df, xlsx_path, TRUSTED_THRESHOLD)
+    print(f"\n📊 Excel report saved: {xlsx_path}")
 
     # Print summary stats
     print("\n" + "=" * 60)
