@@ -1,7 +1,7 @@
 # Microsoft Defender XDR — Investigation & Schema Reference
 
 > **Tenant:** Crystal Group (crystal-martin.com / crystal-abl.com.bd / crystal-cet.com.bd)  
-> **Last Updated:** 2026-05-08 (KQL 11 Audit Report v2 — MS infra IP filter + baseline contamination warning)  
+> **Last Updated:** 2026-05-09 (Output Audit v4.1 — conditional alert scoring, dynamic baseline, Alert IP correlation)  
 > **Purpose:** Tài liệu hóa schema, phân tích incidents, và hỗ trợ điều tra bảo mật trên Microsoft Defender XDR
 
 ---
@@ -46,8 +46,10 @@ Microsoft-Defender/
 │       └── investigation_report.md            ← Báo cáo chi tiết (auto-generated)
 │
 ├── docs/                                      ← Tài liệu nghiệp vụ & Hướng dẫn
-│   ├── detection_logic_reference.md           ← Giải thích chi tiết logic nhận diện VPN/Hacker
-│   └── post_mortem_logic_fixes.md             ← Rút kinh nghiệm: False Positive/Negative fixes
+│   ├── detection_logic_reference.md           ← Giải thích chi tiết logic nhận diện VPN/Hacker (v4.1)
+│   ├── post_mortem_logic_fixes.md             ← Rút kinh nghiệm: False Positive/Negative fixes
+│   ├── alert_pipeline_source_of_truth.md      ← ⭐ Source of Truth: MS docs + CA policies verified
+│   └── pillar_alignment.md                    ← Gap analysis: 3 pillars alignment
 │
 ├── queries/                                   ← KQL queries cho investigation
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
@@ -239,11 +241,14 @@ Phase 1 — Raw Data Export
   4. Chạy 8 KQL queries trong Advanced Hunting (queries/*.kql)
   5. Export CSV → Lưu vào incidents/data/exports/
 
-Phase 2 — Automated Analysis
-  6. Chạy: python scripts/analyze_signins.py
-     → Build behavioral baseline per user (trusted IPs/devices/browsers/ISPs)
+Phase 2 — Automated Analysis (v4.1)
+  6. Chạy: python scripts/analyze_signins.py --data-dir incidents/data/export --output-dir incidents/analysis
+     → Load 8 data sources (signin + ISP + alerts + profiles + phishing + cloudapp + auth + Q00)
+     → Dynamic baseline threshold (5% or 15% for low-volume users)
      → Detect anomalies (unknown IP, foreign country, suspicious ISP)
-     → Tạo bảng tổng hợp + verdict (Safe/Suspicious/Compromised)
+     → Alert IP correlation (cross-reference Q00 alert IPs)
+     → Conditional alert scoring (only penalize when compromise indicators present)
+     → Tạo bảng tổng hợp + verdict (Safe/Suspicious/Likely Compromised/Confirmed)
 
 Phase 3 — Investigation
   7. Review report    →  incidents/analysis/investigation_report.md

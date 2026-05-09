@@ -104,4 +104,36 @@ Pipeline kết luận **Niaz Morshed** là "100% AiTM" dựa trên session nhả
 - **Lưu ý:** Đây là giải pháp Option A (Warning-based). Option B (tính baseline chỉ từ pre-attack window) phức tạp hơn và yêu cầu biết thời điểm tấn công bắt đầu.
 
 ---
+
+## 7. Lỗi Phạt Oan User Chỉ Bị Tấn Công Mà Chưa Bị Chiếm (False Positive — Alert Scoring)
+
+### Mô tả Vấn đề
+Tài khoản **`Abdullah_Zubair@crystal-abl.com.bd`** bị gán nhãn **🔴 Likely Compromised** (Score 30) dù không có bất kỳ dấu hiệu compromise nào — 0 foreign sign-ins, 0 suspicious IPs, 0 HighRisk events, 0 DataBreach.
+
+### Nguyên nhân Gốc rễ
+- User có **40 Defender Alerts** nhưng tất cả đều là **blocked attacks** (CA policy chặn thành công, ErrorCode ≠ 0).
+- Scoring cũ: `min(AlertCount, 5) * 5 = 25 điểm` — áp dụng **vô điều kiện** cho mọi user có alerts, bất kể alerts đó thành công hay bị chặn.
+- Cộng thêm 5 điểm Unmanaged → vượt ngưỡng 30 → Likely Compromised. User tương tự: `cmaadmmk` (Score 40, 19 alerts).
+
+### Giải pháp Khắc phục
+- **Conditional Alert Scoring:** Chỉ tính điểm Alert khi user CÓ **compromise indicators** (foreign sign-ins, suspicious IPs, hoặc HighRisk events). Users chỉ bị blocked attack → 0 điểm alert.
+- **Kết quả:** Abdullah_Zubair: 30 → **5 (🟢 Likely Safe)**. cmaadmmk: 40 → **15 (🟠 Suspicious)**.
+
+---
+
+## 8. Lỗi Baseline Bị Ô Nhiễm Cho User Ít Sign-in (Baseline Contamination — Low Volume)
+
+### Mô tả Vấn đề
+Tài khoản **`Rahman.Mustafizur@bd.crystal-martin.com`** chỉ có 39 sign-ins, trong đó 32 đến từ 10 quốc gia lạ (AR, CL, EC, FR, KE, MX, NL, PT, RS, TH). Hệ thống báo **ForeignCountries = 0** và Score chỉ có 55 — rõ ràng sai.
+
+### Nguyên nhân Gốc rễ
+- Threshold 5% trên 39 sign-ins = chỉ cần **2 sign-ins** từ 1 quốc gia là đạt Trusted.
+- Hacker tạo 32/39 sign-ins từ foreign countries → mỗi nước đều vượt 5% → tất cả 10 nước thành TrustedCountries → ForeignCountries = 0.
+- User tương tự: `sumon.mia` (14 sign-ins, 100% foreign, ForeignCountries = 0).
+
+### Giải pháp Khắc phục
+- **Dynamic Baseline Threshold:** Users có **< 50 sign-ins** tự động dùng **threshold 15%** thay vì 5%. Hacker cần tạo nhiều hơn sign-ins để "lừa" baseline.
+- **Kết quả:** Rahman.Mustafizur: 55 → **408** (10 hacker countries bị phát hiện đúng). sumon.mia: ForeignCountries vẫn 0 nhưng HighRisk vẫn catch (Score 50).
+
+---
 *Tài liệu này được tạo ra để lưu trữ làm Knowledge Base cho các vòng phát triển SOC Automation tiếp theo.*
