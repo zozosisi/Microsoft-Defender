@@ -157,6 +157,25 @@ def load_auth_status(data_dir: Path) -> pd.DataFrame:
     return df
 
 
+def load_unfamiliar_signin_data(data_dir: Path) -> pd.DataFrame:
+    """Load Unfamiliar Sign-in Incidents data (Q00).
+    
+    This file contains alert IPs from Entra ID Protection 'Unfamiliar sign-in properties'
+    detections, including both successful and blocked sign-in attempts.
+    Source: alert_pipeline_source_of_truth.md — confirmed via MS docs + tenant CA policies.
+    """
+    path = data_dir / "unfamiliar_signin_incidents.csv"
+    if not path.exists():
+        print("  ⚠ unfamiliar_signin_incidents.csv not found — Alert IP correlation will be skipped")
+        return pd.DataFrame()
+    df = pd.read_csv(path, low_memory=False)
+    if "AlertTimestamp" in df.columns:
+        df["AlertTimestamp"] = pd.to_datetime(df["AlertTimestamp"], format="mixed")
+    print(f"  ✓ Loaded unfamiliar_signin_incidents.csv: {len(df)} rows")
+    print(f"    → Unique Alert IPs: {df['RemoteIP'].nunique() if 'RemoteIP' in df.columns else 'N/A'}")
+    return df
+
+
 
 def is_microsoft_infra_ip(ip: str) -> bool:
     """Check if an IP belongs to Microsoft infrastructure (Exchange Online backend, etc.).
@@ -524,12 +543,60 @@ def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame, user_df: pd.Da
 
 
 
+def enrich_with_unfamiliar_signins(user_upn: str, unfamiliar_df: pd.DataFrame,
+                                    suspicious_ips: list) -> dict:
+    """Cross-reference user's suspicious IPs with Unfamiliar Sign-in alert IPs.
+    
+    Purpose: Boost scoring confidence when a suspicious IP is also flagged by
+    Entra ID Protection as 'Unfamiliar sign-in properties'.
+    Source: alert_pipeline_source_of_truth.md — Gap 1 alignment fix.
+    """
+    result = {
+        "AlertIPsMatched": [],
+        "AlertIPsMatchedCount": 0,
+        "UserAlertCount": 0,
+        "FirstAlertTimestamp": "",
+        "CrossUserAlertIPs": [],
+    }
+    
+    if unfamiliar_df.empty or "RemoteIP" not in unfamiliar_df.columns:
+        return result
+    
+    # Get all alert IPs for THIS user
+    user_alerts = unfamiliar_df[
+        unfamiliar_df["AccountUpn"].str.lower() == user_upn.lower()
+    ]
+    
+    if not user_alerts.empty:
+        result["UserAlertCount"] = len(user_alerts)
+        if "AlertTimestamp" in user_alerts.columns:
+            result["FirstAlertTimestamp"] = user_alerts["AlertTimestamp"].min().strftime("%Y-%m-%d %H:%M")
+    
+    # Cross-reference: which of our suspicious IPs are ALSO in alert IPs?
+    all_alert_ips = set(unfamiliar_df["RemoteIP"].dropna().unique())
+    matched = [ip for ip in suspicious_ips if ip in all_alert_ips]
+    result["AlertIPsMatched"] = sorted(matched)
+    result["AlertIPsMatchedCount"] = len(matched)
+    
+    # Cross-user: alert IPs for OTHER users that appear in this user's sign-ins
+    other_user_alert_ips = set(
+        unfamiliar_df[
+            unfamiliar_df["AccountUpn"].str.lower() != user_upn.lower()
+        ]["RemoteIP"].dropna().unique()
+    )
+    cross_user = [ip for ip in suspicious_ips if ip in other_user_alert_ips]
+    result["CrossUserAlertIPs"] = sorted(cross_user)
+    
+    return result
+
+
 # ============================================================
 # VERDICT SCORING
 # ============================================================
 def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
                     phishing_info: dict, cloudapp_info: dict,
-                    auth_info: dict = None) -> tuple:
+                    auth_info: dict = None,
+                    unfamiliar_info: dict = None) -> tuple:
     """Compute anomaly score and verdict for a user."""
     score = 0
 
@@ -567,6 +634,12 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
 
     # Alert count (Defender Alerts)
     score += min(alert_info.get("AlertCount", 0), 5) * 5
+
+    # Alert IP correlation bonus (Unfamiliar Sign-in Incidents — Q00)
+    # +3 per suspicious IP that is ALSO an Entra ID alert IP, max 30 pts
+    # Source: pillar_alignment.md — Gap 1 fix
+    if unfamiliar_info:
+        score += min(unfamiliar_info.get("AlertIPsMatchedCount", 0), 10) * 3
 
     # Unmanaged device percentage
     if anomalies.get("UnmanagedPct", 0) > 80:
@@ -607,6 +680,7 @@ def analyze(data_dir: Path, output_dir: Path):
     phish_df = load_phishing_data(data_dir)
     cloudapp_df = load_cloudapp_data(data_dir)
     auth_df = load_auth_status(data_dir)
+    unfamiliar_df = load_unfamiliar_signin_data(data_dir)
 
     # Get unique users
     users = sorted(signin_df["AccountUpn"].unique())
@@ -636,8 +710,11 @@ def analyze(data_dir: Path, output_dir: Path):
         account_object_id = user_df["AccountObjectId"].iloc[0]
         cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, suspicious_ips)
 
+        # Enrich with Unfamiliar Sign-in alert IPs (Q00)
+        unfamiliar_info = enrich_with_unfamiliar_signins(upn, unfamiliar_df, suspicious_ips)
+
         # Compute verdict
-        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info)
+        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info, unfamiliar_info)
 
         # Build summary row
         row = {
@@ -696,6 +773,12 @@ def analyze(data_dir: Path, output_dir: Path):
             "LastPasswordReset": auth_info["LastPasswordReset"],
             "AccountStatus": auth_info["AccountStatus"],
             "IsAdmin": auth_info["IsAdmin"],
+            # Unfamiliar Sign-in Alert correlation (Q00 — Gap 1 fix)
+            "AlertIPsMatched": json.dumps(unfamiliar_info["AlertIPsMatched"]),
+            "AlertIPsMatchedCount": unfamiliar_info["AlertIPsMatchedCount"],
+            "UserAlertCount_Q00": unfamiliar_info["UserAlertCount"],
+            "FirstAlertTimestamp": unfamiliar_info["FirstAlertTimestamp"],
+            "CrossUserAlertIPs": json.dumps(unfamiliar_info["CrossUserAlertIPs"]),
             # Microsoft Infra IPs filtered
             "MicrosoftInfraIPsFiltered": anomalies.get("MicrosoftInfraIPsFiltered", 0),
             # Baseline contamination warning (Audit Report v2 — Fix #3)
