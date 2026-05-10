@@ -48,9 +48,9 @@ CloudAppEvents
 | extend InitiatedBy = tostring(RawEventData.UserId)
 | where TargetUser in (TargetUPNs) or AccountId in (TargetUPNs)
 | extend Category = case(
-    ActionType has_any ("Reset password", "Change password", "force change"), "Password Reset",
-    ActionType has_any ("Revoke", "Invalidate", "refresh token"), "Session Revoke",
-    ActionType has_any ("security info", "registered"), "MFA Change",
+    ActionType has "password", "Password Reset",
+    ActionType has "Revoke" or ActionType has "Invalidate", "Session Revoke",
+    ActionType has "security info", "MFA Change",
     "Other"
 )
 | project
