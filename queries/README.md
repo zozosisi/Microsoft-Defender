@@ -47,6 +47,7 @@ Query 0 (AlertInfo + AlertEvidence)
 | 11 | `11_aitm_token_theft_investigation.kql` | **Chốt hạ:** Phát hiện Hacker trộm Cookie Session (Pass-the-Cookie/AiTM). Phân biệt VPN vs AiTM bằng DeviceList + TrustedCountries baseline. **v2:** Filter Microsoft infra IPs, thêm 🟡 Review Required tier. | `EntraIdSignInEvents` |
 | 12 | `12_infostealer_endpoint_investigation.kql` | **Chốt hạ:** Quét xem máy tính của user có bị nhiễm mã độc trộm mật khẩu (Redline, Raccoon) hay không. | `AlertEvidence`, `AlertInfo` |
 | 13 | `13_hidden_inbox_rules_investigation.kql` | **Chốt hạ:** Phát hiện Hacker cài cắm các Rule ẩn để forward trộm email ra bên ngoài. | `CloudAppEvents` |
+| **14** | **`14_remediation_history.kql`** | **Lịch sử remediation:** Password reset, session revoke, MFA re-registration cho affected users. | `CloudAppEvents` |
 
 ## Cách chạy
 

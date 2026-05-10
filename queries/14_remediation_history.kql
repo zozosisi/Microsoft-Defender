@@ -1,0 +1,101 @@
+// ============================================================
+// QUERY 14: Password Reset & Session Revoke History
+// Export CSV → Save as: remediation_history.csv
+// ============================================================
+// Lấy lịch sử admin/user thực hiện:
+//   - Reset password
+//   - Revoke refresh tokens (revoke session)
+//   - MFA re-registration
+// từ CloudAppEvents (Audit Logs) cho affected users.
+// ============================================================
+// ⚠️ LƯU Ý: CloudAppEvents chỉ lưu 30 ngày.
+//    Nếu remediation xảy ra >30 ngày trước → không có data.
+// ============================================================
+
+let AffectedUsers =
+    AlertEvidence
+    | where Timestamp > ago(30d)
+    | where Title has "Unfamiliar sign-in"
+    | where isnotempty(AccountObjectId)
+    | distinct AccountObjectId;
+
+let TargetUPNs = 
+    IdentityInfo
+    | where Timestamp >= ago(30d)
+    | where AccountObjectId in (AffectedUsers)
+    | distinct AccountUpn;
+
+// --- PART A: Password Reset ---
+let PasswordResets = 
+    CloudAppEvents
+    | where Timestamp > ago(30d)
+    | where ActionType in (
+        "Reset password.",                    // Admin reset password
+        "Reset user password.",               // Admin reset user password
+        "Change password.",                   // User self-change
+        "Change user password.",              // Admin change user password
+        "Set force change user password."     // Force change at next login
+    )
+    | extend TargetUser = tostring(RawEventData.ObjectId)
+    | extend InitiatedBy = tostring(RawEventData.UserId)
+    | where TargetUser in (TargetUPNs) or AccountId in (TargetUPNs)
+    | project
+        Timestamp,
+        ActionType,
+        TargetUser,
+        InitiatedBy,
+        Category = "Password Reset",
+        IPAddress,
+        CountryCode
+    ;
+
+// --- PART B: Session Revocation ---
+let SessionRevokes =
+    CloudAppEvents
+    | where Timestamp > ago(30d)
+    | where ActionType in (
+        "Revoke sign in sessions.",           // Revoke all refresh tokens
+        "Invalidate all refresh tokens for a user."  // Legacy action name
+    )
+    | extend TargetUser = tostring(RawEventData.ObjectId)
+    | extend InitiatedBy = tostring(RawEventData.UserId)
+    | where TargetUser in (TargetUPNs) or AccountId in (TargetUPNs)
+    | project
+        Timestamp,
+        ActionType,
+        TargetUser,
+        InitiatedBy,
+        Category = "Session Revoke",
+        IPAddress,
+        CountryCode
+    ;
+
+// --- PART C: MFA Registration/Update ---
+let MfaChanges =
+    CloudAppEvents
+    | where Timestamp > ago(30d)
+    | where ActionType in (
+        "User registered security info.",          // MFA registration
+        "User registered all required security info.",
+        "Admin registered security info.",         // Admin registered for user
+        "User deleted security info.",             // MFA method removed
+        "User started security info registration."
+    )
+    | extend TargetUser = tostring(RawEventData.ObjectId)
+    | extend InitiatedBy = tostring(RawEventData.UserId)
+    | where TargetUser in (TargetUPNs) or AccountId in (TargetUPNs)
+    | project
+        Timestamp,
+        ActionType,
+        TargetUser,
+        InitiatedBy,
+        Category = "MFA Change",
+        IPAddress,
+        CountryCode
+    ;
+
+// --- UNION ALL ---
+PasswordResets
+| union SessionRevokes
+| union MfaChanges
+| order by TargetUser asc, Timestamp desc
