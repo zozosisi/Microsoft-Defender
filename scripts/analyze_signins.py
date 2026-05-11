@@ -640,7 +640,7 @@ def enrich_with_unfamiliar_signins(user_upn: str, unfamiliar_df: pd.DataFrame,
     return result
 
 
-def detect_aitm_sessions(user_df: pd.DataFrame, baseline: dict) -> dict:
+def detect_aitm_sessions(user_df: pd.DataFrame, baseline: dict) -> tuple:
     """Detect AiTM Token Theft by finding sessions used from multiple IPs/Countries.
     
     AiTM (Adversary-in-the-Middle) steals session cookies, causing the same SessionId
@@ -649,15 +649,24 @@ def detect_aitm_sessions(user_df: pd.DataFrame, baseline: dict) -> dict:
     
     Migrated from Q11 KQL (archived) — now runs in Python for consistency.
     Requires: AuthenticationProcessingDetails column in signin_history.csv (added to Q01A-F v5.0).
+    
+    Returns:
+        tuple: (summary_dict, detail_rows_list)
+            - summary_dict: counts for scoring
+            - detail_rows_list: list of dicts with per-session detail for Excel sheet
     """
     result = {
         "AiTMSuspectedSessions": 0,
         "MfaSatisfiedByToken": 0,
         "AiTMHighRiskSessions": 0,
     }
+    detail_rows = []
     
     if "SessionId" not in user_df.columns:
-        return result
+        return result, detail_rows
+    
+    upn = user_df["AccountUpn"].iloc[0] if len(user_df) > 0 else ""
+    display_name = user_df["AccountDisplayName"].iloc[0] if len(user_df) > 0 else ""
     
     # Filter: only successful sign-ins with valid SessionId, exclude MS infra IPs
     session_df = user_df[
@@ -667,7 +676,7 @@ def detect_aitm_sessions(user_df: pd.DataFrame, baseline: dict) -> dict:
     ].copy()
     
     if session_df.empty:
-        return result
+        return result, detail_rows
     
     # Find sessions appearing on multiple IPs (potential token theft)
     session_stats = session_df.groupby("SessionId").agg(
@@ -678,6 +687,7 @@ def detect_aitm_sessions(user_df: pd.DataFrame, baseline: dict) -> dict:
     result["AiTMSuspectedSessions"] = len(multi_ip_sessions)
     
     # Detect MFA bypass by token (AiTM indicator)
+    mfa_by_token_count = 0
     if "AuthenticationProcessingDetails" in user_df.columns:
         auth_details = user_df["AuthenticationProcessingDetails"].dropna().astype(str)
         mfa_token_patterns = [
@@ -687,21 +697,77 @@ def detect_aitm_sessions(user_df: pd.DataFrame, baseline: dict) -> dict:
         mfa_by_token = auth_details.apply(
             lambda x: any(p.lower() in x.lower() for p in mfa_token_patterns)
         )
-        result["MfaSatisfiedByToken"] = int(mfa_by_token.sum())
+        mfa_by_token_count = int(mfa_by_token.sum())
+    result["MfaSatisfiedByToken"] = mfa_by_token_count
     
     # High-risk AiTM: multi-IP session + unknown device in that session
+    # Also build detail rows for the AiTM Sessions sheet
     trusted_devices = set(baseline.get("TrustedDevices", []))
+    trusted_ips = set(baseline.get("TrustedIPs", []))
     high_risk_count = 0
+    
     for session_id in multi_ip_sessions.index:
         session_rows = session_df[session_df["SessionId"] == session_id]
+        ips = sorted(session_rows["IPAddress"].unique())
+        countries = sorted(session_rows["Country"].dropna().unique())
+        devices = sorted(session_rows["DeviceName"].dropna().unique()) or ["(empty)"]
+        browsers = sorted(session_rows["Browser"].dropna().unique()) or ["(empty)"]
+        os_list = sorted(session_rows["OSPlatform"].dropna().unique()) or ["(empty)"]
+        apps = sorted(session_rows["Application"].dropna().unique()) or ["(empty)"]
+        
         has_unknown_device = session_rows["DeviceName"].apply(
             lambda d: pd.isna(d) or str(d).strip() == "" or d not in trusted_devices
         ).any()
+        
+        # Check if any IP in this session is from MFA-by-token sign-in
+        session_mfa_token = False
+        if "AuthenticationProcessingDetails" in session_rows.columns:
+            for _, r in session_rows.iterrows():
+                apd = str(r.get("AuthenticationProcessingDetails", ""))
+                if any(p.lower() in apd.lower() for p in mfa_token_patterns):
+                    session_mfa_token = True
+                    break
+        
         if has_unknown_device:
             high_risk_count += 1
+        
+        # Determine risk level for this session
+        if has_unknown_device and session_mfa_token:
+            risk_level = "🔴 HIGH (Unknown Device + MFA Token Bypass)"
+        elif has_unknown_device:
+            risk_level = "🟠 MEDIUM (Unknown Device, Multi-IP)"
+        elif session_mfa_token:
+            risk_level = "🟠 MEDIUM (MFA Token Bypass, Multi-IP)"
+        else:
+            risk_level = "🟡 LOW (Multi-IP only — possible WiFi/Mobile switch)"
+        
+        # Timestamps
+        ts = pd.to_datetime(session_rows["Timestamp"], errors="coerce")
+        first_seen = ts.min().strftime("%Y-%m-%d %H:%M") if ts.notna().any() else ""
+        last_seen = ts.max().strftime("%Y-%m-%d %H:%M") if ts.notna().any() else ""
+        
+        detail_rows.append({
+            "User": upn,
+            "DisplayName": display_name,
+            "SessionId": session_id,
+            "RiskLevel": risk_level,
+            "UniqueIPs": len(ips),
+            "IPList": ", ".join(ips),
+            "Countries": ", ".join(countries),
+            "Devices": ", ".join(str(d) for d in devices),
+            "Browsers": ", ".join(str(b) for b in browsers),
+            "OS": ", ".join(str(o) for o in os_list),
+            "Applications": ", ".join(str(a) for a in apps),
+            "MFAByToken": "Yes" if session_mfa_token else "No",
+            "UnknownDevice": "Yes" if has_unknown_device else "No",
+            "SignInCount": len(session_rows),
+            "FirstSeen": first_seen,
+            "LastSeen": last_seen,
+        })
+    
     result["AiTMHighRiskSessions"] = high_risk_count
     
-    return result
+    return result, detail_rows
 
 
 # ============================================================
@@ -829,6 +895,7 @@ def analyze(data_dir: Path, output_dir: Path):
 
     # Process each user
     results = []
+    all_aitm_details = []  # Collect AiTM session details for Sheet 6
     for i, upn in enumerate(users):
         print(f"  [{i+1}/{len(users)}] {upn}")
         user_df = signin_df[signin_df["AccountUpn"] == upn].copy()
@@ -861,7 +928,8 @@ def analyze(data_dir: Path, output_dir: Path):
         unfamiliar_info = enrich_with_unfamiliar_signins(upn, unfamiliar_df, suspicious_ips)
 
         # AiTM Token Theft detection (migrated from Q11 KQL — v5.0)
-        aitm_info = detect_aitm_sessions(user_df, baseline)
+        aitm_info, aitm_detail_rows = detect_aitm_sessions(user_df, baseline)
+        all_aitm_details.extend(aitm_detail_rows)
 
         # Compute verdict
         score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info, unfamiliar_info, aitm_info, user_upn=upn)
@@ -962,7 +1030,8 @@ def analyze(data_dir: Path, output_dir: Path):
 
     # Excel report (professional multi-sheet workbook)
     xlsx_path = output_dir / "investigation_report.xlsx"
-    generate_excel_report(summary_df, xlsx_path, TRUSTED_THRESHOLD)
+    aitm_df = pd.DataFrame(all_aitm_details) if all_aitm_details else pd.DataFrame()
+    generate_excel_report(summary_df, xlsx_path, TRUSTED_THRESHOLD, aitm_details_df=aitm_df)
     print(f"\n📊 Excel report saved: {xlsx_path}")
 
     # Print summary stats
