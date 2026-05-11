@@ -68,13 +68,13 @@ Microsoft-Defender/
 │   ├── 06_cloudapp_isp.kql                    ← Backup ISP data (CloudAppEvents)
 │   ├── 09_cloudapp_events_bulk.kql            ← Bulk Data Breach export cho Python
 │   ├── 10_auth_status.kql                     ← MFA, Password, Account Status & Roles
-│   ├── 11_aitm_token_theft_investigation.kql  ← Raw session data cho AiTM detection
 │   ├── 12_infostealer_endpoint_investigation.kql ← Endpoint/malware alerts (non-identity)
 │   ├── 13_hidden_inbox_rules_investigation.kql ← Inbox rule changes (JSON parsed)
 │   ├── 14_remediation_history.kql             ← Password reset, session revoke history
-│   └── archive/                               ← Archived queries (logic migrated to Python)
+│   └── archive/                               ← Archived queries (logic migrated/merged)
 │       ├── 07_vpn_vs_hacker_investigation.kql ← [ARCHIVED] → detect_user_anomalies()
-│       └── 08_post_breach_investigation.kql   ← [ARCHIVED] → enrich_with_cloudapp()
+│       ├── 08_post_breach_investigation.kql   ← [ARCHIVED] → enrich_with_cloudapp()
+│       └── 11_aitm_token_theft_investigation.kql ← [ARCHIVED] → merged vào Q01A-F
 │
 └── scripts/                                   ← Scripts phân tích tự động
     ├── analyze_signins.py                     ← Baseline + Anomaly detection per user

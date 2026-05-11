@@ -42,6 +42,7 @@ EntraIdSignInEvents
     RiskState,
     RiskEventTypes,
     ConditionalAccessStatus,
+    AuthenticationProcessingDetails,
     SessionId,
     LastPasswordChangeTimestamp
 | order by AccountUpn asc, Timestamp asc

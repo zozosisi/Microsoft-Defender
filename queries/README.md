@@ -21,7 +21,7 @@ Query 0 (AlertInfo + AlertEvidence) — Foundation
    └── Xác định ~54 affected users (ABL + CMBD + CETBD + CSC)
          │
          ├── [PIPELINE] Queries cho Python analyze_signins.py
-         │     ├── Query 1A-1F: Sign-in history (EntraIdSignInEvents, split 5d/query)
+         │     ├── Query 1A-1F: Sign-in history + AiTM data (EntraIdSignInEvents, split 5d/query)
          │     ├── Query 2:     ISP enrichment (IdentityLogonEvents)
          │     ├── Query 3:     Alert details — Unfamiliar sign-in (AlertEvidence)
          │     ├── Query 4:     User profiles (IdentityInfo)
@@ -30,7 +30,6 @@ Query 0 (AlertInfo + AlertEvidence) — Foundation
          │     └── Query 10:    Auth status — MFA, password (IdentityAccountInfo)
          │
          ├── [INVESTIGATION] Queries bổ sung — raw data cho deep-dive
-         │     ├── Query 11:    AiTM session data (SessionId + AuthProcessingDetails)
          │     ├── Query 12:    Endpoint/malware alerts (non-identity alerts)
          │     └── Query 13:    Inbox rules changes (CloudAppEvents + JSON parse)
          │
@@ -38,9 +37,10 @@ Query 0 (AlertInfo + AlertEvidence) — Foundation
          │     ├── Query 6:     CloudApp ISP backup (dùng nếu Q02 thiếu data)
          │     └── Query 14:    Remediation history (audit/compliance)
          │
-         └── [ARCHIVED] queries/archive/ — Logic đã migrate sang Python
+         └── [ARCHIVED] queries/archive/ — Logic đã migrate hoặc merged
                ├── Query 7:     VPN vs Hacker (→ analyze_signins.py detect_user_anomalies)
-               └── Query 8:     Post-Breach single user (→ Q09 + enrich_with_cloudapp)
+               ├── Query 8:     Post-Breach single user (→ Q09 + enrich_with_cloudapp)
+               └── Query 11:    AiTM session data (→ merged vào Q01A-F)
 ```
 
 ## Danh sách queries
@@ -67,7 +67,6 @@ Query 0 (AlertInfo + AlertEvidence) — Foundation
 
 | # | File | Export CSV as | Table | Mô tả |
 |---|------|---------------|-------|--------|
-| 11 | `11_aitm_token_theft_investigation.kql` | `aitm_session_data.csv` | `EntraIdSignInEvents` | Raw session data + AuthProcessingDetails cho AiTM detection |
 | 12 | `12_infostealer_endpoint_investigation.kql` | `endpoint_alerts.csv` | `AlertEvidence` + `AlertInfo` | Tất cả alerts non-identity (malware, infostealer, credential theft) |
 | 13 | `13_hidden_inbox_rules_investigation.kql` | `inbox_rules.csv` | `CloudAppEvents` | Inbox rule changes + JSON parsed RuleConfig |
 
@@ -84,6 +83,7 @@ Query 0 (AlertInfo + AlertEvidence) — Foundation
 |------|---------------|
 | `07_vpn_vs_hacker_investigation.kql` | Logic đã migrate 100% vào `analyze_signins.py` → `detect_user_anomalies()` |
 | `08_post_breach_investigation.kql` | Hardcode 1 user. Q09 cung cấp bulk data, Python handle phân tích |
+| `11_aitm_token_theft_investigation.kql` | Data merged vào Q01A-F (`AuthenticationProcessingDetails`). Bị hit 10K row limit riêng |
 
 ## Cách chạy
 
