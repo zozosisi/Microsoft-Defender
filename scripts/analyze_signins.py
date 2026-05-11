@@ -147,18 +147,6 @@ def load_phishing_data(data_dir: Path) -> pd.DataFrame:
     return df
 
 
-def load_cloudapp_data(data_dir: Path) -> pd.DataFrame:
-    """Load CloudAppEvents data for post-breach analysis."""
-    path = data_dir / "cloudapp_events.csv"
-    if not path.exists():
-        print("  ⚠ cloudapp_events.csv not found — Post-breach analysis will be skipped")
-        return pd.DataFrame()
-    df = pd.read_csv(path, low_memory=False)
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="mixed")
-    print(f"  ✓ Loaded cloudapp_events.csv: {len(df)} rows")
-    return df
-
-
 def load_auth_status(data_dir: Path) -> pd.DataFrame:
     """Load MFA and Password reset data."""
     path = data_dir / "auth_status.csv"
@@ -433,38 +421,7 @@ def enrich_with_phishing(user_upn: str, phish_df: pd.DataFrame) -> dict:
     return {"PhishingEmailsReceived": len(user_phish)}
 
 
-def enrich_with_cloudapp(user_upn: str, account_object_id: str, cloudapp_df: pd.DataFrame, untrusted_ips: list) -> dict:
-    """Check CloudAppEvents for data breach actions from untrusted IPs."""
-    if cloudapp_df.empty or not untrusted_ips:
-        return {"DataBreachEvents": 0, "DataBreachActions": []}
 
-    # Match by UPN (AccountId) OR AccountObjectId — no partial match to avoid false positives
-    user_ca = cloudapp_df[
-        (cloudapp_df["AccountId"].str.lower() == user_upn.lower()) |
-        (cloudapp_df["AccountObjectId"] == account_object_id)
-    ]
-    
-    if user_ca.empty:
-        return {"DataBreachEvents": 0, "DataBreachActions": []}
-        
-    # Filter by Untrusted IPs (from anomalies)
-    hacker_ca = user_ca[user_ca["IPAddress"].isin(untrusted_ips)]
-    
-    # Full list of suspicious actions (aligned with detection_logic_reference.md Section 3B)
-    suspicious_actions = [
-        'FileDownloaded', 'FileAccessed',           # Data theft / snooping
-        'New-InboxRule', 'Set-InboxRule',            # Persistence / anti-forensics
-        'MailItemsAccessed', 'eDiscoverySearch',     # Email snooping
-        'FileRecycled', 'FolderRecycled',            # Data destruction
-        'MessageSent',                               # Lateral movement via Teams
-    ]
-    
-    breach_events = hacker_ca[hacker_ca["ActionType"].isin(suspicious_actions)]
-    
-    return {
-        "DataBreachEvents": len(breach_events),
-        "DataBreachActions": sorted(breach_events["ActionType"].unique().tolist())
-    }
 
 
 def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame, user_df: pd.DataFrame) -> dict:
@@ -589,7 +546,7 @@ def analyze(data_dir: Path, output_dir: Path):
     alert_df = load_alert_data(data_dir)
     profile_df = load_user_profiles(data_dir)
     phish_df = load_phishing_data(data_dir)
-    cloudapp_df = load_cloudapp_data(data_dir)
+
     auth_df = load_auth_status(data_dir)
     unfamiliar_df = load_unfamiliar_signin_data(data_dir)
 
@@ -617,10 +574,7 @@ def analyze(data_dir: Path, output_dir: Path):
         phishing_info = enrich_with_phishing(upn, phish_df)
         auth_info = enrich_with_auth_status(upn, auth_df, user_df)
 
-        # CloudApp data breach (use unknown IPs as filter)
         unknown_ips = user_data.get("UnknownIPList", [])
-        account_object_id = user_df["AccountObjectId"].iloc[0]
-        cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, unknown_ips)
 
         # Unfamiliar Sign-in alert IPs (Q00)
         unfamiliar_info = enrich_with_unfamiliar_signins(upn, unfamiliar_df, unknown_ips)
@@ -674,9 +628,7 @@ def analyze(data_dir: Path, output_dir: Path):
             "LastAlert": alert_info["LastAlert"],
             # Phishing
             "PhishingEmailsReceived": phishing_info["PhishingEmailsReceived"],
-            # Data Breach
-            "DataBreachEvents": cloudapp_info["DataBreachEvents"],
-            "DataBreachActions": json.dumps(cloudapp_info["DataBreachActions"]),
+
             # Auth Status
             "MFAStatus": auth_info["MFAStatus"],
             "LastPasswordReset": auth_info["LastPasswordReset"],
@@ -700,8 +652,8 @@ def analyze(data_dir: Path, output_dir: Path):
     risk_order = {"High": 0, "Medium": 1, "Low": 2, "None": 3}
     summary_df["_risk_sort"] = summary_df["UserRiskLevel"].map(risk_order)
     summary_df = summary_df.sort_values(
-        ["_risk_sort", "MSTotalRiskSignIns", "DataBreachEvents"],
-        ascending=[True, False, False]
+        ["_risk_sort", "MSTotalRiskSignIns"],
+        ascending=[True, False]
     )
     summary_df = summary_df.drop(columns=["_risk_sort"])
 
@@ -730,12 +682,7 @@ def analyze(data_dir: Path, output_dir: Path):
                   f"High: {row['MSHighRiskSignIns']}, Med: {row['MSMediumRiskSignIns']}, "
                   f"Foreign: {row['NonBDSignIns']})")
 
-    # Users with data breach
-    breach = summary_df[summary_df["DataBreachEvents"] > 0]
-    if len(breach) > 0:
-        print(f"\n🚨 USERS WITH DATA BREACH EVENTS:")
-        for _, row in breach.iterrows():
-            print(f"  • {row['User']} ({row['DataBreachEvents']} events)")
+
 
     return summary_df
 

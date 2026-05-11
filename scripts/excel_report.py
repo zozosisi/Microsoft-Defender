@@ -300,7 +300,6 @@ def build_executive_summary(ws, df, threshold):
 
     metrics = [
         ("Total Alerts (all users)", df["AlertCount"].sum() if "AlertCount" in df.columns else 0),
-        ("Total Data Breach Events", df["DataBreachEvents"].sum() if "DataBreachEvents" in df.columns else 0),
         ("Users with MS High Risk", len(df[df["MSHighRiskSignIns"] > 0]) if "MSHighRiskSignIns" in df.columns else 0),
         ("Users with MS Medium Risk", len(df[df["MSMediumRiskSignIns"] > 0]) if "MSMediumRiskSignIns" in df.columns else 0),
         ("Users with Foreign Access", len(df[df["NonBDSignIns"] > 0]) if "NonBDSignIns" in df.columns else 0),
@@ -338,8 +337,6 @@ def build_user_investigation(ws, df):
         ("Active Days (30d)", "ActiveDays", "num", 14),
         ("Foreign Sign-ins (count)", "ForeignCountrySignIns", "num", 20),
         ("Foreign Countries (list)", "ForeignCountryList", "data", 50),
-        ("Data Breach Events", "DataBreachEvents", "num", 16),
-        ("Data Breach Actions", "DataBreachActions", "data", 30),
         ("Defender Alert Count", "AlertCount", "num", 16),
         ("MFA Status", "MFAStatus", "data", 32),
         ("Account Status", "AccountStatus", "data", 14),
@@ -359,8 +356,6 @@ def build_user_investigation(ws, df):
         for col_idx, (label, field, style, _) in enumerate(columns, 1):
             if label == "Foreign Countries (list)":
                 value = parse_json_list(row_data.get("ForeignCountryList", "[]"))
-            elif label == "Data Breach Actions":
-                value = parse_json_list(row_data.get("DataBreachActions", "[]"))
             elif label == "Is Admin":
                 value = "YES" if row_data.get("IsAdmin", False) else "No"
             elif field:
@@ -394,7 +389,7 @@ def build_detailed_metrics(ws, df):
         "TrustedIPs", "TrustedCountries", "AllCountries",
         "TrustedDevices", "TrustedBrowsers", "TrustedOS", "ISPList",
         "UnknownIPList", "ForeignCountryList", "NonBDCountries",
-        "SuspiciousISPs", "DataBreachActions",
+        "SuspiciousISPs",
         "AlertIPsMatched",
     }
 
@@ -484,28 +479,10 @@ def build_action_plan(ws, df):
         ),
     }
 
-    # Special action for Data Breach
-    data_breach_action = (
-        "P0 — IMMEDIATE",
-        "1. Isolate account immediately\n"
-        "2. Revoke all sessions + Reset password\n"
-        "3. Re-enroll MFA\n"
-        "4. Forensic review of CloudApp breach events\n"
-        "5. Review & remove suspicious mailbox rules\n"
-        "6. Notify affected data owners\n"
-        "7. Incident report required"
-    )
-
     for row_idx, (_, row_data) in enumerate(df.iterrows(), 2):
         risk_level = row_data.get("UserRiskLevel", "None")
-        data_breach = row_data.get("DataBreachEvents", 0)
         cat = risk_category(risk_level)
-
-        if data_breach > 0:
-            priority, action_text = data_breach_action
-            cat = "confirmed"  # Override color for data breach
-        else:
-            priority, action_text = actions[cat]
+        priority, action_text = actions[cat]
 
         values = [
             row_data.get("User", ""),
@@ -523,7 +500,7 @@ def build_action_plan(ws, df):
             if col_idx == 6:  # Actions column — wrap text
                 cell.alignment = Alignment(vertical="top", wrap_text=True)
 
-        apply_risk_formatting(ws, row_idx, risk_level if data_breach == 0 else "High", 1, len(columns))
+        apply_risk_formatting(ws, row_idx, risk_level, 1, len(columns))
 
         # Priority cell bold
         p_cell = ws.cell(row=row_idx, column=5)
@@ -600,8 +577,6 @@ def build_methodology(ws):
     row += 1
 
     evidence = [
-        ("Data Breach Events", "Q09 CloudAppEvents",
-         "File accessed/downloaded from unknown IPs — actual breach evidence, requires immediate containment"),
         ("Foreign Country Sign-ins", "Q01 Sign-in History",
          "Non-BD sign-ins — may be legitimate VPN/travel or service proxies (e.g., AMC PROD)"),
         ("Defender Alerts", "Q03 Alert Data",
@@ -643,8 +618,7 @@ def build_methodology(ws):
          "User identity info — department, job title"),
         ("Q05", "phishing_emails.csv", "EmailEvents",
          "Phishing emails received by affected users"),
-        ("Q09", "cloudapp_events.csv", "CloudAppEvents",
-         "Cloud app activity — file access/download from unknown IPs (data breach)"),
+
         ("Q10", "auth_status.csv", "IdentityAccountInfo",
          "MFA status, password reset history, admin roles"),
     ]
@@ -670,7 +644,7 @@ def build_methodology(ws):
         ("Service App Traffic", "Internal apps (AMC PROD, My Profile) generate foreign sign-ins through Azure relay IPs. "
          "These are NOT actual user locations and should be ignored for geolocation analysis."),
         ("SOC Analyst Role", "This report provides DATA for analyst review. The analyst makes the final determination "
-         "based on MS risk signals, data breach evidence, and contextual factors (travel, VPN, etc.)."),
+         "based on MS risk signals and contextual factors (travel, VPN, etc.)."),
         ("MS Infra IPs", "Microsoft infrastructure IPs (20.x, 40.x, 52.x, 2603:x) are auto-filtered before analysis."),
     ]
 
