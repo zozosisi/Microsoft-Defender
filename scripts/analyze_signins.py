@@ -312,37 +312,23 @@ def aggregate_user_data(user_df: pd.DataFrame, baseline: dict) -> dict:
         filtered_df.loc[unknown_ip_mask, "IPAddress"].unique().tolist()
     )
 
-    # --- Microsoft Risk Signals (PRIMARY) ---
+    # --- Microsoft Risk Signals (raw values — no custom categorization) ---
     risk_col = "RiskLevelDuringSignIn"
     if risk_col in filtered_df.columns:
         numeric_risk = pd.to_numeric(filtered_df[risk_col], errors='coerce').fillna(0)
-        result["MSHighRiskSignIns"] = int((numeric_risk >= 100).sum())
-        result["MSMediumRiskSignIns"] = int(((numeric_risk >= 50) & (numeric_risk < 100)).sum())
-        result["MSLowRiskSignIns"] = int(((numeric_risk >= 10) & (numeric_risk < 50)).sum())
+        result["RiskSignIns"] = int((numeric_risk > 0).sum())
+        result["MaxRiskScore"] = int(numeric_risk.max())
     else:
-        result["MSHighRiskSignIns"] = 0
-        result["MSMediumRiskSignIns"] = 0
-        result["MSLowRiskSignIns"] = 0
+        result["RiskSignIns"] = 0
+        result["MaxRiskScore"] = 0
 
-    # Risk events
+    # Risk event types
     if "RiskEventTypes" in filtered_df.columns:
         risk_events = filtered_df["RiskEventTypes"].dropna().astype(str)
         risk_events = risk_events[(risk_events.str.strip() != "") & (risk_events != "[]")]
         result["MSRiskEvents"] = len(risk_events)
     else:
         result["MSRiskEvents"] = 0
-
-    # User risk level (highest across all sign-ins)
-    ms_total = result["MSHighRiskSignIns"] + result["MSMediumRiskSignIns"] + result["MSLowRiskSignIns"]
-    if result["MSHighRiskSignIns"] > 0:
-        result["UserRiskLevel"] = "High"
-    elif result["MSMediumRiskSignIns"] > 0:
-        result["UserRiskLevel"] = "Medium"
-    elif result["MSLowRiskSignIns"] > 0:
-        result["UserRiskLevel"] = "Low"
-    else:
-        result["UserRiskLevel"] = "None"
-    result["MSTotalRiskSignIns"] = ms_total
 
     return result
 
@@ -531,12 +517,9 @@ def analyze(data_dir: Path, output_dir: Path):
             "Entity": get_entity(upn),
             "Department": profile_info["Department"],
             "JobTitle": profile_info["JobTitle"],
-            # Microsoft Risk Signals (PRIMARY)
-            "UserRiskLevel": user_data["UserRiskLevel"],
-            "MSHighRiskSignIns": user_data["MSHighRiskSignIns"],
-            "MSMediumRiskSignIns": user_data["MSMediumRiskSignIns"],
-            "MSLowRiskSignIns": user_data["MSLowRiskSignIns"],
-            "MSTotalRiskSignIns": user_data["MSTotalRiskSignIns"],
+            # Microsoft Risk Signals (raw — no custom categorization)
+            "RiskSignIns": user_data["RiskSignIns"],
+            "MaxRiskScore": user_data["MaxRiskScore"],
             "MSRiskEvents": user_data["MSRiskEvents"],
             # Sign-in volume
             "TotalSignIns": baseline["TotalSignIns"],
@@ -585,15 +568,12 @@ def analyze(data_dir: Path, output_dir: Path):
         }
         results.append(row)
 
-    # Create output DataFrame — sorted by MS Risk Level (High first), then by risk event count
+    # Create output DataFrame — sorted by MaxRiskScore desc, then RiskSignIns desc
     summary_df = pd.DataFrame(results)
-    risk_order = {"High": 0, "Medium": 1, "Low": 2, "None": 3}
-    summary_df["_risk_sort"] = summary_df["UserRiskLevel"].map(risk_order)
     summary_df = summary_df.sort_values(
-        ["_risk_sort", "MSTotalRiskSignIns"],
-        ascending=[True, False]
+        ["MaxRiskScore", "RiskSignIns"],
+        ascending=[False, False]
     )
-    summary_df = summary_df.drop(columns=["_risk_sort"])
 
     # Export
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -605,19 +585,18 @@ def analyze(data_dir: Path, output_dir: Path):
 
     # Print summary stats
     print("\n" + "=" * 60)
-    print("SUMMARY (Microsoft Risk Signals)")
+    print("SUMMARY")
     print("=" * 60)
-    risk_levels = summary_df["UserRiskLevel"].value_counts()
-    for level, count in risk_levels.items():
-        print(f"  {level}: {count} users")
+    total_with_risk = len(summary_df[summary_df["RiskSignIns"] > 0])
+    print(f"  Users with MS Risk Events: {total_with_risk} / {len(summary_df)}")
 
     # Users with MS risk events
-    risky = summary_df[summary_df["MSTotalRiskSignIns"] > 0]
+    risky = summary_df[summary_df["RiskSignIns"] > 0]
     if len(risky) > 0:
         print(f"\n🔍 USERS WITH MICROSOFT RISK EVENTS:")
         for _, row in risky.iterrows():
-            print(f"  • {row['User']} (Risk: {row['UserRiskLevel']}, "
-                  f"High: {row['MSHighRiskSignIns']}, Med: {row['MSMediumRiskSignIns']}, "
+            print(f"  • {row['User']} (MaxRisk: {row['MaxRiskScore']}, "
+                  f"RiskSignIns: {row['RiskSignIns']}, "
                   f"Foreign: {row['NonBDSignIns']})")
 
 
