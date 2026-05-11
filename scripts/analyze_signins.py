@@ -147,15 +147,6 @@ def load_phishing_data(data_dir: Path) -> pd.DataFrame:
     return df
 
 
-def load_auth_status(data_dir: Path) -> pd.DataFrame:
-    """Load MFA and Password reset data."""
-    path = data_dir / "auth_status.csv"
-    if not path.exists():
-        print("  ⚠ auth_status.csv not found — Auth status enrichment will be skipped")
-        return pd.DataFrame()
-    df = pd.read_csv(path, low_memory=False)
-    print(f"  ✓ Loaded auth_status.csv: {len(df)} rows")
-    return df
 
 
 def load_unfamiliar_signin_data(data_dir: Path) -> pd.DataFrame:
@@ -424,57 +415,8 @@ def enrich_with_phishing(user_upn: str, phish_df: pd.DataFrame) -> dict:
 
 
 
-def enrich_with_auth_status(user_upn: str, auth_df: pd.DataFrame, user_df: pd.DataFrame) -> dict:
-    """Extract MFA, Password reset, Account status, and Admin roles for a user."""
-    result = {
-        "MFAStatus": "Not Enrolled / Unknown",
-        "LastPasswordReset": "Unknown",
-        "AccountStatus": "Unknown",
-        "IsAdmin": False,
-    }
-    
-    # Fallback 1: Infer MFA from Sign-in Logs (AuthenticationRequirement)
-    if not user_df.empty and "AuthenticationRequirement" in user_df.columns:
-        mfa_signins = user_df[user_df["AuthenticationRequirement"].str.lower() == "multifactorauthentication"]
-        if len(mfa_signins) > 0:
-            result["MFAStatus"] = "MFA Enforced (Detected from Sign-ins)"
 
-    # Fallback 2: IdentityAccountInfo (auth_status.csv)
-    if not auth_df.empty:
-        user_auth = auth_df[auth_df["AccountUpn"].str.lower() == user_upn.lower()]
-        if not user_auth.empty:
-            row = user_auth.iloc[0]
-            
-            # Parse MFA
-            mfa_str = str(row.get("EnrolledMfas", ""))
-            if pd.notna(row.get("EnrolledMfas")) and mfa_str.strip().lower() not in ("[]", "", "nan"):
-                try:
-                    mfa_list = json.loads(mfa_str)
-                    result["MFAStatus"] = ", ".join(mfa_list)
-                except (json.JSONDecodeError, ValueError, TypeError):
-                    result["MFAStatus"] = mfa_str
-                    
-            # Parse Password Reset
-            pwd_time = row.get("LastPasswordChangeTime")
-            if pd.notna(pwd_time) and str(pwd_time).strip().lower() not in ("invalid date", "nat", "nan", ""):
-                result["LastPasswordReset"] = str(pwd_time)
-            
-            # Parse Account Status (from Q10 enrichment)
-            acct_status = row.get("AccountStatus", "")
-            if pd.notna(acct_status) and str(acct_status).strip():
-                result["AccountStatus"] = str(acct_status).strip()
-            
-            # Parse Assigned Roles — check if user is admin
-            roles_str = str(row.get("AssignedRoles", "[]"))
-            if pd.notna(row.get("AssignedRoles")) and roles_str.strip().lower() not in ("[]", "", "nan"):
-                try:
-                    roles_list = json.loads(roles_str)
-                    if len(roles_list) > 0:
-                        result["IsAdmin"] = True
-                except (json.JSONDecodeError, ValueError, TypeError):
-                    pass
-        
-    return result
+
 
 
 
@@ -547,7 +489,7 @@ def analyze(data_dir: Path, output_dir: Path):
     profile_df = load_user_profiles(data_dir)
     phish_df = load_phishing_data(data_dir)
 
-    auth_df = load_auth_status(data_dir)
+
     unfamiliar_df = load_unfamiliar_signin_data(data_dir)
 
     # Get unique users
@@ -572,7 +514,7 @@ def analyze(data_dir: Path, output_dir: Path):
         alert_info = enrich_with_alerts(upn, alert_df)
         profile_info = enrich_with_profile(upn, profile_df)
         phishing_info = enrich_with_phishing(upn, phish_df)
-        auth_info = enrich_with_auth_status(upn, auth_df, user_df)
+
 
         unknown_ips = user_data.get("UnknownIPList", [])
 
@@ -629,11 +571,7 @@ def analyze(data_dir: Path, output_dir: Path):
             # Phishing
             "PhishingEmailsReceived": phishing_info["PhishingEmailsReceived"],
 
-            # Auth Status
-            "MFAStatus": auth_info["MFAStatus"],
-            "LastPasswordReset": auth_info["LastPasswordReset"],
-            "AccountStatus": auth_info["AccountStatus"],
-            "IsAdmin": auth_info["IsAdmin"],
+
             # Unfamiliar Sign-in Alert correlation (Q00)
             "AlertIPsMatched": json.dumps(unfamiliar_info["AlertIPsMatched"]),
             "AlertIPsMatchedCount": unfamiliar_info["AlertIPsMatchedCount"],
@@ -687,72 +625,6 @@ def analyze(data_dir: Path, output_dir: Path):
     return summary_df
 
 
-
-# ============================================================
-# REPORT GENERATION
-# ============================================================
-def generate_markdown_report(df: pd.DataFrame, output_path: Path):
-    """Generate a markdown investigation report."""
-    lines = [
-        "# 🔍 Investigation Report: Unfamiliar Sign-in — BD Users",
-        "",
-        f"> **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-        f"> **Users analyzed:** {len(df)}",
-        f"> **Trusted threshold:** {TRUSTED_THRESHOLD*100}%",
-        "",
-        "---",
-        "",
-        "## Summary",
-        "",
-    ]
-
-    # Verdict summary
-    for verdict_type in ["🚨 CONFIRMED COMPROMISED (Data Breach)", "🔴 Likely Compromised", "🟠 Suspicious", "🟢 Likely Safe"]:
-        count = len(df[df["Verdict"] == verdict_type])
-        lines.append(f"- **{verdict_type}:** {count} users")
-    lines.append("")
-
-    # Per-user details
-    lines.extend(["---", "", "## User Details", ""])
-
-    for _, row in df.iterrows():
-        lines.extend([
-            f"### {row['Verdict']} — {row['DisplayName']}",
-            "",
-            f"- **Email:** `{row['User']}`",
-            f"- **Entity:** {row['Entity']} | **Dept:** {row['Department']}",
-            f"- **Current Risk:** {row['CurrentRiskLevel']}",
-            f"- **Anomaly Score:** {row['AnomalyScore']}",
-            "",
-            f"| Metric | Value |",
-            f"|--------|-------|",
-            f"| Total Sign-ins | {row['TotalSignIns']} ({row['ActiveDays']} active days) |",
-            f"| Trusted IPs | {row['TrustedIPCount']} / {row['TotalUniqueIPs']} unique |",
-            f"| Trusted Countries (≥5%) | {row['TrustedCountries']} |",
-            f"| All Countries Seen | {row['AllCountries']} |",
-            f"| ISPs | {row['ISPList']} |",
-            f"| Non-BD Sign-ins | **{row['NonBDSignIns']}** → {row['NonBDCountries']} |",
-            f"| Unknown IP Sign-ins | {row['UnknownIPSignIns']} |",
-            f"| Unknown Device Sign-ins | {row['UnknownDeviceSignIns']} |",
-            f"| Off-hours Sign-ins | {row['OffHoursSignIns']} |",
-            f"| High Risk Sign-ins | {row['HighRiskSignIns']} |",
-            f"| Managed / Unmanaged | {row['ManagedSignIns']} / {row['UnmanagedSignIns']} ({row['UnmanagedPct']}%) |",
-            f"| Alerts | {row['AlertCount']} (first: {row['FirstAlert']}, last: {row['LastAlert']}) |",
-            f"| Phishing Emails | {row['PhishingEmailsReceived']} |",
-            f"| Suspicious ISPs | {row['SuspiciousISPs']} |",
-            f"| MFA Enrolled | {row['MFAStatus']} |",
-            f"| Last Password Reset | {row['LastPasswordReset']} |",
-            f"| Account Status | {row['AccountStatus']} |",
-            f"| Admin Account | {'⚠️ YES' if row['IsAdmin'] else 'No'} |",
-            f"| Data Breach Events | **{row['DataBreachEvents']}** → {row['DataBreachActions']} |",
-            f"| MS Infra IPs Filtered | {row.get('MicrosoftInfraIPsFiltered', 0)} |",
-            f"| Baseline Warning | {row.get('BaselineWarning', '')} |",
-            "",
-            "---",
-            "",
-        ])
-
-    output_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 # ============================================================

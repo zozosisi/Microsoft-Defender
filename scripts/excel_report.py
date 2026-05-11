@@ -303,7 +303,7 @@ def build_executive_summary(ws, df, threshold):
         ("Users with MS High Risk", len(df[df["MSHighRiskSignIns"] > 0]) if "MSHighRiskSignIns" in df.columns else 0),
         ("Users with MS Medium Risk", len(df[df["MSMediumRiskSignIns"] > 0]) if "MSMediumRiskSignIns" in df.columns else 0),
         ("Users with Foreign Access", len(df[df["NonBDSignIns"] > 0]) if "NonBDSignIns" in df.columns else 0),
-        ("Users with Admin Role", len(df[df["IsAdmin"] == True]) if "IsAdmin" in df.columns else 0),
+
     ]
     for label, value in metrics:
         ws.cell(row=row, column=1, value=label).style = "mlabel"
@@ -338,9 +338,7 @@ def build_user_investigation(ws, df):
         ("Foreign Sign-ins (count)", "ForeignCountrySignIns", "num", 20),
         ("Foreign Countries (list)", "ForeignCountryList", "data", 50),
         ("Defender Alert Count", "AlertCount", "num", 16),
-        ("MFA Status", "MFAStatus", "data", 32),
-        ("Account Status", "AccountStatus", "data", 14),
-        ("Is Admin", "IsAdmin", "data", 10),
+
     ]
 
     # Header row
@@ -356,8 +354,6 @@ def build_user_investigation(ws, df):
         for col_idx, (label, field, style, _) in enumerate(columns, 1):
             if label == "Foreign Countries (list)":
                 value = parse_json_list(row_data.get("ForeignCountryList", "[]"))
-            elif label == "Is Admin":
-                value = "YES" if row_data.get("IsAdmin", False) else "No"
             elif field:
                 value = row_data.get(field, "")
                 if pd.isna(value):
@@ -619,8 +615,7 @@ def build_methodology(ws):
         ("Q05", "phishing_emails.csv", "EmailEvents",
          "Phishing emails received by affected users"),
 
-        ("Q10", "auth_status.csv", "IdentityAccountInfo",
-         "MFA status, password reset history, admin roles"),
+
     ]
 
     for query, file, table, purpose in sources:
