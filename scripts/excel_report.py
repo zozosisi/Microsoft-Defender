@@ -63,7 +63,7 @@ NO_BORDER = Border()
 # ============================================================
 # HELPER: Parse JSON array string to readable text
 # ============================================================
-def parse_json_list(val, max_items=10):
+def parse_json_list(val):
     """Convert JSON array string to comma-separated text."""
     if pd.isna(val) or val == "" or val == "[]":
         return "—"
@@ -71,8 +71,6 @@ def parse_json_list(val, max_items=10):
         items = json.loads(val)
         if not items:
             return "—"
-        if len(items) > max_items:
-            return ", ".join(str(i) for i in items[:max_items]) + f" (+{len(items)-max_items} more)"
         return ", ".join(str(i) for i in items)
     except (json.JSONDecodeError, TypeError):
         return str(val)
@@ -345,24 +343,24 @@ def build_user_investigation(ws, df):
     ws.sheet_properties.tabColor = "2980B9"
 
     columns = [
-        ("User", "User", "data", 35),
+        ("User (UPN)", "User", "data", 35),
         ("Display Name", "DisplayName", "data", 30),
         ("Entity", "Entity", "data", 8),
         ("Department", "Department", "data", 25),
-        ("Verdict", None, "data", 32),   # special handling
+        ("Verdict", None, "data", 38),   # special handling
         ("Anomaly Score", "AnomalyScore", "score", 14),
         ("Total Sign-ins", "TotalSignIns", "num", 14),
-        ("Active Days", "ActiveDays", "num", 12),
-        ("Foreign Countries", "ForeignCountrySignIns", "num", 16),
-        ("Foreign Country List", "ForeignCountryList", "data", 40),
-        ("Suspicious IPs", None, "num", 14),  # derived
+        ("Active Days (30d)", "ActiveDays", "num", 14),
+        ("Foreign Sign-ins (count)", "ForeignCountrySignIns", "num", 20),
+        ("Foreign Countries (list)", "ForeignCountryList", "data", 50),
+        ("Suspicious IPs (unique)", None, "num", 18),  # derived
         ("Data Breach Events", "DataBreachEvents", "num", 16),
-        ("Data Breach Actions", "DataBreachActions", "data", 25),
-        ("Alert Count", "AlertCount", "num", 12),
-        ("MFA Status", "MFAStatus", "data", 28),
+        ("Data Breach Actions", "DataBreachActions", "data", 30),
+        ("Defender Alert Count", "AlertCount", "num", 16),
+        ("MFA Status", "MFAStatus", "data", 32),
         ("Account Status", "AccountStatus", "data", 14),
         ("Is Admin", "IsAdmin", "data", 10),
-        ("Baseline Warning", "BaselineWarning", "data", 40),
+        ("Baseline Warning", "BaselineWarning", "data", 50),
     ]
 
     # Header row
@@ -379,12 +377,12 @@ def build_user_investigation(ws, df):
             # Determine value
             if label == "Verdict":
                 value = verdict_clean(verdict_raw)
-            elif label == "Suspicious IPs":
+            elif label == "Suspicious IPs (unique)":
                 try:
                     value = len(json.loads(row_data.get("SuspiciousIPs", "[]")))
                 except (json.JSONDecodeError, TypeError):
                     value = 0
-            elif label == "Foreign Country List":
+            elif label == "Foreign Countries (list)":
                 value = parse_json_list(row_data.get("ForeignCountryList", "[]"))
             elif label == "Data Breach Actions":
                 value = parse_json_list(row_data.get("DataBreachActions", "[]"))
@@ -444,7 +442,7 @@ def build_detailed_metrics(ws, df):
                 val = ""
             # Parse JSON columns
             if h in json_cols and isinstance(val, str):
-                val = parse_json_list(val, max_items=15)
+                val = parse_json_list(val)
             # Clean verdict emoji
             if h == "Verdict":
                 val = verdict_clean(val)
