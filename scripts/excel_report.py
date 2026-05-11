@@ -735,7 +735,7 @@ def build_scoring_logic(ws):
         ("Suspicious IP", "Unknown IP + Unknown Device sign-in = high-confidence attacker indicator"),
         ("Benign Unknown IP", "Unknown IP + Trusted Device = likely travel or new VPN endpoint"),
         ("MS Infra IPs", "Microsoft infrastructure IPs (20.x, 40.x, 52.x, etc.) are auto-filtered before analysis"),
-        ("AiTM Session", "Same SessionId appearing from different IPs = possible session cookie theft"),
+        ("AiTM Session", "Same SessionId from different IPs. Multi-device login (PC + Phone) creates separate SessionIds — NOT affected. Only scored when combined with MFA-by-token bypass + Unknown Device."),
         ("Baseline Contamination", "If > 15 Trusted Countries detected, attacker may have poisoned the baseline"),
     ]
 
