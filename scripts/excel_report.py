@@ -604,8 +604,6 @@ def build_methodology(ws):
          "File accessed/downloaded from unknown IPs — actual breach evidence, requires immediate containment"),
         ("Foreign Country Sign-ins", "Q01 Sign-in History",
          "Non-BD sign-ins — may be legitimate VPN/travel or service proxies (e.g., AMC PROD)"),
-        ("AiTM Token Theft", "Q01 AuthProcessingDetails",
-         "Session used from multiple IPs with MFA-by-token — potential session hijacking"),
         ("Defender Alerts", "Q03 Alert Data",
          "Unfamiliar sign-in property alerts triggered by Entra ID Protection"),
         ("ISP Analysis", "Q02 ISP Data",
@@ -696,139 +694,15 @@ def build_methodology(ws):
 
 
 # ============================================================
-# ============================================================
-# SHEET 6: AiTM SESSIONS (detailed session data)
-# ============================================================
-def build_aitm_sessions(ws, aitm_df: pd.DataFrame):
-    """Build the AiTM Sessions sheet with per-session detail data."""
-    ws.sheet_properties.tabColor = "E74C3C"  # Red
-
-    # --- Title ---
-    ws.merge_cells("A1:P1")
-    title_cell = ws["A1"]
-    title_cell.value = "AiTM Session Analysis — Multi-IP Session Detail"
-    title_cell.style = "title"
-    ws.row_dimensions[1].height = 40
-
-    ws.merge_cells("A2:P2")
-    ws["A2"].value = (
-        "Sessions where the same SessionId appeared from different IPs. "
-        "HIGH risk = Unknown Device + MFA Token Bypass (likely stolen cookie). "
-        "LOW risk = WiFi/Mobile network switching."
-    )
-    ws["A2"].style = "sub"
-    ws.row_dimensions[2].height = 30
-
-    if aitm_df.empty:
-        ws.merge_cells("A4:P4")
-        ws["A4"].value = "✅ No multi-IP sessions detected across all users."
-        ws["A4"].style = "mval"
-        ws["A4"].font = Font(name="Calibri", size=14, color=COLORS["safe_font"], bold=True)
-        return
-
-    # Summary stats
-    row = 4
-    total = len(aitm_df)
-    high = len(aitm_df[aitm_df["RiskLevel"].str.contains("HIGH", na=False)])
-    medium = len(aitm_df[aitm_df["RiskLevel"].str.contains("MEDIUM", na=False)])
-    low = len(aitm_df[aitm_df["RiskLevel"].str.contains("LOW", na=False)])
-    users_affected = aitm_df["User"].nunique()
-
-    stats = [
-        ("Total Multi-IP Sessions", total),
-        ("Users Affected", users_affected),
-        ("🔴 HIGH Risk Sessions", high),
-        ("🟠 MEDIUM Risk Sessions", medium),
-        ("🟡 LOW Risk Sessions", low),
-    ]
-    for label, val in stats:
-        ws.cell(row=row, column=1, value=label).style = "mlabel"
-        ws.cell(row=row, column=2, value=val).style = "mval"
-        row += 1
-
-    # Column definitions
-    row += 1
-    columns = [
-        ("User (UPN)", "User", 35),
-        ("Display Name", "DisplayName", 25),
-        ("Session Risk", "RiskLevel", 42),
-        ("Session ID", "SessionId", 40),
-        ("Unique IPs", "UniqueIPs", 10),
-        ("IP Addresses", "IPList", 40),
-        ("Countries", "Countries", 20),
-        ("Devices", "Devices", 30),
-        ("Browsers", "Browsers", 25),
-        ("OS", "OS", 18),
-        ("Applications", "Applications", 30),
-        ("MFA by Token", "MFAByToken", 12),
-        ("Unknown Device", "UnknownDevice", 14),
-        ("Sign-in Count", "SignInCount", 12),
-        ("First Seen", "FirstSeen", 18),
-        ("Last Seen", "LastSeen", 18),
-    ]
-
-    # Header row
-    write_header_row(ws, row, [c[0] for c in columns])
-    row += 1
-
-    # Sort: HIGH first, then MEDIUM, then LOW
-    risk_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
-    aitm_sorted = aitm_df.copy()
-    aitm_sorted["_sort"] = aitm_sorted["RiskLevel"].apply(
-        lambda r: next((v for k, v in risk_order.items() if k in str(r)), 3)
-    )
-    aitm_sorted = aitm_sorted.sort_values(["_sort", "User", "FirstSeen"])
-
-    # Data rows
-    for _, session in aitm_sorted.iterrows():
-        for col_idx, (label, field, width) in enumerate(columns, 1):
-            value = session.get(field, "")
-            if pd.isna(value):
-                value = ""
-            cell = ws.cell(row=row, column=col_idx, value=value)
-            cell.style = "data"
-            cell.alignment = Alignment(vertical="center", wrap_text=True)
-
-        # Color-code by risk level
-        risk = str(session.get("RiskLevel", ""))
-        if "HIGH" in risk:
-            fill = PatternFill(start_color=COLORS["confirmed_bg"], end_color=COLORS["confirmed_bg"], fill_type="solid")
-            font = Font(name="Calibri", size=10, color=COLORS["confirmed_font"])
-        elif "MEDIUM" in risk:
-            fill = PatternFill(start_color=COLORS["likely_bg"], end_color=COLORS["likely_bg"], fill_type="solid")
-            font = Font(name="Calibri", size=10, color=COLORS["likely_font"])
-        else:
-            fill = PatternFill(start_color="FFFFF9C4", end_color="FFFFF9C4", fill_type="solid")
-            font = Font(name="Calibri", size=10, color="FF795548")
-
-        for c in range(1, len(columns) + 1):
-            ws.cell(row=row, column=c).fill = fill
-            ws.cell(row=row, column=c).font = font
-
-        ws.row_dimensions[row].height = 28
-        row += 1
-
-    # Column widths
-    for col_idx, (_, _, width) in enumerate(columns, 1):
-        col_letter = chr(64 + col_idx) if col_idx <= 26 else f"A{chr(64 + col_idx - 26)}"
-        ws.column_dimensions[col_letter].width = width
-
-    # Freeze header
-    ws.freeze_panes = ws.cell(row=row - len(aitm_sorted), column=1)
-
-
-# ============================================================
 # MAIN ENTRY POINT
 # ============================================================
-def generate_excel_report(df: pd.DataFrame, output_path: Path, threshold: float = 0.05,
-                          aitm_details_df: pd.DataFrame = None):
+def generate_excel_report(df: pd.DataFrame, output_path: Path, threshold: float = 0.05):
     """Generate a professional multi-sheet Excel investigation report.
 
     Args:
-        df: Summary DataFrame (sorted by AnomalyScore desc)
+        df: Summary DataFrame (sorted by UserRiskLevel)
         output_path: Path to save the .xlsx file
         threshold: Trusted threshold used in analysis
-        aitm_details_df: Optional DataFrame with AiTM session details
     """
     wb = Workbook()
     create_styles(wb)
@@ -854,13 +728,8 @@ def generate_excel_report(df: pd.DataFrame, output_path: Path, threshold: float 
     ws5 = wb.create_sheet("Methodology")
     build_methodology(ws5)
 
-    # Sheet 6: AiTM Sessions
-    ws6 = wb.create_sheet("AiTM Sessions")
-    if aitm_details_df is None:
-        aitm_details_df = pd.DataFrame()
-    build_aitm_sessions(ws6, aitm_details_df)
-
     # Save
     wb.save(output_path)
     print(f"\U0001f4ca Excel report saved: {output_path}")
+
 
