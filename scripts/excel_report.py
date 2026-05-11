@@ -350,73 +350,6 @@ def build_detailed_metrics(ws, df):
     auto_width(ws, max_width=35)
 
 
-# ============================================================
-# SHEET 4: ACTION PLAN
-# ============================================================
-def build_action_plan(ws, df):
-    """Build the Action Plan sheet — binary: investigate vs monitor."""
-    ws.sheet_properties.tabColor = "E74C3C"
-
-    columns = [
-        ("User", 35),
-        ("Display Name", 28),
-        ("Entity", 8),
-        ("Risk Sign-ins", 14),
-        ("Max Risk Score", 14),
-        ("Priority", 10),
-        ("Recommended Actions", 75),
-        ("Status", 12),
-    ]
-
-    for col_idx, (label, width) in enumerate(columns, 1):
-        cell = ws.cell(row=1, column=col_idx, value=label)
-        cell.style = "hdr"
-        ws.column_dimensions[get_column_letter(col_idx)].width = width
-
-    for row_idx, (_, row_data) in enumerate(df.iterrows(), 2):
-        is_risky = has_risk(row_data)
-        risk_signins = row_data.get("RiskSignIns", 0)
-        max_score = row_data.get("MaxRiskScore", 0)
-
-        if is_risky:
-            priority = "P1 — INVESTIGATE"
-            action_text = (
-                "1. Review MS risk event details in Entra ID\n"
-                "2. Verify with user if activity is legitimate\n"
-                "3. Consider session revocation + password reset\n"
-                "4. Check mailbox rules for suspicious forwarding"
-            )
-        else:
-            priority = "P2 — MONITOR"
-            action_text = "No MS risk events detected. Continue monitoring."
-
-        values = [
-            row_data.get("User", ""),
-            row_data.get("DisplayName", ""),
-            row_data.get("Entity", ""),
-            risk_signins if not pd.isna(risk_signins) else 0,
-            max_score if not pd.isna(max_score) else 0,
-            priority,
-            action_text,
-            "Pending",
-        ]
-
-        for col_idx, val in enumerate(values, 1):
-            cell = ws.cell(row=row_idx, column=col_idx, value=val)
-            cell.style = "data"
-            if col_idx == 7:
-                cell.alignment = Alignment(vertical="top", wrap_text=True)
-
-        apply_row_highlight(ws, row_idx, row_data, 1, len(columns))
-
-        p_cell = ws.cell(row=row_idx, column=6)
-        if is_risky:
-            p_cell.font = Font(name="Calibri", size=10, bold=True, color=COLORS["likely_font"])
-        ws.row_dimensions[row_idx].height = 60 if is_risky else 30
-
-    ws.freeze_panes = "A2"
-    ws.auto_filter.ref = f"A1:{get_column_letter(len(columns))}{len(df)+1}"
-
 
 
 # ============================================================
@@ -531,13 +464,9 @@ def generate_excel_report(df: pd.DataFrame, output_path: Path, threshold: float 
     ws3 = wb.create_sheet("Detailed Metrics")
     build_detailed_metrics(ws3, df)
 
-    # Sheet 4: Action Plan
-    ws4 = wb.create_sheet("Action Plan")
-    build_action_plan(ws4, df)
-
-    # Sheet 5: Methodology
-    ws5 = wb.create_sheet("Methodology")
-    build_methodology(ws5)
+    # Sheet 4: Methodology
+    ws4 = wb.create_sheet("Methodology")
+    build_methodology(ws4)
 
     # Save
     wb.save(output_path)
