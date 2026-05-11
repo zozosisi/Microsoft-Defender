@@ -640,6 +640,70 @@ def enrich_with_unfamiliar_signins(user_upn: str, unfamiliar_df: pd.DataFrame,
     return result
 
 
+def detect_aitm_sessions(user_df: pd.DataFrame, baseline: dict) -> dict:
+    """Detect AiTM Token Theft by finding sessions used from multiple IPs/Countries.
+    
+    AiTM (Adversary-in-the-Middle) steals session cookies, causing the same SessionId
+    to appear from different IPs/Countries. Combined with MFA bypass by token,
+    this is a strong indicator of session hijacking.
+    
+    Migrated from Q11 KQL (archived) — now runs in Python for consistency.
+    Requires: AuthenticationProcessingDetails column in signin_history.csv (added to Q01A-F v5.0).
+    """
+    result = {
+        "AiTMSuspectedSessions": 0,
+        "MfaSatisfiedByToken": 0,
+        "AiTMHighRiskSessions": 0,
+    }
+    
+    if "SessionId" not in user_df.columns:
+        return result
+    
+    # Filter: only successful sign-ins with valid SessionId, exclude MS infra IPs
+    session_df = user_df[
+        user_df["SessionId"].notna()
+        & (user_df["SessionId"].astype(str).str.strip() != "")
+        & ~user_df["IPAddress"].apply(is_microsoft_infra_ip)
+    ].copy()
+    
+    if session_df.empty:
+        return result
+    
+    # Find sessions appearing on multiple IPs (potential token theft)
+    session_stats = session_df.groupby("SessionId").agg(
+        UniqueIPs=("IPAddress", "nunique"),
+        UniqueCountries=("Country", "nunique"),
+    )
+    multi_ip_sessions = session_stats[session_stats["UniqueIPs"] > 1]
+    result["AiTMSuspectedSessions"] = len(multi_ip_sessions)
+    
+    # Detect MFA bypass by token (AiTM indicator)
+    if "AuthenticationProcessingDetails" in user_df.columns:
+        auth_details = user_df["AuthenticationProcessingDetails"].dropna().astype(str)
+        mfa_token_patterns = [
+            "MFA requirement satisfied by claim in the token",
+            "MFA requirement satisfied by primary refresh token",
+        ]
+        mfa_by_token = auth_details.apply(
+            lambda x: any(p.lower() in x.lower() for p in mfa_token_patterns)
+        )
+        result["MfaSatisfiedByToken"] = int(mfa_by_token.sum())
+    
+    # High-risk AiTM: multi-IP session + unknown device in that session
+    trusted_devices = set(baseline.get("TrustedDevices", []))
+    high_risk_count = 0
+    for session_id in multi_ip_sessions.index:
+        session_rows = session_df[session_df["SessionId"] == session_id]
+        has_unknown_device = session_rows["DeviceName"].apply(
+            lambda d: pd.isna(d) or str(d).strip() == "" or d not in trusted_devices
+        ).any()
+        if has_unknown_device:
+            high_risk_count += 1
+    result["AiTMHighRiskSessions"] = high_risk_count
+    
+    return result
+
+
 # ============================================================
 # VERDICT SCORING
 # ============================================================
@@ -647,6 +711,7 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
                     phishing_info: dict, cloudapp_info: dict,
                     auth_info: dict = None,
                     unfamiliar_info: dict = None,
+                    aitm_info: dict = None,
                     user_upn: str = "") -> tuple:
     """Compute anomaly score and verdict for a user."""
     
@@ -713,6 +778,13 @@ def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
     # Unmanaged device percentage
     if anomalies.get("UnmanagedPct", 0) > 80:
         score += 5
+
+    # AiTM Token Theft detection (migrated from Q11 KQL — v5.0)
+    # +15 per high-risk AiTM session (multi-IP + unknown device), max 45 pts
+    # Only score when MFA bypass by token is also detected (strong AiTM signal)
+    if aitm_info:
+        if aitm_info.get("MfaSatisfiedByToken", 0) > 0 and aitm_info.get("AiTMHighRiskSessions", 0) > 0:
+            score += min(aitm_info["AiTMHighRiskSessions"], 3) * 15
 
     # Admin account severity boost (+10 if compromised admin)
     if auth_info and auth_info.get("IsAdmin", False) and score >= 15:
@@ -788,8 +860,11 @@ def analyze(data_dir: Path, output_dir: Path):
         # Enrich with Unfamiliar Sign-in alert IPs (Q00)
         unfamiliar_info = enrich_with_unfamiliar_signins(upn, unfamiliar_df, suspicious_ips)
 
+        # AiTM Token Theft detection (migrated from Q11 KQL — v5.0)
+        aitm_info = detect_aitm_sessions(user_df, baseline)
+
         # Compute verdict
-        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info, unfamiliar_info, user_upn=upn)
+        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info, unfamiliar_info, aitm_info, user_upn=upn)
 
         # Build summary row
         row = {
@@ -854,6 +929,10 @@ def analyze(data_dir: Path, output_dir: Path):
             "UserAlertCount_Q00": unfamiliar_info["UserAlertCount"],
             "FirstAlertTimestamp": unfamiliar_info["FirstAlertTimestamp"],
             "CrossUserAlertIPs": json.dumps(unfamiliar_info["CrossUserAlertIPs"]),
+            # AiTM Token Theft (migrated from Q11 — v5.0)
+            "AiTMSuspectedSessions": aitm_info["AiTMSuspectedSessions"],
+            "AiTMHighRiskSessions": aitm_info["AiTMHighRiskSessions"],
+            "MfaSatisfiedByToken": aitm_info["MfaSatisfiedByToken"],
             # Microsoft Infra IPs filtered
             "MicrosoftInfraIPsFiltered": anomalies.get("MicrosoftInfraIPsFiltered", 0),
             # Baseline reliability (Output Audit v4 fix)
