@@ -550,6 +550,213 @@ def build_action_plan(ws, df):
 
 
 # ============================================================
+# SHEET 5: SCORING LOGIC (verdict methodology)
+# ============================================================
+def build_scoring_logic(ws):
+    """Build the Scoring Logic sheet documenting verdict methodology."""
+    ws.sheet_properties.tabColor = "8E44AD"  # Purple
+
+    # --- Title ---
+    ws.merge_cells("A1:F1")
+    title_cell = ws["A1"]
+    title_cell.value = "Verdict Scoring Logic — Detection Methodology v5.0"
+    title_cell.style = "title"
+    ws.row_dimensions[1].height = 40
+
+    ws.merge_cells("A2:F2")
+    ws["A2"].value = "This sheet documents how each user's Anomaly Score and Verdict are calculated."
+    ws["A2"].style = "sub"
+    ws.row_dimensions[2].height = 22
+
+    # --- Section 1: Scoring Matrix ---
+    row = 4
+    ws.cell(row=row, column=1, value="SCORING MATRIX").style = "mlabel"
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=6)
+    row += 1
+
+    headers = ["Risk Factor", "Points", "Max Cap", "Condition", "Data Source", "Description"]
+    write_header_row(ws, row, headers)
+    row += 1
+
+    scoring_rules = [
+        ("Data Breach Actions", "+1,000", "—",
+         "DataBreachEvents > 0", "Q09 CloudAppEvents",
+         "File accessed/downloaded from suspicious IP. Instant CONFIRMED verdict."),
+        ("Hacker Botnet Countries", "+30 / country", "No cap",
+         "Country in sign-in but NOT in TrustedCountries", "Q01 Sign-in History",
+         "Foreign countries from unknown devices. Dedup: countries with VPN sign-ins excluded."),
+        ("Suspicious IPs", "+5 / IP", "Max 50",
+         "Unknown IP + Unknown Device", "Q01 Sign-in History",
+         "IPs never seen with a trusted device. Catches domestic hackers using local ISP."),
+        ("Suspicious ISPs", "+15 / ISP", "No cap",
+         "ISP is Hosting/VPS/Anonymous", "Q02 ISP Data",
+         "Sign-ins from hosting providers, VPS, or anonymizing networks."),
+        ("AiTM Token Theft", "+15 / session", "Max 45",
+         "Multi-IP session + MFA-by-token + Unknown Device", "Q01 AuthProcessingDetails",
+         "Session cookie stolen via AiTM proxy. Only scored when MFA bypass by token detected."),
+        ("Benign Unknown IPs", "+2 / IP", "Max 30",
+         "Unknown IP + Trusted Device", "Q01 Sign-in History",
+         "Likely travel/VPN — same device, new IP. Low penalty."),
+        ("Entra ID Risk Events", "+5 / event", "No cap",
+         "RiskLevel >= 50 (Medium/High)", "Q01 Sign-in History",
+         "Microsoft flagged the session as risky (atypical travel, leaked credentials, etc.)"),
+        ("Defender Alerts", "+5 / alert", "Max 25",
+         "CONDITIONAL: only if user has compromise indicators", "Q03 Alert Data",
+         "Alerts only count when user also has foreign sign-ins, suspicious IPs, or high-risk events."),
+        ("Alert IP Correlation", "+3 / IP match", "Max 30",
+         "Suspicious IP also appears in Q00 Alert IPs", "Q00 Incidents",
+         "Suspicious IP confirmed by Entra ID Protection as unfamiliar sign-in source."),
+        ("Phishing Target", "+5 / email", "No cap",
+         "User received phishing email", "Q05 Phishing Check",
+         "User was targeted by phishing campaign — increases likelihood of credential theft."),
+        ("Off-Hours Sign-ins", "+0.5 / event", "Max 10",
+         "Sign-in outside business hours", "Q01 Sign-in History",
+         "Sign-ins at unusual hours. Low weight — many legitimate cases."),
+        ("Unmanaged Devices", "+5 (flat)", "Max 5",
+         "Unmanaged device % > 80%", "Q01 Sign-in History",
+         "User primarily uses personal/unmanaged devices."),
+        ("Admin Account Boost", "+10 (flat)", "Max 10",
+         "IsAdmin = true AND score >= 15", "Q10 Auth Status",
+         "Extra penalty for admin accounts already showing suspicious activity."),
+        ("VPN Countries", "+0", "—",
+         "Country in sign-in + Trusted Device", "Q01 Sign-in History",
+         "Legitimate VPN usage — foreign country but on known/trusted device. No penalty."),
+    ]
+
+    for rule in scoring_rules:
+        for col_idx, val in enumerate(rule, 1):
+            cell = ws.cell(row=row, column=col_idx, value=val)
+            cell.style = "data"
+            cell.alignment = Alignment(vertical="center", wrap_text=True)
+        # Highlight Data Breach row
+        if "1,000" in rule[1]:
+            for c in range(1, 7):
+                cell = ws.cell(row=row, column=c)
+                cell.fill = PatternFill(start_color=COLORS["confirmed_bg"], end_color=COLORS["confirmed_bg"], fill_type="solid")
+                cell.font = Font(name="Calibri", size=10, color=COLORS["confirmed_font"])
+        # Highlight VPN row (safe — green)
+        if rule[1] == "+0":
+            for c in range(1, 7):
+                cell = ws.cell(row=row, column=c)
+                cell.fill = PatternFill(start_color=COLORS["safe_bg"], end_color=COLORS["safe_bg"], fill_type="solid")
+                cell.font = Font(name="Calibri", size=10, color=COLORS["safe_font"])
+        ws.row_dimensions[row].height = 36
+        row += 1
+
+    # --- Section 2: Verdict Thresholds ---
+    row += 1
+    ws.cell(row=row, column=1, value="VERDICT CLASSIFICATION").style = "mlabel"
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=6)
+    row += 1
+
+    write_header_row(ws, row, ["Verdict", "Score Threshold", "Meaning", "", "", ""])
+    row += 1
+
+    verdict_rules = [
+        ("CONFIRMED COMPROMISED (Data Breach)", "DataBreachEvents > 0",
+         "Hacker accessed/downloaded files from suspicious IP. Immediate remediation required.",
+         "confirmed"),
+        ("Likely Compromised", "Score >= 30",
+         "Multiple strong indicators of account compromise. Password reset + session revoke recommended.",
+         "likely"),
+        ("Suspicious", "Score >= 15",
+         "Some anomalous activity detected. Monitor and verify with user.",
+         "suspicious"),
+        ("Likely Safe", "Score < 15",
+         "No significant anomalies. Alerts may be false positives from VPN/travel.",
+         "safe"),
+        ("Verified Safe (SOC Override)", "Manual override",
+         "SOC team has verified the user's activity is legitimate. Score forced to 0.",
+         "safe"),
+    ]
+
+    for verdict, threshold, meaning, cat in verdict_rules:
+        fill = get_verdict_fill(cat)
+        font = get_verdict_font(cat)
+        for col_idx, val in enumerate([verdict, threshold, meaning], 1):
+            cell = ws.cell(row=row, column=col_idx, value=val)
+            cell.fill = fill
+            cell.font = font
+            cell.border = THIN_BORDER
+            cell.alignment = Alignment(vertical="center", wrap_text=True)
+        if col_idx == 3:
+            ws.merge_cells(start_row=row, start_column=3, end_row=row, end_column=6)
+        ws.row_dimensions[row].height = 32
+        row += 1
+
+    # --- Section 3: Data Sources ---
+    row += 1
+    ws.cell(row=row, column=1, value="DATA SOURCES (KQL Queries)").style = "mlabel"
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=6)
+    row += 1
+
+    write_header_row(ws, row, ["Query", "Export File", "Table", "Purpose", "", ""])
+    row += 1
+
+    sources = [
+        ("Q00", "unfamiliar_signin_incidents.csv", "AlertInfo + AlertEvidence",
+         "Master query — all Unfamiliar Sign-in incidents, users, IPs"),
+        ("Q01A-F", "signin_history_01..06.csv -> merged", "EntraIdSignInEvents",
+         "Sign-in history (30 days, split 6 parts) + AuthProcessingDetails for AiTM"),
+        ("Q02", "isp_data.csv", "IdentityLogonEvents",
+         "ISP enrichment — identify hosting/VPS/anonymous ISPs"),
+        ("Q03", "alert_data.csv", "AlertEvidence",
+         "Unfamiliar sign-in alert details per user"),
+        ("Q04", "user_profiles.csv", "IdentityInfo",
+         "User identity info — department, job title, risk level"),
+        ("Q05", "phishing_emails.csv", "EmailEvents",
+         "Phishing emails received by affected users"),
+        ("Q09", "cloudapp_events.csv", "CloudAppEvents",
+         "Cloud app activity — file access/download from suspicious IPs (data breach)"),
+        ("Q10", "auth_status.csv", "IdentityAccountInfo",
+         "MFA status, password reset history, admin roles"),
+    ]
+
+    for query, file, table, purpose in sources:
+        for col_idx, val in enumerate([query, file, table, purpose], 1):
+            cell = ws.cell(row=row, column=col_idx, value=val)
+            cell.style = "data"
+        if col_idx == 4:
+            ws.merge_cells(start_row=row, start_column=4, end_row=row, end_column=6)
+        row += 1
+
+    # --- Section 4: Key Concepts ---
+    row += 1
+    ws.cell(row=row, column=1, value="KEY CONCEPTS").style = "mlabel"
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=6)
+    row += 1
+
+    concepts = [
+        ("Trusted IP", "IP appearing in >= 5% of user's total sign-ins (dynamic per-user baseline)"),
+        ("Trusted Country", "Country appearing in >= 5% of sign-ins (15% threshold for low-volume users < 50 sign-ins)"),
+        ("Trusted Device", "Device used >= 5% of sign-ins — known corporate/personal device"),
+        ("VPN Country", "Foreign country sign-in on a Trusted Device = legitimate VPN usage, not penalized"),
+        ("Hacker Botnet Country", "Foreign country sign-in on Unknown Device = likely residential proxy/botnet"),
+        ("Suspicious IP", "Unknown IP + Unknown Device sign-in = high-confidence attacker indicator"),
+        ("Benign Unknown IP", "Unknown IP + Trusted Device = likely travel or new VPN endpoint"),
+        ("MS Infra IPs", "Microsoft infrastructure IPs (20.x, 40.x, 52.x, etc.) are auto-filtered before analysis"),
+        ("AiTM Session", "Same SessionId appearing from different IPs = possible session cookie theft"),
+        ("Baseline Contamination", "If > 15 Trusted Countries detected, attacker may have poisoned the baseline"),
+    ]
+
+    for term, definition in concepts:
+        cell_t = ws.cell(row=row, column=1, value=term)
+        cell_t.style = "mlabel"
+        cell_d = ws.cell(row=row, column=2, value=definition)
+        cell_d.style = "mval"
+        ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        row += 1
+
+    # Column widths
+    ws.column_dimensions["A"].width = 28
+    ws.column_dimensions["B"].width = 20
+    ws.column_dimensions["C"].width = 22
+    ws.column_dimensions["D"].width = 30
+    ws.column_dimensions["E"].width = 18
+    ws.column_dimensions["F"].width = 45
+
+
+# ============================================================
 # MAIN ENTRY POINT
 # ============================================================
 def generate_excel_report(df: pd.DataFrame, output_path: Path, threshold: float = 0.05):
@@ -580,6 +787,11 @@ def generate_excel_report(df: pd.DataFrame, output_path: Path, threshold: float 
     ws4 = wb.create_sheet("Action Plan")
     build_action_plan(ws4, df)
 
+    # Sheet 5: Scoring Logic
+    ws5 = wb.create_sheet("Scoring Logic")
+    build_scoring_logic(ws5)
+
     # Save
     wb.save(output_path)
-    print(f"📊 Excel report saved: {output_path}")
+    print(f"\U0001f4ca Excel report saved: {output_path}")
+
