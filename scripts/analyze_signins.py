@@ -27,16 +27,8 @@ if sys.stdout.encoding.lower() != 'utf-8':
 # CONFIGURATION
 # ============================================================
 TRUSTED_THRESHOLD = 0.05  # 5% — IP/Device/Browser >= 5% total sign-ins = Trusted
-NORMAL_HOUR_THRESHOLD = 0.03  # 3% — hour with >= 3% sign-ins = Normal hour
 
-# Danh sách user đã được SOC team xác minh thủ công là AN TOÀN.
-# Verdict sẽ bị override thành "🟢 Verified Safe (SOC Override)"
-# bất kể Anomaly Score là bao nhiêu. CloudAppEvents sẽ bị BỎ QUA hoàn toàn.
-# Format: { "email": "Lý do xác minh — Ngày xác minh" }
-# Fix: Post-Mortem #9 — Button Lin (CSC entity, công tác HK/VN/CN)
-VERIFIED_SAFE_USERS = {
-    "button_lin@crystal-csc.cn": "Đi công tác HK/VN/CN — SOC xác minh 09-May-2026",
-}
+
 
 # Known BD ISPs (legitimate)
 BD_ISPS_KEYWORDS = [
@@ -82,16 +74,7 @@ MICROSOFT_INFRA_IP_PREFIXES = [
     "40.126.",      # Azure AD / Entra ID authentication endpoints
 ]
 
-# Baseline contamination threshold — if a user has more than this many TrustedCountries,
-# the baseline may have been polluted by attacker-generated sign-ins.
-# Fix: Audit Report v2 — Niaz Morshed had 20 TrustedCountries (likely hacker-generated)
-BASELINE_COUNTRY_WARNING_THRESHOLD = 15
 
-# Minimum sign-in count for reliable baseline (5% threshold).
-# Users below this use a higher threshold (15%) to prevent baseline contamination.
-# Fix: Output Audit v4 — sumon.mia (14 sign-ins, 100% hacker data → all countries become Trusted)
-BASELINE_LOW_VOLUME_THRESHOLD = 50
-BASELINE_LOW_VOLUME_TRUSTED_THRESHOLD = 0.15  # 15% for low-volume users
 
 BD_DOMAINS = [
     "crystal-abl.com.bd",
@@ -279,58 +262,33 @@ def build_user_baseline(user_df: pd.DataFrame) -> dict:
     baseline["LastSignIn"] = user_df["Timestamp"].max().strftime("%Y-%m-%d %H:%M")
     baseline["ActiveDays"] = user_df["Timestamp"].dt.date.nunique()
 
-    # Determine effective threshold based on sign-in volume
-    # Fix: Output Audit v4 — low-volume users (< 50 sign-ins) use higher threshold (15%)
-    # to prevent baseline contamination by hacker-generated sign-ins
-    effective_threshold = TRUSTED_THRESHOLD
-    if baseline["TotalSignIns"] < BASELINE_LOW_VOLUME_THRESHOLD:
-        effective_threshold = BASELINE_LOW_VOLUME_TRUSTED_THRESHOLD
-        baseline["BaselineLowVolume"] = True
-    else:
-        baseline["BaselineLowVolume"] = False
-    baseline["EffectiveThreshold"] = effective_threshold
-
     # Trusted IPs
     baseline["TrustedIPs"] = build_trusted_set(
-        user_df["IPAddress"].dropna(), effective_threshold
+        user_df["IPAddress"].dropna(), TRUSTED_THRESHOLD
     )
     baseline["TotalUniqueIPs"] = user_df["IPAddress"].nunique()
 
-    # Trusted Countries
+    # Countries
     baseline["TrustedCountries"] = build_trusted_set(
-        user_df["Country"].dropna(), effective_threshold
+        user_df["Country"].dropna(), TRUSTED_THRESHOLD
     )
     baseline["AllCountries"] = sorted(user_df["Country"].dropna().unique().tolist())
 
-    # Trusted Cities
-    baseline["TrustedCities"] = build_trusted_set(
-        user_df["City"].dropna(), effective_threshold
-    )
-
     # Trusted Devices
     baseline["TrustedDevices"] = build_trusted_set(
-        user_df["DeviceName"].dropna(), effective_threshold
+        user_df["DeviceName"].dropna(), TRUSTED_THRESHOLD
     )
     baseline["TotalUniqueDevices"] = user_df["DeviceName"].nunique()
 
     # Trusted Browsers
     baseline["TrustedBrowsers"] = build_trusted_set(
-        user_df["Browser"].dropna(), effective_threshold
+        user_df["Browser"].dropna(), TRUSTED_THRESHOLD
     )
 
     # Trusted OS
     baseline["TrustedOS"] = build_trusted_set(
-        user_df["OSPlatform"].dropna(), effective_threshold
+        user_df["OSPlatform"].dropna(), TRUSTED_THRESHOLD
     )
-
-    # Normal hours (UTC)
-    hours = user_df["Timestamp"].dt.hour
-    hour_counts = hours.value_counts()
-    total = len(hours)
-    normal_hours = sorted(
-        hour_counts[hour_counts / total >= NORMAL_HOUR_THRESHOLD].index.tolist()
-    )
-    baseline["NormalHours"] = normal_hours
 
     # Device posture
     baseline["ManagedSignIns"] = int((user_df["IsManaged"] == 1).sum())
@@ -341,104 +299,74 @@ def build_user_baseline(user_df: pd.DataFrame) -> dict:
 
 
 # ============================================================
-# ANOMALY DETECTION
+# DATA AGGREGATION (context only — no scoring)
 # ============================================================
-def detect_user_anomalies(user_df: pd.DataFrame, baseline: dict) -> dict:
-    """Compare each sign-in against baseline, compute anomaly metrics."""
-    anomalies = {}
+def aggregate_user_data(user_df: pd.DataFrame, baseline: dict) -> dict:
+    """Aggregate sign-in data for reporting. No scoring — context only."""
+    result = {}
 
-    # ★ FIX: Filter out Microsoft infrastructure IPs before anomaly detection
-    # These are Exchange Online backend IPs that appear as foreign sign-ins but are NOT user activity
+    # Filter out Microsoft infrastructure IPs
     ms_infra_mask = user_df["IPAddress"].apply(is_microsoft_infra_ip)
-    ms_infra_count = int(ms_infra_mask.sum())
-    anomalies["MicrosoftInfraIPsFiltered"] = ms_infra_count
-    user_df = user_df[~ms_infra_mask].copy()
+    result["MicrosoftInfraIPsFiltered"] = int(ms_infra_mask.sum())
+    filtered_df = user_df[~ms_infra_mask].copy()
 
-    # Unknown IP sign-ins
-    trusted_ips = set(baseline["TrustedIPs"])
-    unknown_ip_mask = ~user_df["IPAddress"].isin(trusted_ips)
-    anomalies["UnknownIPSignIns"] = int(unknown_ip_mask.sum())
-    anomalies["UnknownIPList"] = sorted(
-        user_df.loc[unknown_ip_mask, "IPAddress"].unique().tolist()
+    # Foreign country sign-ins (non-BD)
+    non_bd_mask = (filtered_df["Country"] != "BD") & filtered_df["Country"].notna()
+    result["NonBDSignIns"] = int(non_bd_mask.sum())
+    result["NonBDCountries"] = sorted(
+        filtered_df.loc[non_bd_mask, "Country"].unique().tolist()
     )
 
-    # Foreign country sign-ins
+    # Foreign vs trusted countries
     trusted_countries = set(baseline["TrustedCountries"])
-    foreign_mask = ~user_df["Country"].isin(trusted_countries) & user_df["Country"].notna()
-    anomalies["ForeignCountrySignIns"] = int(foreign_mask.sum())
-    anomalies["ForeignCountryList"] = sorted(
-        user_df.loc[foreign_mask, "Country"].unique().tolist()
+    foreign_mask = ~filtered_df["Country"].isin(trusted_countries) & filtered_df["Country"].notna()
+    result["ForeignCountrySignIns"] = int(foreign_mask.sum())
+    result["ForeignCountryList"] = sorted(
+        filtered_df.loc[foreign_mask, "Country"].unique().tolist()
     )
 
-    # Non-BD sign-ins (specific check)
-    non_bd_mask = (user_df["Country"] != "BD") & user_df["Country"].notna()
-    anomalies["NonBDSignIns"] = int(non_bd_mask.sum())
-    anomalies["NonBDCountries"] = sorted(
-        user_df.loc[non_bd_mask, "Country"].unique().tolist()
+    # Unknown IPs (for context only)
+    trusted_ips = set(baseline["TrustedIPs"])
+    unknown_ip_mask = ~filtered_df["IPAddress"].isin(trusted_ips)
+    result["UnknownIPSignIns"] = int(unknown_ip_mask.sum())
+    result["UnknownIPList"] = sorted(
+        filtered_df.loc[unknown_ip_mask, "IPAddress"].unique().tolist()
     )
 
-    # VPN vs Hacker Botnet logic
-    # Hacker: Foreign country sign-ins with Unknown Device (empty or not in trusted)
-    trusted_devices = set(baseline["TrustedDevices"])
-    hacker_mask = foreign_mask & (~user_df["DeviceName"].isin(trusted_devices) | user_df["DeviceName"].isna() | (user_df["DeviceName"].str.strip() == ""))
-    vpn_mask = foreign_mask & user_df["DeviceName"].isin(trusted_devices) & user_df["DeviceName"].notna() & (user_df["DeviceName"].str.strip() != "")
-
-    anomalies["HackerBotnetSignIns"] = int(hacker_mask.sum())
-    anomalies["VPNSignIns"] = int(vpn_mask.sum())
-    anomalies["HackerBotnetCountries"] = sorted(user_df.loc[hacker_mask, "Country"].dropna().unique().tolist())
-    anomalies["VPNCountries"] = sorted(user_df.loc[vpn_mask, "Country"].dropna().unique().tolist())
-
-    # Unknown device sign-ins
-    trusted_devices = set(baseline["TrustedDevices"])
-    unknown_dev_mask = ~user_df["DeviceName"].isin(trusted_devices) | user_df["DeviceName"].isna() | (user_df["DeviceName"].str.strip() == "")
-    anomalies["UnknownDeviceSignIns"] = int(unknown_dev_mask.sum())
-    
-    # Trusted Device IPs (IPs that have been seen with a Trusted Device at least once)
-    trusted_device_ips = set(user_df.loc[user_df["DeviceName"].isin(trusted_devices), "IPAddress"].dropna().unique())
-    
-    # Suspicious IPs for Data Breach Analysis (Unknown IP + never used with a Trusted Device)
-    # This prevents False Positives where Entra ID telemetry randomly drops the DeviceName on a legitimate connection.
-    suspicious_ip_mask = unknown_ip_mask & ~user_df["IPAddress"].isin(trusted_device_ips)
-    suspicious_ip_list = sorted(user_df.loc[suspicious_ip_mask, "IPAddress"].dropna().unique().tolist())
-    anomalies["SuspiciousIPList"] = suspicious_ip_list
-    
-    # Benign Unknown IPs = Unknown IP but Trusted Device (e.g., employee on hotel WiFi)
-    # These are NOT double-counted with SuspiciousIPList in scoring
-    all_unknown_ips = set(anomalies["UnknownIPList"])
-    suspicious_ips_set = set(suspicious_ip_list)
-    benign_unknown_ips = all_unknown_ips - suspicious_ips_set
-    anomalies["BenignUnknownIPCount"] = len(benign_unknown_ips)
-    
-    anomalies["UnknownDeviceList"] = sorted(
-        user_df.loc[unknown_dev_mask, "DeviceName"].dropna().unique().tolist()
-    )
-
-    # Unknown browser sign-ins
-    trusted_browsers = set(baseline["TrustedBrowsers"])
-    unknown_br_mask = ~user_df["Browser"].isin(trusted_browsers) & user_df["Browser"].notna()
-    anomalies["UnknownBrowserSignIns"] = int(unknown_br_mask.sum())
-
-    # Off-hours sign-ins
-    normal_hours = set(baseline["NormalHours"])
-    hours = user_df["Timestamp"].dt.hour
-    offhours_mask = ~hours.isin(normal_hours)
-    anomalies["OffHoursSignIns"] = int(offhours_mask.sum())
-
-    # High risk sign-ins (RiskLevelDuringSignIn >= 50 = Medium+)
+    # --- Microsoft Risk Signals (PRIMARY) ---
     risk_col = "RiskLevelDuringSignIn"
-    if risk_col in user_df.columns:
-        numeric_risk = pd.to_numeric(user_df[risk_col], errors='coerce').fillna(0)
-        anomalies["HighRiskSignIns"] = int((numeric_risk >= 50).sum())
+    if risk_col in filtered_df.columns:
+        numeric_risk = pd.to_numeric(filtered_df[risk_col], errors='coerce').fillna(0)
+        result["MSHighRiskSignIns"] = int((numeric_risk >= 100).sum())
+        result["MSMediumRiskSignIns"] = int(((numeric_risk >= 50) & (numeric_risk < 100)).sum())
+        result["MSLowRiskSignIns"] = int(((numeric_risk >= 10) & (numeric_risk < 50)).sum())
     else:
-        anomalies["HighRiskSignIns"] = 0
+        result["MSHighRiskSignIns"] = 0
+        result["MSMediumRiskSignIns"] = 0
+        result["MSLowRiskSignIns"] = 0
 
-    # Unmanaged device percentage
-    total = baseline["TotalSignIns"]
-    anomalies["UnmanagedPct"] = round(
-        baseline["UnmanagedSignIns"] / total * 100, 1
-    ) if total > 0 else 0
+    # Risk events
+    if "RiskEventTypes" in filtered_df.columns:
+        risk_events = filtered_df["RiskEventTypes"].dropna().astype(str)
+        risk_events = risk_events[(risk_events.str.strip() != "") & (risk_events != "[]")]
+        result["MSRiskEvents"] = len(risk_events)
+    else:
+        result["MSRiskEvents"] = 0
 
-    return anomalies
+    # User risk level (highest across all sign-ins)
+    ms_total = result["MSHighRiskSignIns"] + result["MSMediumRiskSignIns"] + result["MSLowRiskSignIns"]
+    if result["MSHighRiskSignIns"] > 0:
+        result["UserRiskLevel"] = "High"
+    elif result["MSMediumRiskSignIns"] > 0:
+        result["UserRiskLevel"] = "Medium"
+    elif result["MSLowRiskSignIns"] > 0:
+        result["UserRiskLevel"] = "Low"
+    else:
+        result["UserRiskLevel"] = "None"
+    result["MSTotalRiskSignIns"] = ms_total
+
+    return result
+
 
 
 def enrich_with_isp(user_upn: str, isp_df: pd.DataFrame) -> dict:
@@ -770,112 +698,17 @@ def detect_aitm_sessions(user_df: pd.DataFrame, baseline: dict) -> tuple:
     return result, detail_rows
 
 
-# ============================================================
-# VERDICT SCORING
-# ============================================================
-def compute_verdict(anomalies: dict, isp_info: dict, alert_info: dict,
-                    phishing_info: dict, cloudapp_info: dict,
-                    auth_info: dict = None,
-                    unfamiliar_info: dict = None,
-                    aitm_info: dict = None,
-                    user_upn: str = "") -> tuple:
-    """Compute anomaly score and verdict for a user."""
-    
-    # Fix: Post-Mortem #9 — Verified Safe User Override
-    # Nếu user đã được SOC xác minh an toàn → override verdict ngay lập tức
-    if user_upn.lower() in {k.lower() for k in VERIFIED_SAFE_USERS}:
-        reason = VERIFIED_SAFE_USERS.get(user_upn, "SOC Override")
-        return 0, f"🟢 Verified Safe (SOC Override: {reason})"
-    
-    score = 0
 
-    # Foreign country sign-ins: Penalize Hacker variety, not VPN variety
-    # VPN Countries = +0 points (legitimate)
-    # Hacker Countries = +30 points per distinct country
-    # IMPORTANT: Dedup — if a country has BOTH hacker and VPN sign-ins, don't penalize it
-    # (e.g., button_lin in CN: 16900 trusted device sign-ins + 10 telemetry drops)
-    hacker_only_countries = set(anomalies.get("HackerBotnetCountries", [])) - set(anomalies.get("VPNCountries", []))
-    score += len(hacker_only_countries) * 30
 
-    # Suspicious IP sign-ins (Unknown IP + Unknown Device) — catches domestic hackers
-    # +5 points per suspicious IP, max 50 pts (post-mortem #1: hacker can use local ISP)
-    score += min(len(anomalies.get("SuspiciousIPList", [])), 10) * 5
-
-    # Suspicious ISPs: High penalty per suspicious ISP
-    score += len(isp_info.get("SuspiciousISPs", [])) * 15
-
-    # Benign Unknown IPs (Unknown IP + Trusted Device = likely travel/VPN)
-    # Only count IPs NOT already in SuspiciousIPList to avoid double-counting
-    score += min(anomalies.get("BenignUnknownIPCount", 0), 15) * 2
-
-    # High risk sign-ins (Entra ID Risk Event)
-    score += anomalies.get("HighRiskSignIns", 0) * 5
-
-    # Phishing emails received
-    score += phishing_info.get("PhishingEmailsReceived", 0) * 5
-
-    # Data Breach Actions (CloudAppEvents)
-    if cloudapp_info.get("DataBreachEvents", 0) > 0:
-        score += 1000  # Instant massive penalty
-
-    # Off-hours sign-ins (cap at 10 pts)
-    score += min(anomalies.get("OffHoursSignIns", 0), 20) * 0.5
-
-    # Alert count (Defender Alerts) — CONDITIONAL scoring (v4 fix)
-    # Only apply alert penalty when user has COMPROMISE indicators
-    # (foreign sign-ins, suspicious IPs, or HighRisk events).
-    # Users with ONLY blocked attacks (0 foreign, 0 suspicious, 0 risk) get 0 alert score.
-    # Fix: Output Audit v4 — Abdullah_Zubair (40 alerts, 0 foreign → was falsely Likely Compromised)
-    has_compromise_indicators = (
-        len(hacker_only_countries) > 0
-        or len(anomalies.get("SuspiciousIPList", [])) > 0
-        or anomalies.get("HighRiskSignIns", 0) > 0
-        or anomalies.get("ForeignCountrySignIns", 0) > 0
-    )
-    if has_compromise_indicators:
-        score += min(alert_info.get("AlertCount", 0), 5) * 5
-
-    # Alert IP correlation bonus (Unfamiliar Sign-in Incidents — Q00)
-    # +3 per suspicious IP that is ALSO an Entra ID alert IP, max 30 pts
-    # Source: pillar_alignment.md — Gap 1 fix
-    if unfamiliar_info:
-        score += min(unfamiliar_info.get("AlertIPsMatchedCount", 0), 10) * 3
-
-    # Unmanaged device percentage
-    if anomalies.get("UnmanagedPct", 0) > 80:
-        score += 5
-
-    # AiTM Token Theft detection (migrated from Q11 KQL — v5.0)
-    # +15 per high-risk AiTM session (multi-IP + unknown device), max 45 pts
-    # Only score when MFA bypass by token is also detected (strong AiTM signal)
-    if aitm_info:
-        if aitm_info.get("MfaSatisfiedByToken", 0) > 0 and aitm_info.get("AiTMHighRiskSessions", 0) > 0:
-            score += min(aitm_info["AiTMHighRiskSessions"], 3) * 15
-
-    # Admin account severity boost (+10 if compromised admin)
-    if auth_info and auth_info.get("IsAdmin", False) and score >= 15:
-        score += 10
-
-    # Classify
-    if cloudapp_info.get("DataBreachEvents", 0) > 0:
-        verdict = "🚨 CONFIRMED COMPROMISED (Data Breach)"
-    elif score >= 30:
-        verdict = "🔴 Likely Compromised"
-    elif score >= 15:
-        verdict = "🟠 Suspicious"
-    else:
-        verdict = "🟢 Likely Safe"
-
-    return round(score, 1), verdict
 
 
 # ============================================================
 # MAIN ANALYSIS
 # ============================================================
 def analyze(data_dir: Path, output_dir: Path):
-    """Main analysis pipeline."""
+    """Main analysis pipeline — v6.0 (Microsoft Risk Signals only, no custom scoring)."""
     print("=" * 60)
-    print("Microsoft Defender XDR — Sign-in Investigation Analysis")
+    print("Microsoft Defender XDR — Sign-in Investigation Analysis v6.0")
     print("=" * 60)
 
     # Load data
@@ -895,7 +728,7 @@ def analyze(data_dir: Path, output_dir: Path):
 
     # Process each user
     results = []
-    all_aitm_details = []  # Collect AiTM session details for Sheet 6
+    all_aitm_details = []
     for i, upn in enumerate(users):
         print(f"  [{i+1}/{len(users)}] {upn}")
         user_df = signin_df[signin_df["AccountUpn"] == upn].copy()
@@ -903,8 +736,8 @@ def analyze(data_dir: Path, output_dir: Path):
         # Build baseline
         baseline = build_user_baseline(user_df)
 
-        # Detect anomalies
-        anomalies = detect_user_anomalies(user_df, baseline)
+        # Aggregate data (context only — no scoring)
+        user_data = aggregate_user_data(user_df, baseline)
 
         # Enrich with ISP, alerts, profile, phishing
         isp_info = enrich_with_isp(upn, isp_df)
@@ -912,29 +745,20 @@ def analyze(data_dir: Path, output_dir: Path):
         profile_info = enrich_with_profile(upn, profile_df)
         phishing_info = enrich_with_phishing(upn, phish_df)
         auth_info = enrich_with_auth_status(upn, auth_df, user_df)
-        
-        # Fix: Post-Mortem #9 — Bỏ qua CloudAppEvents hoàn toàn cho Verified Safe Users
-        is_verified_safe = upn.lower() in {k.lower() for k in VERIFIED_SAFE_USERS}
-        
-        # Get suspicious IPs for cloudapp filter (Unknown IP + Unknown Device)
-        suspicious_ips = anomalies.get("SuspiciousIPList", [])
+
+        # CloudApp data breach (use unknown IPs as filter)
+        unknown_ips = user_data.get("UnknownIPList", [])
         account_object_id = user_df["AccountObjectId"].iloc[0]
-        if is_verified_safe:
-            cloudapp_info = {"DataBreachEvents": 0, "DataBreachActions": []}
-        else:
-            cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, suspicious_ips)
+        cloudapp_info = enrich_with_cloudapp(upn, account_object_id, cloudapp_df, unknown_ips)
 
-        # Enrich with Unfamiliar Sign-in alert IPs (Q00)
-        unfamiliar_info = enrich_with_unfamiliar_signins(upn, unfamiliar_df, suspicious_ips)
+        # Unfamiliar Sign-in alert IPs (Q00)
+        unfamiliar_info = enrich_with_unfamiliar_signins(upn, unfamiliar_df, unknown_ips)
 
-        # AiTM Token Theft detection (migrated from Q11 KQL — v5.0)
+        # AiTM Token Theft detection
         aitm_info, aitm_detail_rows = detect_aitm_sessions(user_df, baseline)
         all_aitm_details.extend(aitm_detail_rows)
 
-        # Compute verdict
-        score, verdict = compute_verdict(anomalies, isp_info, alert_info, phishing_info, cloudapp_info, auth_info, unfamiliar_info, aitm_info, user_upn=upn)
-
-        # Build summary row
+        # Build summary row (no AnomalyScore, no Verdict — MS Risk only)
         row = {
             # Identity
             "User": upn,
@@ -942,47 +766,45 @@ def analyze(data_dir: Path, output_dir: Path):
             "Entity": get_entity(upn),
             "Department": profile_info["Department"],
             "JobTitle": profile_info["JobTitle"],
-            "CurrentRiskLevel": profile_info["ProfileRiskLevel"],
+            # Microsoft Risk Signals (PRIMARY)
+            "UserRiskLevel": user_data["UserRiskLevel"],
+            "MSHighRiskSignIns": user_data["MSHighRiskSignIns"],
+            "MSMediumRiskSignIns": user_data["MSMediumRiskSignIns"],
+            "MSLowRiskSignIns": user_data["MSLowRiskSignIns"],
+            "MSTotalRiskSignIns": user_data["MSTotalRiskSignIns"],
+            "MSRiskEvents": user_data["MSRiskEvents"],
             # Sign-in volume
             "TotalSignIns": baseline["TotalSignIns"],
             "ActiveDays": baseline["ActiveDays"],
             "FirstSignIn": baseline["FirstSignIn"],
             "LastSignIn": baseline["LastSignIn"],
-            # Baseline
+            # Foreign access
+            "ForeignCountrySignIns": user_data["ForeignCountrySignIns"],
+            "ForeignCountryList": json.dumps(user_data["ForeignCountryList"]),
+            "NonBDSignIns": user_data["NonBDSignIns"],
+            "NonBDCountries": json.dumps(user_data["NonBDCountries"]),
+            # Baseline context
             "TrustedIPs": json.dumps(baseline["TrustedIPs"]),
             "TrustedIPCount": len(baseline["TrustedIPs"]),
             "TotalUniqueIPs": baseline["TotalUniqueIPs"],
             "TrustedCountries": json.dumps(baseline["TrustedCountries"]),
             "AllCountries": json.dumps(baseline["AllCountries"]),
             "TrustedCountryCount": len(baseline["TrustedCountries"]),
-            "TrustedCities": json.dumps(baseline["TrustedCities"]),
             "TrustedDevices": json.dumps(baseline["TrustedDevices"]),
             "TrustedBrowsers": json.dumps(baseline["TrustedBrowsers"]),
             "TrustedOS": json.dumps(baseline["TrustedOS"]),
             "ISPList": json.dumps(isp_info["ISPList"]),
             "UniqueISPs": isp_info["UniqueISPs"],
-            # Anomalies
-            "UnknownIPSignIns": anomalies["UnknownIPSignIns"],
-            "UnknownIPList": json.dumps(anomalies["UnknownIPList"]),
-            "ForeignCountrySignIns": anomalies["ForeignCountrySignIns"],
-            "ForeignCountryList": json.dumps(anomalies["ForeignCountryList"]),
-            "NonBDSignIns": anomalies["NonBDSignIns"],
-            "NonBDCountries": json.dumps(anomalies["NonBDCountries"]),
-            "UnknownDeviceSignIns": anomalies["UnknownDeviceSignIns"],
-            "UnknownBrowserSignIns": anomalies["UnknownBrowserSignIns"],
-            "OffHoursSignIns": anomalies["OffHoursSignIns"],
-            "HighRiskSignIns": anomalies["HighRiskSignIns"],
-            "ManagedSignIns": baseline["ManagedSignIns"],
-            "UnmanagedSignIns": baseline["UnmanagedSignIns"],
-            "UnmanagedPct": anomalies["UnmanagedPct"],
+            "SuspiciousISPs": json.dumps(isp_info["SuspiciousISPs"]),
+            # Unknown IPs (context)
+            "UnknownIPSignIns": user_data["UnknownIPSignIns"],
+            "UnknownIPList": json.dumps(user_data["UnknownIPList"]),
             # Alerts
             "AlertCount": alert_info["AlertCount"],
             "FirstAlert": alert_info["FirstAlert"],
             "LastAlert": alert_info["LastAlert"],
             # Phishing
             "PhishingEmailsReceived": phishing_info["PhishingEmailsReceived"],
-            "SuspiciousISPs": json.dumps(isp_info["SuspiciousISPs"]),
-            "SuspiciousIPs": json.dumps(anomalies.get("SuspiciousIPList", [])),
             # Data Breach
             "DataBreachEvents": cloudapp_info["DataBreachEvents"],
             "DataBreachActions": json.dumps(cloudapp_info["DataBreachActions"]),
@@ -991,39 +813,31 @@ def analyze(data_dir: Path, output_dir: Path):
             "LastPasswordReset": auth_info["LastPasswordReset"],
             "AccountStatus": auth_info["AccountStatus"],
             "IsAdmin": auth_info["IsAdmin"],
-            # Unfamiliar Sign-in Alert correlation (Q00 — Gap 1 fix)
+            # Unfamiliar Sign-in Alert correlation (Q00)
             "AlertIPsMatched": json.dumps(unfamiliar_info["AlertIPsMatched"]),
             "AlertIPsMatchedCount": unfamiliar_info["AlertIPsMatchedCount"],
             "UserAlertCount_Q00": unfamiliar_info["UserAlertCount"],
-            "FirstAlertTimestamp": unfamiliar_info["FirstAlertTimestamp"],
-            "CrossUserAlertIPs": json.dumps(unfamiliar_info["CrossUserAlertIPs"]),
-            # AiTM Token Theft (migrated from Q11 — v5.0)
+            # AiTM Token Theft
             "AiTMSuspectedSessions": aitm_info["AiTMSuspectedSessions"],
             "AiTMHighRiskSessions": aitm_info["AiTMHighRiskSessions"],
             "MfaSatisfiedByToken": aitm_info["MfaSatisfiedByToken"],
-            # Microsoft Infra IPs filtered
-            "MicrosoftInfraIPsFiltered": anomalies.get("MicrosoftInfraIPsFiltered", 0),
-            # Baseline reliability (Output Audit v4 fix)
-            "EffectiveThreshold": f"{baseline['EffectiveThreshold']*100:.0f}%",
-            # Baseline contamination warning (v2 + v4 low-volume fix)
-            "BaselineWarning": (
-                f"⚠️ LOW VOLUME ({baseline['TotalSignIns']} sign-ins) — threshold raised to {baseline['EffectiveThreshold']*100:.0f}%"
-                if baseline.get("BaselineLowVolume", False)
-                else (
-                    f"⚠️ {len(baseline['TrustedCountries'])} Trusted Countries — possible baseline contamination by attacker"
-                    if len(baseline["TrustedCountries"]) > BASELINE_COUNTRY_WARNING_THRESHOLD
-                    else ""
-                )
-            ),
-            # Verdict
-            "AnomalyScore": score,
-            "Verdict": verdict,
+            # Device posture
+            "ManagedSignIns": baseline["ManagedSignIns"],
+            "UnmanagedSignIns": baseline["UnmanagedSignIns"],
+            # Infra
+            "MicrosoftInfraIPsFiltered": user_data["MicrosoftInfraIPsFiltered"],
         }
         results.append(row)
 
-    # Create output DataFrame
+    # Create output DataFrame — sorted by MS Risk Level (High first), then by risk event count
     summary_df = pd.DataFrame(results)
-    summary_df = summary_df.sort_values("AnomalyScore", ascending=False)
+    risk_order = {"High": 0, "Medium": 1, "Low": 2, "None": 3}
+    summary_df["_risk_sort"] = summary_df["UserRiskLevel"].map(risk_order)
+    summary_df = summary_df.sort_values(
+        ["_risk_sort", "MSTotalRiskSignIns", "DataBreachEvents"],
+        ascending=[True, False, False]
+    )
+    summary_df = summary_df.drop(columns=["_risk_sort"])
 
     # Export
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1036,21 +850,30 @@ def analyze(data_dir: Path, output_dir: Path):
 
     # Print summary stats
     print("\n" + "=" * 60)
-    print("SUMMARY")
+    print("SUMMARY (Microsoft Risk Signals)")
     print("=" * 60)
-    verdicts = summary_df["Verdict"].value_counts()
-    for v, c in verdicts.items():
-        print(f"  {v}: {c} users")
+    risk_levels = summary_df["UserRiskLevel"].value_counts()
+    for level, count in risk_levels.items():
+        print(f"  {level}: {count} users")
 
-    compromised = summary_df[summary_df["Verdict"].str.contains("Compromised")]
-    if len(compromised) > 0:
-        print(f"\n🔴 USERS REQUIRING IMMEDIATE ACTION:")
-        for _, row in compromised.iterrows():
-            print(f"  • {row['User']} (Score: {row['AnomalyScore']}, "
-                  f"NonBD: {row['NonBDSignIns']}, "
-                  f"SuspiciousISPs: {row['SuspiciousISPs']})")
+    # Users with MS risk events
+    risky = summary_df[summary_df["MSTotalRiskSignIns"] > 0]
+    if len(risky) > 0:
+        print(f"\n🔍 USERS WITH MICROSOFT RISK EVENTS:")
+        for _, row in risky.iterrows():
+            print(f"  • {row['User']} (Risk: {row['UserRiskLevel']}, "
+                  f"High: {row['MSHighRiskSignIns']}, Med: {row['MSMediumRiskSignIns']}, "
+                  f"Foreign: {row['NonBDSignIns']})")
+
+    # Users with data breach
+    breach = summary_df[summary_df["DataBreachEvents"] > 0]
+    if len(breach) > 0:
+        print(f"\n🚨 USERS WITH DATA BREACH EVENTS:")
+        for _, row in breach.iterrows():
+            print(f"  • {row['User']} ({row['DataBreachEvents']} events)")
 
     return summary_df
+
 
 
 # ============================================================
