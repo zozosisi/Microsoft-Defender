@@ -1,6 +1,9 @@
 # Tài Liệu Rút Kinh Nghiệm: Tối Ưu Logic Điều Tra Tự Động (Post-Mortem)
 
-> **Mục đích:** Tài liệu này ghi nhận lại các lỗ hổng logic (False Positives/False Negatives) đã được phát hiện trong quá trình xây dựng hệ thống tự động hóa điều tra sự cố (Automated Incident Response) bằng Python, nguyên nhân gốc rễ và cách hệ thống đã được tinh chỉnh để giải quyết.
+> **Mục đích:** Tài liệu này ghi nhận lại các lỗ hổng logic (False Positives/False Negatives) đã được phát hiện trong quá trình xây dựng hệ thống tự động hóa điều tra sự cố bằng Python.
+>
+> [!WARNING]
+> **DEPRECATION NOTICE (v6.0+):** Tài liệu này mô tả các lỗi của hệ thống scoring/verdict cũ (v1–v5), đã bị **loại bỏ hoàn toàn** từ v6.0. Pipeline hiện tại không còn custom scoring, DataBreach heuristic, hay verdict system. Giữ lại làm tài liệu lịch sử.
 
 ---
 

@@ -2,6 +2,9 @@
 
 > **Version:** v3 — Đã tự-audit, sửa sai, và cập nhật v4.2 (Verified Safe User Override)  
 > **Ngày:** 2026-05-09
+>
+> [!WARNING]
+> **DEPRECATION NOTICE (v6.0+):** Tài liệu này phân tích hệ thống scoring/verdict cũ (v1–v5), đã bị **loại bỏ hoàn toàn** từ v6.0. Pipeline hiện tại chỉ hiển thị raw Microsoft Risk Signals — không có custom scoring hay verdict. Giữ lại làm tài liệu lịch sử.
 
 ---
 

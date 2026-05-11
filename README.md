@@ -1,7 +1,7 @@
 # Microsoft Defender XDR — Investigation & Schema Reference
 
 > **Tenant:** Crystal Group (crystal-martin.com / crystal-abl.com.bd / crystal-cet.com.bd / crystal-csc.cn)  
-> **Last Updated:** 2026-05-11 (v5.0 — Raw Data Only architecture, Q07/Q08 archived, Q11-Q13 rewritten)  
+> **Last Updated:** 2026-05-12 (v6.5 — Raw Data + MS Risk Signals, no custom scoring)  
 > **Purpose:** Tài liệu hóa schema, phân tích incidents, và hỗ trợ điều tra bảo mật trên Microsoft Defender XDR
 
 ---
@@ -66,19 +66,20 @@ Microsoft-Defender/
 │   ├── 04_user_profiles.kql                   ← User identity profiles
 │   ├── 05_phishing_check.kql                  ← Phishing email detection
 │   ├── 06_cloudapp_isp.kql                    ← Backup ISP data (CloudAppEvents)
-│   ├── 09_cloudapp_events_bulk.kql            ← Bulk Data Breach export cho Python
-│   ├── 10_auth_status.kql                     ← MFA, Password, Account Status & Roles
+│   ├── 09_cloudapp_events_bulk.kql            ← CloudApp events (support/context)
 │   ├── 12_infostealer_endpoint_investigation.kql ← Endpoint/malware alerts (non-identity)
 │   ├── 13_hidden_inbox_rules_investigation.kql ← Inbox rule changes (JSON parsed)
 │   ├── 14_remediation_history.kql             ← Password reset, session revoke history
 │   └── archive/                               ← Archived queries (logic migrated/merged)
-│       ├── 07_vpn_vs_hacker_investigation.kql ← [ARCHIVED] → detect_user_anomalies()
-│       ├── 08_post_breach_investigation.kql   ← [ARCHIVED] → enrich_with_cloudapp()
-│       └── 11_aitm_token_theft_investigation.kql ← [ARCHIVED] → merged vào Q01A-F
+│       ├── 07_vpn_vs_hacker_investigation.kql ← [ARCHIVED]
+│       ├── 08_post_breach_investigation.kql   ← [ARCHIVED]
+│       ├── 10_auth_status.kql                ← [ARCHIVED] data unreliable
+│       └── 11_aitm_token_theft_investigation.kql ← [ARCHIVED] merged vào Q01A-F
 │
 └── scripts/                                   ← Scripts phân tích tự động
-    ├── analyze_signins.py                     ← Baseline + Anomaly detection per user
-    └── excel_report.py                        ← Excel report generator (openpyxl)
+    ├── analyze_signins.py                     ← Data aggregation + MS Risk Signals (no custom scoring)
+    ├── excel_report.py                        ← Excel report generator (openpyxl)
+    └── merge_exports.py                       ← Merge split CSV exports
 ```
 
 ---
@@ -248,21 +249,19 @@ Phase 1 — Raw Data Export
   4. Chạy 8 KQL queries trong Advanced Hunting (queries/*.kql)
   5. Export CSV → Lưu vào incidents/data/exports/
 
-Phase 2 — Automated Analysis (v4.2)
+Phase 2 — Automated Analysis (v6.5)
   6. Chạy: python scripts/analyze_signins.py --data-dir incidents/data/export --output-dir incidents/analysis
-     → Load 8 data sources (signin + ISP + alerts + profiles + phishing + cloudapp + auth + Q00)
-     → Dynamic baseline threshold (5% or 15% for low-volume users)
-     → Detect anomalies (unknown IP, foreign country, suspicious ISP)
-     → Alert IP correlation (cross-reference Q00 alert IPs)
-     → Conditional alert scoring (only penalize when compromise indicators present)
-     → Verified Safe User Override (SOC whitelist → skip CloudAppEvents + force Safe verdict)
-     → Tạo bảng tổng hợp + verdict (Safe/Suspicious/Likely Compromised/Confirmed/Verified Safe)
+     → Load data sources (signin + ISP + alerts + profiles + phishing + Q00)
+     → Build user baseline (trusted IPs, countries, devices)
+     → Aggregate context (foreign sign-ins, unknown IPs, device posture)
+     → Display raw Microsoft Risk Signals (RiskLevelDuringSignIn, RiskEventTypes)
+     → NO custom scoring, NO verdict, NO categorization — raw data only
 
 Phase 3 — Investigation
   7. Review report    →  incidents/analysis/investigation_report.xlsx
-     Sheet 1: Executive Summary (verdict counts, entity breakdown, key metrics)
-     Sheet 2: User Investigation (core columns, conditional formatting)
-     Sheet 3: Detailed Metrics (full 57 columns for technical deep-dive)
-     Sheet 4: Action Plan (P1-P4 remediation per user)
-  8. Action plan      →  Dựa trên verdict + Action Plan sheet để xử lý từng user
+     Sheet 1: Executive Summary (key metrics, entity breakdown)
+     Sheet 2: User Investigation (risk sign-ins, max risk score, foreign access)
+     Sheet 3: Detailed Metrics (full raw columns for technical deep-dive)
+     Sheet 4: Methodology (data sources, important notes)
+  8. Analyst decides  →  Review MS risk signals + context → determine actions
 ```
