@@ -1,28 +1,42 @@
 # Hệ Thống Phân Tích Sự Cố Microsoft Defender: Business Logic Reference
 
-> **Cập nhật lần cuối:** 09-May-2026 (v4.2 — Verified Safe User Override, CSC entity, CN/VN ISP trust)
+> **Cập nhật lần cuối:** 11-May-2026 (v5.0 — Raw Data Only architecture, Q07/Q08 archived, Q11-Q13 rewritten)
 > **Mục đích:** Tài liệu này mô tả chi tiết nghiệp vụ và logic tính toán đằng sau công cụ `analyze_signins.py` để giúp đội ngũ SOC/IT hiểu rõ cách hệ thống đưa ra quyết định cảnh báo.
 
 ---
 
 ## 1. Nguồn Dữ Liệu Đầu Vào (Data Ingestion)
-Hệ thống kết hợp dữ liệu từ bộ KQL truy vấn (từ 01 đến 10) để tạo góc nhìn 360 độ về một người dùng, đọc vào qua các file CSV:
-1. **`signin_history.csv`** (Query 01A-01F): Lịch sử đăng nhập từ Entra ID (`AADSignInEventsBeta` — ⚠️ deprecated, sẽ chuyển sang `EntraIdSignInEvents`).
-2. **`isp_data.csv`** (Query 02): Dữ liệu nhà mạng (`IdentityLogonEvents`).
-3. **`alert_data.csv`** (Query 03): Các cảnh báo bảo mật (`AlertEvidence`).
-4. **`user_profiles.csv`** (Query 04): Thông tin phòng ban, chức vụ (`IdentityInfo`).
-5. **`phishing_emails.csv`** (Query 05): Lịch sử nhận email lừa đảo (`EmailEvents`).
-6. **`cloudapp_events.csv`** (Query 09): Dữ liệu hành vi thao tác file/ứng dụng (`CloudAppEvents`) dùng để phát hiện Data Breach.
-7. **`auth_status.csv`** (Query 10): Trạng thái đăng ký MFA và thời gian đổi mật khẩu (`IdentityAccountInfo`).
+
+> **Nguyên tắc thiết kế (v5.0):** Tất cả KQL queries chỉ phục vụ **1 mục đích duy nhất: lấy raw data**. Mọi logic phân tích (baseline building, scoring, verdict) nằm **hoàn toàn trong Python** `analyze_signins.py`.
+
+Hệ thống kết hợp dữ liệu từ bộ KQL truy vấn để tạo góc nhìn 360 độ về một người dùng, đọc vào qua các file CSV:
+
+### Pipeline chính (bắt buộc)
+1. **`unfamiliar_signin_incidents.csv`** (Query 00): ⭐ Master query — toàn bộ incidents + users + IPs (`AlertInfo` + `AlertEvidence`). Bao gồm 4 entity: ABL, CMBD, CETBD, CSC.
+2. **`signin_history.csv`** (Query 01A-01F): Lịch sử đăng nhập từ Entra ID (`EntraIdSignInEvents`). Split 6 queries × 5 ngày do limit 100K rows.
+3. **`isp_data.csv`** (Query 02): Dữ liệu nhà mạng (`IdentityLogonEvents`).
+4. **`alert_data.csv`** (Query 03): Các cảnh báo "Unfamiliar sign-in" (`AlertEvidence`).
+5. **`user_profiles.csv`** (Query 04): Thông tin phòng ban, chức vụ (`IdentityInfo`).
+6. **`phishing_emails.csv`** (Query 05): Lịch sử nhận email lừa đảo (`EmailEvents`).
+7. **`cloudapp_events.csv`** (Query 09): Dữ liệu hành vi thao tác file/ứng dụng (`CloudAppEvents`) dùng để phát hiện Data Breach.
+8. **`auth_status.csv`** (Query 10): Trạng thái đăng ký MFA và thời gian đổi mật khẩu (`IdentityAccountInfo`).
    - *Cơ chế Fallback (Dự phòng):* Nếu dữ liệu `IdentityAccountInfo` trống (do tenant chưa tích hợp đầy đủ UEBA/Defender for Identity), hệ thống sẽ tự động quét chéo bảng `signin_history.csv` để tìm cột `AuthenticationRequirement`. Nếu có lịch sử yêu cầu MFA, user sẽ được đánh dấu là "MFA Enforced (Detected from Sign-ins)".
 
-*(Lưu ý: Query 07 và 08 là các công cụ KQL hỗ trợ điều tra thủ công (Manual Investigation) độc lập, sau khi test thành công thì logic đã được tích hợp thẳng vào Python).*
+### Investigation queries (raw data cho deep-dive)
+9. **`aitm_session_data.csv`** (Query 11): Raw session data kèm `AuthenticationProcessingDetails` cho AiTM detection.
+10. **`endpoint_alerts.csv`** (Query 12): Tất cả alerts non-identity (malware, infostealer, credential theft).
+11. **`inbox_rules.csv`** (Query 13): Inbox rule changes kèm parsed JSON `RuleConfig`.
 
-> **⚠️ Quan trọng (v2 — 08-May-2026):**
-> - Query 07 đã chuyển sang dùng `EntraIdSignInEvents` (thay vì `AADSignInEventsBeta` deprecated) và phân tích theo **DeviceStatus** thay vì Country — phù hợp với bài học [Post-Mortem #1](post_mortem_logic_fixes.md).
-> - Query 08 đã chuyển sang dùng **Whitelist approach** (chỉ giữ các suspicious ActionType) thay vì Blacklist — tránh bỏ lọt hành vi hacker.
-> - Query 09 đã bổ sung `AccountDisplayName`, `DeviceType`, `OSPlatform` để hỗ trợ Python phân tích VPN vs Hacker.
-> - Query 10 đã bổ sung `AccountStatus`, `AuthenticationMethod`, `SourceProviderRiskLevel`, `AssignedRoles`.
+### Archived queries (`queries/archive/`)
+- **Query 07** (VPN vs Hacker): Logic đã migrate 100% vào `detect_user_anomalies()`. Archived.
+- **Query 08** (Post-Breach single user): Hardcode 1 user, trùng lặp Q09 + `enrich_with_cloudapp()`. Archived.
+
+> **⚠️ Thay đổi quan trọng (v5.0 — 11-May-2026):**
+> - **Q00:** Thêm domain `crystal-csc.cn` vào filter (trước đó thiếu CSC entity).
+> - **Q07 & Q08:** Archived vào `queries/archive/` — logic đã 100% trong Python.
+> - **Q11:** Rewrite thành raw data export (bỏ hardcode users, bỏ baseline building + verdict trong KQL). Python sẽ tự detect AiTM.
+> - **Q12:** Rewrite thành raw data export (bỏ hardcode users, bỏ keyword filter). Export tất cả non-identity alerts.
+> - **Q13:** Rewrite thành raw data export (bỏ hardcode users, bỏ verdict logic). Giữ JSON parsing (`RawEventData`) trong KQL vì hiệu quả hơn Python.
 
 ---
 

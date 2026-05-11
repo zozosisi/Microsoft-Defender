@@ -1,53 +1,89 @@
 # KQL Investigation Queries — Hướng Dẫn Sử Dụng
 
+> **Nguyên tắc thiết kế:** Tất cả queries chỉ phục vụ **1 mục đích duy nhất: lấy raw data**. Mọi logic phân tích (baseline, scoring, verdict) nằm trong Python `analyze_signins.py`.
+
 ## Workflow
 
 ```
 Bước 0: Chạy Query 0 (Master) → Xác định danh sách users + IPs cần investigate
-Bước 1: Chạy 11 queries còn lại trong Advanced Hunting (security.microsoft.com)
+Bước 1: Chạy các queries còn lại trong Advanced Hunting (security.microsoft.com)
 Bước 2: Export CSV → Lưu vào folder incidents/data/export/
-Bước 3: Chạy Python script → Tự động phân tích + tạo report
+Bước 3: Merge signin_history_01..06.csv → signin_history.csv
+Bước 4: Chạy Python script → Tự động phân tích + tạo report
 ```
 
 ## Kiến trúc
 
-Tất cả queries 1-6 đều sử dụng `let AffectedUsers` subquery — tự động lấy danh sách users bị trigger "Unfamiliar sign-in" từ `AlertEvidence`. **Không hardcode domain.**
+Tất cả queries sử dụng `let AffectedUsers` subquery — tự động lấy danh sách users bị trigger "Unfamiliar sign-in" từ `AlertEvidence`. **Không hardcode user/domain.**
 
 ```
-Query 0 (AlertInfo + AlertEvidence)
-   └── Xác định ~54 affected users
-         ├── Query 1A-1F: Sign-in history (split 5 ngày/query, limit 100K rows)
-         ├── Query 2: ISP enrichment (IdentityLogonEvents)
-         ├── Query 3: Alert details (AlertEvidence)
-         ├── Query 4: User profiles (IdentityInfo)
-         ├── Query 5: Phishing check (EmailEvents)
-         └── Query 6: CloudApp ISP backup (CloudAppEvents)
+Query 0 (AlertInfo + AlertEvidence) — Foundation
+   └── Xác định ~54 affected users (ABL + CMBD + CETBD + CSC)
+         │
+         ├── [PIPELINE] Queries cho Python analyze_signins.py
+         │     ├── Query 1A-1F: Sign-in history (EntraIdSignInEvents, split 5d/query)
+         │     ├── Query 2:     ISP enrichment (IdentityLogonEvents)
+         │     ├── Query 3:     Alert details — Unfamiliar sign-in (AlertEvidence)
+         │     ├── Query 4:     User profiles (IdentityInfo)
+         │     ├── Query 5:     Phishing check (EmailEvents)
+         │     ├── Query 9:     CloudApp events bulk (CloudAppEvents)
+         │     └── Query 10:    Auth status — MFA, password (IdentityAccountInfo)
+         │
+         ├── [INVESTIGATION] Queries bổ sung — raw data cho deep-dive
+         │     ├── Query 11:    AiTM session data (SessionId + AuthProcessingDetails)
+         │     ├── Query 12:    Endpoint/malware alerts (non-identity alerts)
+         │     └── Query 13:    Inbox rules changes (CloudAppEvents + JSON parse)
+         │
+         ├── [SUPPORT] Queries hỗ trợ
+         │     ├── Query 6:     CloudApp ISP backup (dùng nếu Q02 thiếu data)
+         │     └── Query 14:    Remediation history (audit/compliance)
+         │
+         └── [ARCHIVED] queries/archive/ — Logic đã migrate sang Python
+               ├── Query 7:     VPN vs Hacker (→ analyze_signins.py detect_user_anomalies)
+               └── Query 8:     Post-Breach single user (→ Q09 + enrich_with_cloudapp)
 ```
 
 ## Danh sách queries
 
-| # | File | Export CSV as | Mô tả |
-|---|------|---------------|--------|
-| **0** | **`00_unfamiliar_signin_incidents.kql`** | **`unfamiliar_signin_incidents.csv`** | **⭐ Master — tất cả incidents + users + IPs** |
-| 1A | `01a_signin_history.kql` | `signin_history_01.csv` | Sign-in — ngày 1-5 (ago 30d→25d) |
-| 1B | `01b_signin_history.kql` | `signin_history_02.csv` | Sign-in — ngày 6-10 (ago 25d→20d) |
-| 1C | `01c_signin_history.kql` | `signin_history_03.csv` | Sign-in — ngày 11-15 (ago 20d→15d) |
-| 1D | `01d_signin_history.kql` | `signin_history_04.csv` | Sign-in — ngày 16-20 (ago 15d→10d) |
-| 1E | `01e_signin_history.kql` | `signin_history_05.csv` | Sign-in — ngày 21-25 (ago 10d→5d) |
-| 1F | `01f_signin_history.kql` | `signin_history_06.csv` | Sign-in — ngày 26-30 (ago 5d→now) |
-| 2 | `02_isp_data.kql` | `isp_data.csv` | ISP enrichment (IdentityLogonEvents) |
-| 3 | `03_alert_data.kql` | `alert_data.csv` | Unfamiliar sign-in alert evidence |
-| 4 | `04_user_profiles.kql` | `user_profiles.csv` | User identity info |
-| 5 | `05_phishing_check.kql` | `phishing_emails.csv` | Phishing emails to affected users |
-| 6 | `06_cloudapp_isp.kql` | `cloudapp_isp.csv` | Backup ISP data (CloudAppEvents) |
-| 7 | `07_vpn_vs_hacker_investigation.kql` | *(manual)* | Phân biệt VPN vs Hacker theo DeviceStatus (dùng EntraIdSignInEvents) |
-| 08 | `08_post_breach_investigation.kql` | Hỗ trợ điều tra tay để săn lùng các hành động xâm nhập dữ liệu. | `CloudAppEvents` |
-| 09 | `09_cloudapp_events_bulk.kql` | Export hàng loạt dữ liệu hành vi ứng dụng cho toàn bộ tổ chức (dùng cho pipeline). | `CloudAppEvents` |
-| 10 | `10_auth_status.kql` | Export thông tin MFA, trạng thái tài khoản, và lịch sử đổi mật khẩu. | `IdentityInfo`, `IdentityAccountInfo` |
-| 11 | `11_aitm_token_theft_investigation.kql` | **Chốt hạ:** Phát hiện Hacker trộm Cookie Session (Pass-the-Cookie/AiTM). Phân biệt VPN vs AiTM bằng DeviceList + TrustedCountries baseline. **v2:** Filter Microsoft infra IPs, thêm 🟡 Review Required tier. | `EntraIdSignInEvents` |
-| 12 | `12_infostealer_endpoint_investigation.kql` | **Chốt hạ:** Quét xem máy tính của user có bị nhiễm mã độc trộm mật khẩu (Redline, Raccoon) hay không. | `AlertEvidence`, `AlertInfo` |
-| 13 | `13_hidden_inbox_rules_investigation.kql` | **Chốt hạ:** Phát hiện Hacker cài cắm các Rule ẩn để forward trộm email ra bên ngoài. | `CloudAppEvents` |
-| **14** | **`14_remediation_history.kql`** | **Lịch sử remediation:** Password reset, session revoke, MFA re-registration cho affected users. | `CloudAppEvents` |
+### Pipeline Queries (bắt buộc cho Python)
+
+| # | File | Export CSV as | Table | Mô tả |
+|---|------|---------------|-------|--------|
+| **0** | `00_unfamiliar_signin_incidents.kql` | `unfamiliar_signin_incidents.csv` | `AlertInfo` + `AlertEvidence` | ⭐ Master — tất cả incidents + users + IPs |
+| 1A | `01a_signin_history.kql` | `signin_history_01.csv` | `EntraIdSignInEvents` | Sign-in — ngày 1-5 (ago 30d→25d) |
+| 1B | `01b_signin_history.kql` | `signin_history_02.csv` | `EntraIdSignInEvents` | Sign-in — ngày 6-10 (ago 25d→20d) |
+| 1C | `01c_signin_history.kql` | `signin_history_03.csv` | `EntraIdSignInEvents` | Sign-in — ngày 11-15 (ago 20d→15d) |
+| 1D | `01d_signin_history.kql` | `signin_history_04.csv` | `EntraIdSignInEvents` | Sign-in — ngày 16-20 (ago 15d→10d) |
+| 1E | `01e_signin_history.kql` | `signin_history_05.csv` | `EntraIdSignInEvents` | Sign-in — ngày 21-25 (ago 10d→5d) |
+| 1F | `01f_signin_history.kql` | `signin_history_06.csv` | `EntraIdSignInEvents` | Sign-in — ngày 26-30 (ago 5d→now) |
+| 2 | `02_isp_data.kql` | `isp_data.csv` | `IdentityLogonEvents` | ISP enrichment |
+| 3 | `03_alert_data.kql` | `alert_data.csv` | `AlertEvidence` | Unfamiliar sign-in alert evidence |
+| 4 | `04_user_profiles.kql` | `user_profiles.csv` | `IdentityInfo` | User identity info |
+| 5 | `05_phishing_check.kql` | `phishing_emails.csv` | `EmailEvents` | Phishing emails to affected users |
+| 9 | `09_cloudapp_events_bulk.kql` | `cloudapp_events.csv` | `CloudAppEvents` | Bulk data breach export |
+| 10 | `10_auth_status.kql` | `auth_status.csv` | `IdentityAccountInfo` | MFA, password, account status |
+
+### Investigation Queries (raw data cho deep-dive)
+
+| # | File | Export CSV as | Table | Mô tả |
+|---|------|---------------|-------|--------|
+| 11 | `11_aitm_token_theft_investigation.kql` | `aitm_session_data.csv` | `EntraIdSignInEvents` | Raw session data + AuthProcessingDetails cho AiTM detection |
+| 12 | `12_infostealer_endpoint_investigation.kql` | `endpoint_alerts.csv` | `AlertEvidence` + `AlertInfo` | Tất cả alerts non-identity (malware, infostealer, credential theft) |
+| 13 | `13_hidden_inbox_rules_investigation.kql` | `inbox_rules.csv` | `CloudAppEvents` | Inbox rule changes + JSON parsed RuleConfig |
+
+### Support & Backup Queries
+
+| # | File | Export CSV as | Table | Mô tả |
+|---|------|---------------|-------|--------|
+| 6 | `06_cloudapp_isp.kql` | `cloudapp_isp.csv` | `CloudAppEvents` | Backup ISP data (dùng nếu Q02 thiếu) |
+| 14 | `14_remediation_history.kql` | `remediation_history.csv` | `CloudAppEvents` | Password reset, session revoke, MFA changes |
+
+### Archived Queries (`queries/archive/`)
+
+| File | Lý do archive |
+|------|---------------|
+| `07_vpn_vs_hacker_investigation.kql` | Logic đã migrate 100% vào `analyze_signins.py` → `detect_user_anomalies()` |
+| `08_post_breach_investigation.kql` | Hardcode 1 user. Q09 cung cấp bulk data, Python handle phân tích |
 
 ## Cách chạy
 
@@ -61,7 +97,7 @@ Query 0 (AlertInfo + AlertEvidence)
 
 ```bash
 cd scripts
-pip install pandas numpy
+pip install pandas numpy openpyxl
 python analyze_signins.py --data-dir ../incidents/data/export --output-dir ../incidents/analysis
 ```
 
@@ -79,16 +115,13 @@ python analyze_signins.py --data-dir /path/to/csvs --output-dir /path/to/output
 
 | File | Mô tả |
 |------|--------|
-| `incidents/analysis/user_investigation_summary.csv` | Bảng tổng hợp — mỗi row = 1 user |
-| `incidents/analysis/investigation_report.md` | Báo cáo markdown chi tiết |
+| `incidents/analysis/investigation_report.xlsx` | ⭐ Excel report 4-sheet (auto-generated) |
 
 ## Lưu ý
 
-- **Query 0 phải chạy TRƯỚC** — các query 1-6 dùng cùng `let AffectedUsers` subquery
-- **Query 1 split 6 phần** vì KQL limit 100K rows — mỗi query 5 ngày, export 6 CSV rồi merge
-- Query 6 (CloudApp ISP) là **backup** — chỉ cần chạy nếu Query 2 không có đủ data
-- Query 7 & 8 là **công cụ điều tra thủ công** (manual) — cần thay `targetUser` trước khi chạy
+- **Query 0 phải chạy TRƯỚC** — các query khác dùng cùng `let AffectedUsers` subquery
+- **Query 1 split 6 phần** vì KQL limit 100K rows — mỗi query 5 ngày, export 6 CSV rồi merge thành `signin_history.csv`
 - **Query 9 có thể hit giới hạn 10K rows** — nếu bị truncate, chia theo thời gian (15d + 15d)
 - Query 10 có thể trả `EnrolledMfas` trống nếu Defender for Identity chưa sync — Python có fallback
-- **Query 11 (v2):** Filter Microsoft infrastructure IPs (`2603:10x6:`, `40.107.`, `52.100.`) + TrustedCountries baseline awareness (4-tier verdict: 🚨→🟡→🟢→🟠)
-- File bắt buộc: `unfamiliar_signin_incidents.csv` (0) + `signin_history_*.csv` (1A-1F). Các file còn lại là optional enrichment
+- File bắt buộc: `unfamiliar_signin_incidents.csv` (Q00) + `signin_history.csv` (Q01). Các file còn lại là optional enrichment
+- **Q11/Q12/Q13** là raw data export — có thể tích hợp vào Python pipeline trong tương lai

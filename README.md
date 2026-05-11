@@ -1,7 +1,7 @@
 # Microsoft Defender XDR — Investigation & Schema Reference
 
 > **Tenant:** Crystal Group (crystal-martin.com / crystal-abl.com.bd / crystal-cet.com.bd / crystal-csc.cn)  
-> **Last Updated:** 2026-05-09 (v4.2 — Verified Safe User Override, CSC entity, CN/VN ISP trust)  
+> **Last Updated:** 2026-05-11 (v5.0 — Raw Data Only architecture, Q07/Q08 archived, Q11-Q13 rewritten)  
 > **Purpose:** Tài liệu hóa schema, phân tích incidents, và hỗ trợ điều tra bảo mật trên Microsoft Defender XDR
 
 ---
@@ -52,7 +52,7 @@ Microsoft-Defender/
 │   ├── entra_defender_sentinel_architecture.md ← Entra ↔ Defender XDR ↔ Sentinel architecture\r
 │   └── risk_remediation_hybrid_ad.md          ← ⭐ Hybrid AD: user risk remediation guide
 │
-├── queries/                                   ← KQL queries cho investigation
+├── queries/                                   ← KQL queries (raw data only)
 │   ├── README.md                              ← Hướng dẫn sử dụng queries
 │   ├── 00_unfamiliar_signin_incidents.kql     ← ⭐ Master query — all incidents + users + IPs
 │   ├── 01a_signin_history.kql                 ← Sign-in ngày 1-5 (ago 30d→25d)
@@ -66,10 +66,15 @@ Microsoft-Defender/
 │   ├── 04_user_profiles.kql                   ← User identity profiles
 │   ├── 05_phishing_check.kql                  ← Phishing email detection
 │   ├── 06_cloudapp_isp.kql                    ← Backup ISP data (CloudAppEvents)
-│   ├── 07_vpn_vs_hacker_investigation.kql     ← Phân biệt VPN vs Hacker theo DeviceStatus
-│   ├── 08_post_breach_investigation.kql       ← Truy vết suspicious actions (Whitelist)
 │   ├── 09_cloudapp_events_bulk.kql            ← Bulk Data Breach export cho Python
-│   └── 10_auth_status.kql                     ← MFA, Password, Account Status & Roles
+│   ├── 10_auth_status.kql                     ← MFA, Password, Account Status & Roles
+│   ├── 11_aitm_token_theft_investigation.kql  ← Raw session data cho AiTM detection
+│   ├── 12_infostealer_endpoint_investigation.kql ← Endpoint/malware alerts (non-identity)
+│   ├── 13_hidden_inbox_rules_investigation.kql ← Inbox rule changes (JSON parsed)
+│   ├── 14_remediation_history.kql             ← Password reset, session revoke history
+│   └── archive/                               ← Archived queries (logic migrated to Python)
+│       ├── 07_vpn_vs_hacker_investigation.kql ← [ARCHIVED] → detect_user_anomalies()
+│       └── 08_post_breach_investigation.kql   ← [ARCHIVED] → enrich_with_cloudapp()
 │
 └── scripts/                                   ← Scripts phân tích tự động
     ├── analyze_signins.py                     ← Baseline + Anomaly detection per user
