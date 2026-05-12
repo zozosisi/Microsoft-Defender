@@ -220,3 +220,16 @@ Hacker đã qua mặt thành công MFA và thực hiện **433 thao tác** từ 
 2. Kiểm tra log Teams để thu hồi hoặc cảnh báo về 56 tin nhắn độc hại đã phát tán nội bộ.
 3. Khôi phục dữ liệu đã bị xóa trong Recycle Bin của OneDrive và SharePoint.
 4. Điều tra tương tự và cách ly ngay lập tức đối với user Top 2 (`Mahmudul.Hasan`).
+
+---
+
+## 12. Kế Hoạch Khắc Phục (Remediation Plan - May 12)
+
+Do tính chất đặc thù của hạ tầng Hybrid AD, việc user đổi mật khẩu trên hệ thống On-Premises (Active Directory) sẽ không tự động xóa trạng thái rủi ro trên Entra ID. Điều này dẫn đến tình trạng các cảnh báo "Unfamiliar Sign-in Properties" liên tục lặp lại mỗi ngày cho cùng một nhóm người dùng (54 users) dù họ đã đổi mật khẩu và bật MFA.
+
+Dựa trên tài liệu kỹ thuật và best practices từ Microsoft, chúng tôi đã soạn thảo báo cáo tình trạng và đề xuất quy trình xử lý gửi cho Ban lãnh đạo và Đội ngũ Network:
+
+1. **Phase 1 (Immediate):** Xác nhận 54 users đã an toàn (Reset Password + Enforce MFA + Revoke Sessions), sau đó thực hiện lệnh **"Dismiss User Risk"** trên Entra ID để chặn vòng lặp cảnh báo hiện tại.
+2. **Phase 2 (Long-term):** Cấu hình tính năng **"Allow on-premises password change to reset user risk"** kết hợp với Password Hash Sync (PHS). Thay đổi này sẽ giúp Entra ID tự động clear user risk trong tương lai mỗi khi nhân sự chi nhánh tự đổi mật khẩu nội bộ.
+
+*Bản thảo email đã được hoàn tất và lưu tại `incidents/email_unfamiliar_signin_report.md`.*
